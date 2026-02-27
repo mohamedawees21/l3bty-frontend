@@ -1,0 +1,37 @@
+/* frontend/src/components/common/Layout.css */
+.layout {
+  display: flex;
+  min-height: 100vh;
+}
+
+.sidebar {
+  width: 250px;
+  background: #1a237e;
+  color: white;
+}
+
+.main-content {
+  flex: 1;
+  background: #f5f7fa;
+}
+
+.header {
+  background: white;
+  padding: 15px 30px;
+  border-bottom: 1px solid #e0e0e0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.content-wrapper {
+  padding: 30px;
+}
+
+.footer {
+  background: white;
+  padding: 20px 30px;
+  border-top: 1px solid #e0e0e0;
+  text-align: center;
+  color: #666;
+}

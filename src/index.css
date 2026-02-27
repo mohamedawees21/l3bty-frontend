@@ -1,0 +1,159 @@
+/* frontend/src/index.css */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  direction: rtl;
+  background-color: #f8f9fa;
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    monospace;
+}
+
+/* Layout Styles */
+.layout {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 15px 30px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.logo a {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  color: white;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 1.2rem;
+}
+
+.logo img {
+  height: 40px;
+  border-radius: 8px;
+}
+
+.user-menu {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.welcome {
+  font-weight: 500;
+}
+
+.role {
+  background: rgba(255, 255, 255, 0.2);
+  padding: 5px 15px;
+  border-radius: 20px;
+  font-size: 0.9rem;
+}
+
+.logout-btn {
+  background: rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: white;
+  padding: 8px 20px;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.logout-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.main-container {
+  display: flex;
+  flex: 1;
+}
+
+.sidebar {
+  width: 250px;
+  background: white;
+  border-left: 1px solid #e9ecef;
+  box-shadow: 4px 0 12px rgba(0, 0, 0, 0.05);
+}
+
+.nav-menu {
+  padding: 20px 0;
+}
+
+.nav-item {
+  display: block;
+  padding: 15px 25px;
+  color: #333;
+  text-decoration: none;
+  border-right: 4px solid transparent;
+  transition: all 0.3s ease;
+  font-weight: 500;
+}
+
+.nav-item:hover {
+  background: #f8f9fa;
+  border-right-color: #667eea;
+}
+
+.nav-item.active {
+  background: #f8f9fa;
+  border-right-color: #667eea;
+  color: #667eea;
+  font-weight: 600;
+}
+
+.content {
+  flex: 1;
+  padding: 20px;
+  overflow-y: auto;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .main-container {
+    flex-direction: column;
+  }
+  
+  .sidebar {
+    width: 100%;
+    border-left: none;
+    border-bottom: 1px solid #e9ecef;
+  }
+  
+  .nav-menu {
+    display: flex;
+    overflow-x: auto;
+    padding: 10px 0;
+  }
+  
+  .nav-item {
+    white-space: nowrap;
+    border-right: none;
+    border-bottom: 3px solid transparent;
+  }
+  
+  .nav-item:hover,
+  .nav-item.active {
+    border-right: none;
+    border-bottom-color: #667eea;
+  }
+}
