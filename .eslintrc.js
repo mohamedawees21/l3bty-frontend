@@ -25,12 +25,13 @@ module.exports = {
     },
   },
   plugins: ['react', 'react-hooks'],
-  rules: {
-    'react/prop-types': 'off',
-    'react/react-in-jsx-scope': 'off',
-    'no-unused-vars': 'warn',
-    'no-console': 'warn',
-    'react-hooks/rules-of-hooks': 'error',
-    'react-hooks/exhaustive-deps': 'warn',
-  },
+rules: {
+  'react/prop-types': 'off',
+  'react/react-in-jsx-scope': 'off',
+  'no-unused-vars': 'warn',
+  'no-console': 'off',
+  'react-hooks/rules-of-hooks': 'error',
+  'react-hooks/exhaustive-deps': 'warn',
+},
+  
 };

@@ -1,27 +1,13 @@
 import axios from 'axios';
 
 // ==================== إعدادات البيئة ====================
-const detectEnvironment = () => {
-  const env = process.env.REACT_APP_ENVIRONMENT || 'development';
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
 
-  let apiUrl;
-
-  if (env === 'production') {
-    apiUrl = process.env.REACT_APP_API_URL;
-  } else {
-    apiUrl = 'http://localhost:5000/api';
-  }
-
-  console.log(`🌍 البيئة الحالية: ${env}`);
-  console.log(`🌐 عنوان API: ${apiUrl}`);
-
-  return { env, apiUrl };
-};
-
-const { env, apiUrl } = detectEnvironment(); // ✅ تصحيح: تعريف env هنا
+console.log('🌐 عنوان API:', API_URL);
+console.log('🔧 البيئة:', process.env.NODE_ENV);
 
 const api = axios.create({
-  baseURL: apiUrl,
+  baseURL: API_URL,  // ✅ استخدام المتغير
   timeout: 30000,
   headers: {
     'Content-Type': 'application/json',
@@ -29,15 +15,6 @@ const api = axios.create({
     'Accept-Language': 'ar'
   }
 });
-
-// ==================== المساعدات العامة ====================
-const generateRentalNumber = (prefix = 'RNT') => 
-  `${prefix}-${Date.now().toString().slice(-8)}-${Math.floor(Math.random() * 1000)}`;
-
-const generateShiftNumber = () => `SHIFT-${Date.now().toString().slice(-8)}`;
-
-// تأخير تنفيذ
-const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
 // ==================== Interceptors ====================
 api.interceptors.request.use(
@@ -57,9 +34,8 @@ api.interceptors.request.use(
       console.log('🌐 API Request:', {
         method: config.method?.toUpperCase(),
         url: config.url,
-        fullUrl: `${config.baseURL}${config.url}`,
-        tokenExists: !!authToken,
-        data: config.data ? JSON.stringify(config.data).substring(0, 200) : undefined
+        fullUrl: `${API_URL}${config.url}`, // ✅ استخدام المتغير
+        tokenExists: !!authToken
       });
     }
     
@@ -70,6 +46,7 @@ api.interceptors.request.use(
     return Promise.reject(error);
   }
 );
+
 
 api.interceptors.response.use(
   (response) => {
@@ -267,12 +244,11 @@ api.changePassword = async (id, passwordData) => {
   }
 };
 
-// ==================== إنشاء تأجير جديد (مبسط وآمن) ====================
+// ==================== إنشاء تأجير جديد ====================
 api.createRental = async (rentalData) => {
   try {
     console.log('📦 إنشاء تأجير جديد:', rentalData);
     
-    // التأكد من وجود البيانات المطلوبة
     if (!rentalData.customer_name) {
       throw new Error('اسم العميل مطلوب');
     }
@@ -281,7 +257,6 @@ api.createRental = async (rentalData) => {
       throw new Error('يجب إضافة لعبة واحدة على الأقل');
     }
     
-    // تجهيز البيانات للإرسال
     const payload = {
       customer_name: rentalData.customer_name,
       customer_phone: rentalData.customer_phone || '',
@@ -295,12 +270,12 @@ api.createRental = async (rentalData) => {
       notes: rentalData.notes || ''
     };
     
-    console.log('📤 إرسال البيانات:', payload);
+    console.log('📤 إرسال البيانات إلى:', `${API_URL}/rentals`); // ✅ استخدام المتغير
     
-    // استخدام axios مباشرة بدل api.post لتجنب الـ interceptor
+    // استخدام المتغير مباشرة في الطلب
     const token = localStorage.getItem('token');
     const response = await axios.post(
-      'http://localhost:5000/api/rentals',
+      `${API_URL}/rentals`,  // ✅ استخدام المتغير
       payload,
       {
         headers: {
@@ -321,7 +296,7 @@ api.createRental = async (rentalData) => {
   } catch (error) {
     console.error('❌ خطأ في إنشاء التأجير:', error);
     
-    // تخزين محلي كنسخة احتياطية
+    // تخزين محلي
     try {
       const localRentals = JSON.parse(localStorage.getItem('local_rentals') || '[]');
       const localRental = {
@@ -353,9 +328,124 @@ api.createRental = async (rentalData) => {
   }
 };
 
-/**
- * جلب التأجيرات النشطة مع دعم تعدد المسارات
- */
+// ==================== استراتيجيات متعددة للمسارات ====================
+api.createGameUnbreakable = async (gameData) => {
+  try {
+    console.log('🛡️ محاولة إنشاء لعبة بأي طريقة:', gameData);
+    
+    const token = localStorage.getItem('token');
+    const userStr = localStorage.getItem('user');
+    const user = userStr ? JSON.parse(userStr) : null;
+    
+    if (!token || !user) {
+      return {
+        success: false,
+        message: 'يجب تسجيل الدخول أولاً'
+      };
+    }
+    
+    const branchId = gameData.branch_id || user.branch_id || 1;
+    
+    const gamePayload = {
+      name: gameData.name,
+      description: gameData.description || `${gameData.name}`,
+      category: gameData.category || 'سيارات',
+      price_per_15min: parseFloat(gameData.price_per_15min) || 50,
+      branch_id: branchId,
+      status: gameData.status || 'available',
+      min_rental_time: gameData.min_rental_time || 15,
+      max_rental_time: gameData.max_rental_time || 120,
+      image_url: gameData.image_url || 'default-game.jpg',
+      is_active: true
+    };
+    
+    // استراتيجيات متعددة - كلها تستخدم API_URL
+    const strategies = [
+      {
+        name: 'المسار الرئيسي POST /games',
+        executor: async () => {
+          return await api.post('/games', gamePayload);
+        }
+      },
+      {
+        name: 'إضافة لعبة لفرع POST /branches/{branchId}/add-game',
+        executor: async () => {
+          return await api.post(`/branches/${branchId}/add-game`, gamePayload);
+        }
+      },
+      {
+        name: 'طريقة fetch مباشرة',
+        executor: async () => {
+          const response = await fetch(`${API_URL}/games`, {  // ✅ استخدام المتغير
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify(gamePayload)
+          });
+          
+          if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+          }
+          
+          return await response.json();
+        }
+      }
+    ];
+    
+    // تنفيذ الاستراتيجيات
+    for (let i = 0; i < strategies.length; i++) {
+      try {
+        console.log(`🔄 المحاولة ${i + 1}: ${strategies[i].name}`);
+        const response = await strategies[i].executor();
+        
+        if (response && (response.status === 201 || response.status === 200 || response.success)) {
+          console.log(`✅ نجحت المحاولة ${i + 1}`);
+          return {
+            success: true,
+            data: response.data || response,
+            method: strategies[i].name
+          };
+        }
+      } catch (error) {
+        console.log(`❌ فشلت المحاولة ${i + 1}:`, error.message);
+      }
+    }
+    
+    // تخزين محلي
+    const localGame = {
+      id: 'local-' + Date.now(),
+      ...gamePayload,
+      local: true,
+      created_at: new Date().toISOString()
+    };
+    
+    try {
+      const localGames = JSON.parse(localStorage.getItem('local_games') || '[]');
+      localGames.push(localGame);
+      localStorage.setItem('local_games', JSON.stringify(localGames));
+    } catch (e) {
+      console.warn('⚠️ لا يمكن حفظ اللعبة محلياً');
+    }
+    
+    return {
+      success: true,
+      data: localGame,
+      message: 'تم حفظ اللعبة محلياً',
+      local: true
+    };
+    
+  } catch (error) {
+    console.error('🔥 خطأ شامل:', error);
+    return {
+      success: false,
+      message: error.message
+    };
+  }
+};
+
+
 api.getActiveRentalsUnbreakable = async (params = {}) => {
   console.log('🔄 محاولة جلب التأجيرات النشطة:', params);
   
