@@ -77,14 +77,17 @@ api.interceptors.response.use(
       data: error.response?.data
     });
     
-    if (env === 'ngrok' && error.message.includes('Network Error')) {
-      return {
-        success: false,
-        status: 0,
-        message: 'خطأ في اتصال ngrok. تأكد من أن الخادم يعمل',
-        ngrokError: true
-      };
-    }
+if (
+  process.env.REACT_APP_ENVIRONMENT === 'ngrok' &&
+  error.message.includes('Network Error')
+) {
+  return {
+    success: false,
+    status: 0,
+    message: 'خطأ في اتصال ngrok. تأكد من أن الخادم يعمل',
+    ngrokError: true
+  };
+}
     
     if (error.response?.status === 401) {
       console.log('🔒 توكن منتهي الصلاحية');
