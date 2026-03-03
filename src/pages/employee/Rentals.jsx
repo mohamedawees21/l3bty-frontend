@@ -17,6 +17,7 @@ import {
 import { useAuth } from '../../context/AuthContext';
 import api from '../../services/api';
 import './Rentals.css';
+import API_BASE_URL from "../services/api";
 
 // ==================== ثوابت النظام ====================
 const PAYMENT_METHODS = [
@@ -2700,13 +2701,16 @@ const loadActiveRentals = useCallback(async () => {
     
     console.log(`🔍 جلب التأجيرات النشطة للشيفت: ${currentShift.id}`);
     
-    const response = await fetch(`http://localhost:5000/api/rentals/active?shift_id=${currentShift.id}`, {
-      headers: {
-        'Authorization': `Bearer ${cleanToken}`,
-        'Content-Type': 'application/json'
-      }
-    });
-    
+const response = await fetch(
+  `${API_BASE_URL}/api/rentals/active?shift_id=${currentShift.id}`,
+  {
+    headers: {
+      Authorization: `Bearer ${cleanToken}`,
+      "Content-Type": "application/json",
+    },
+  }
+);
+
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
@@ -2882,14 +2886,17 @@ const handleCreateRental = useCallback(async (data) => {
 
     console.log('📦 إرسال بيانات التأجير:', rentalData);
 
-    const response = await fetch('http://localhost:5000/api/rentals', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
-      },
-      body: JSON.stringify(rentalData)
-    });
+ const response = await fetch(
+  `${API_BASE_URL}/api/rentals`,
+  {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    },
+    body: JSON.stringify(rentalData)
+  }
+);
 
     const responseText = await response.text();
     console.log('📥 استجابة خام:', responseText);
