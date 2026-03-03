@@ -2,7 +2,7 @@ import axios from 'axios';
 
 // ==================== إعدادات البيئة ====================
 // استخدم الخادم المحلي في development و Vercel في production
-const API_URL = "https://l3btybackend-myz7yrsw5-l3btystore-projects.vercel.app";
+const API_URL = "https://l3btybackend.vercel.app";
 console.log('🌐 عنوان API:', API_URL);
 console.log('🔧 البيئة:', process.env.NODE_ENV);
 

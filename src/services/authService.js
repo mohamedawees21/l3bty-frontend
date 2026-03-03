@@ -2,7 +2,7 @@ import api from './api';
 
 // ==================== إعدادات البيئة ====================
 // ✅ استخدم نفس عنوان api.js - مهم جداً
-const API_URL = 'https://l3btybackend-1pxfvnunm-l3btystore-projects.vercel.app';
+const API_URL = "https://l3btybackend.vercel.app";
 
 console.log('🌐 [authService] API URL:', API_URL);
 console.log('🔧 [authService] Environment:', process.env.NODE_ENV);
