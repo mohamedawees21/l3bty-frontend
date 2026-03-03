@@ -17,8 +17,7 @@ import {
 import { useAuth } from '../../context/AuthContext';
 import api from '../../services/api';
 import './Rentals.css';
-import API_BASE_URL from "../services/api";
-
+import API_BASE_URL from "../../services/api";
 // ==================== ثوابت النظام ====================
 const PAYMENT_METHODS = [
   { value: 'cash', label: '💵 نقدي', icon: DollarSign },
