@@ -17,7 +17,7 @@ import {
 import { useAuth } from '../../context/AuthContext';
 import api from '../../services/api';
 import './Rentals.css';
-import API_BASE_URL from "../../services/api";
+
 // ==================== ثوابت النظام ====================
 const PAYMENT_METHODS = [
   { value: 'cash', label: '💵 نقدي', icon: DollarSign },
@@ -105,38 +105,38 @@ const GameImage = ({ src, alt, className, size = 'medium' }) => {
   const [imageError, setImageError] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
   
-const getLocalImage = (gameName) => {
-  const imageMap = {
-    'Car': '/images/Car.jpg',
-    'Driftcar': '/images/Driftcar.jpg',
-    'harley': '/images/harley.jpg',
-    'Hoverboard': '/images/Hoverboard.jpg',
-    'I3bty': '/images/I3bty.png',
-    'Motor': '/images/Motor.jpg',
-    'motorcycle': '/images/motorcycle.jpg',
-    'Ninebot': '/images/Ninebot.jpg',
-    'pingpong': '/images/pingpong.jpg',
-    'playstation': '/images/playstation.jpg',
-    'Scooter': '/images/Scooter.jpg',
-    'Segway': '/images/Segway.jpg',
-    'Simulator': '/images/Simulator.jpg',
-    'Skate': '/images/Skate.jpg',
-    'Trampoline': '/images/Trampoline.jpg',
-    'VR': '/images/VR.jpg',
-    'waterslide': '/images/waterslide.jpg',
-    'wheel': '/images/wheel.jpg',
-    'default': '/images/playstation.jpg'
+  const getLocalImage = (gameName) => {
+    const imageMap = {
+      'Car': '/images/Car.jpg',
+      'Driftcar': '/images/Driftcar.jpg',
+      'harley': '/images/harley.jpg',
+      'Hoverboard': '/images/Hoverboard.jpg',
+      'I3bty': '/images/I3bty.png',
+      'Motor': '/images/Motor.jpg',
+      'motorcycle': '/images/motorcycle.jpg',
+      'Ninebot': '/images/Ninebot.jpg',
+      'pingpong': '/images/pingpong.jpg',
+      'playstation': '/images/playstation.jpg',
+      'Scooter': '/images/Scooter.jpg',
+      'Segway': '/images/Segway.jpg',
+      'Simulator': '/images/Simulator.jpg',
+      'Skate': '/images/Skate.jpg',
+      'Trampoline': '/images/Trampoline.jpg',
+      'VR': '/images/VR.jpg',
+      'waterslide': '/images/waterslide.jpg',
+      'wheel': '/images/wheel.jpg',
+      'default': '/images/playstation.jpg'
+    };
+
+    if (!gameName) return imageMap.default;
+    
+    const gameNameLower = gameName.toLowerCase();
+    const matchedKey = Object.keys(imageMap).find(key => 
+      key !== 'default' && gameNameLower.includes(key.toLowerCase())
+    );
+
+    return matchedKey ? imageMap[matchedKey] : imageMap.default;
   };
-
-  if (!gameName) return imageMap.default;
-  
-  const gameNameLower = gameName.toLowerCase();
-  const matchedKey = Object.keys(imageMap).find(key => 
-    key !== 'default' && gameNameLower.includes(key.toLowerCase())
-  );
-
-  return matchedKey ? imageMap[matchedKey] : imageMap.default;
-};
 
   const imageSrc = src || getLocalImage(alt);
 
@@ -159,7 +159,7 @@ const getLocalImage = (gameName) => {
   );
 };
 
-// ==================== مكون شريط حالة الشيفت مع حساب الإيرادات ====================
+// ==================== مكون شريط حالة الشيفت ====================
 const ShiftStatusBar = ({
   currentShift,
   shiftStats,
@@ -175,36 +175,25 @@ const ShiftStatusBar = ({
   const [notes, setNotes] = useState('');
   const [showStats, setShowStats] = useState(false);
 
-  const isManager = userRole === 'admin' || userRole === 'manager' || userRole === 'مدير';
+  const isManager = userRole === 'admin' || userRole === 'branch_manager';
 
-const calculateRevenue = useMemo(() => {
-  let total = 0;
-  
-  // Revenue from completed rentals (excluding refunded)
-  completedRentals.forEach(rental => {
-    if (rental.status === 'completed' && !rental.is_refunded) {
-      total += parseFloat(rental.final_amount || rental.total_amount || 0);
-    }
-  });
-  
-  // Revenue from active fixed-time rentals (prepaid)
-  activeRentals.forEach(rental => {
-    if (rental.rental_type === 'fixed' && rental.payment_status === 'paid') {
-      total += parseFloat(rental.total_amount || 0);
-    }
-  });
-  
-  return total;
-}, [activeRentals, completedRentals]);
-
-  // إحصائيات محدثة
-  const enhancedStats = {
-    ...shiftStats,
-    total_revenue: calculateRevenue,
-    active_rentals: activeRentals.length,
-    completed_rentals: completedRentals.length,
-    total_rentals: activeRentals.length + completedRentals.length
-  };
+  const calculateRevenue = useMemo(() => {
+    let total = 0;
+    
+    completedRentals.forEach(rental => {
+      if (rental.status === 'completed' && !rental.is_refunded) {
+        total += parseFloat(rental.final_amount || rental.total_amount || 0);
+      }
+    });
+    
+    activeRentals.forEach(rental => {
+      if (rental.rental_type === 'fixed' && rental.payment_status === 'paid') {
+        total += parseFloat(rental.total_amount || 0);
+      }
+    });
+    
+    return total;
+  }, [activeRentals, completedRentals]);
 
   if (loading) {
     return (
@@ -307,63 +296,6 @@ const calculateRevenue = useMemo(() => {
         </div>
       </div>
 
-      {showStats && isManager && (
-        <div className="shift-stats-expanded">
-          <div className="stats-grid">
-            <div className="stat-card">
-              <div className="stat-header">
-                <DollarSign size={20} className="stat-icon" />
-                <h4>الإيرادات</h4>
-              </div>
-              <div className="stat-value">{formatCurrency(calculateRevenue)}</div>
-              <div className="stat-detail">
-                <span>من التأجيرات المكتملة: {formatCurrency(
-                  completedRentals
-                    .filter(r => r.status === 'completed' && !r.is_refunded)
-                    .reduce((sum, r) => sum + parseFloat(r.final_amount || r.total_amount || 0), 0)
-                )}</span>
-                <br />
-                <span>من التأجيرات النشطة: {formatCurrency(
-                  activeRentals
-                    .filter(r => r.rental_type === 'fixed' && r.payment_status === 'paid')
-                    .reduce((sum, r) => sum + parseFloat(r.total_amount || 0), 0)
-                )}</span>
-              </div>
-            </div>
-
-            <div className="stat-card">
-              <div className="stat-header">
-                <Clock size={20} className="stat-icon" />
-                <h4>وقت التشغيل</h4>
-              </div>
-              <div className="stat-value">
-                {Math.floor((new Date() - new Date(currentShift.start_time)) / (1000 * 60 * 60))} ساعة
-              </div>
-              <div className="stat-detail">
-                <span>منذ: {formatTimeAgo(currentShift.start_time)}</span>
-              </div>
-            </div>
-
-            <div className="stat-card">
-              <div className="stat-header">
-                <Users size={20} className="stat-icon" />
-                <h4>العملاء</h4>
-              </div>
-              <div className="stat-value">
-                {new Set([
-                  ...activeRentals.map(r => r.customer_name),
-                  ...completedRentals.map(r => r.customer_name)
-                ]).size}
-              </div>
-              <div className="stat-detail">
-                <span>عملاء جدد في هذا الشيفت</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* نافذة تأكيد إنهاء الشيفت */}
       {showEndShiftConfirm && (
         <div className="modal-overlay">
           <div className="modal modal-end-shift">
@@ -389,24 +321,6 @@ const calculateRevenue = useMemo(() => {
                   </div>
                 </div>
               )}
-
-              <div className="shift-summary-card">
-                <h4>ملخص الشيفت</h4>
-                <div className="summary-rows">
-                  <div className="summary-row">
-                    <span>التأجيرات النشطة:</span>
-                    <strong>{activeRentals.length}</strong>
-                  </div>
-                  <div className="summary-row">
-                    <span>التأجيرات المكتملة:</span>
-                    <strong>{completedRentals.length}</strong>
-                  </div>
-                  <div className="summary-row">
-                    <span>إجمالي الإيراد:</span>
-                    <strong className="amount">{formatCurrency(calculateRevenue)}</strong>
-                  </div>
-                </div>
-              </div>
 
               <div className="form-group">
                 <label>
@@ -463,7 +377,7 @@ const calculateRevenue = useMemo(() => {
   );
 };
 
-// ==================== مكون بطاقة اللعبة مع الصورة ====================
+// ==================== مكون بطاقة اللعبة ====================
 const GameCard = ({ game, onAddToCart, isAvailable }) => {
   const [isHovered, setIsHovered] = useState(false);
 
@@ -473,7 +387,6 @@ const GameCard = ({ game, onAddToCart, isAvailable }) => {
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       onClick={() => isAvailable && onAddToCart(game)}
-      data-category={game.category}
     >
       <div className="game-card-image">
         <GameImage 
@@ -487,21 +400,6 @@ const GameCard = ({ game, onAddToCart, isAvailable }) => {
             <span>غير متاحة</span>
           </div>
         )}
-        {game.category && (
-          <span className="game-category-badge">{game.category}</span>
-        )}
-        {game.current_rentals > 0 && (
-          <span className="game-rentals-badge">
-            <Users size={12} />
-            {game.current_rentals}
-          </span>
-        )}
-        {game.is_new && (
-          <span className="image-badge new">جديد</span>
-        )}
-        {game.is_popular && (
-          <span className="image-badge popular">الأكثر طلباً</span>
-        )}
       </div>
 
       <div className="game-card-content">
@@ -511,25 +409,6 @@ const GameCard = ({ game, onAddToCart, isAvailable }) => {
           <DollarSign size={14} />
           <span className="price-value">{formatCurrency(game.price_per_15min)}</span>
           <span className="price-unit">/ 15 د</span>
-        </div>
-
-        {game.description && (
-          <p className="game-description">{game.description}</p>
-        )}
-
-        <div className="game-features">
-          {game.max_players && (
-            <span className="feature">
-              <Users size={12} />
-              {game.max_players} لاعب
-            </span>
-          )}
-          {game.min_age && (
-            <span className="feature">
-              <Star size={12} />
-              {game.min_age}+
-            </span>
-          )}
         </div>
 
         <button 
@@ -556,12 +435,9 @@ const GamesGrid = ({
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [viewMode, setViewMode] = useState('grid');
-  const [sortBy, setSortBy] = useState('name');
-  const [showFilters, setShowFilters] = useState(false);
 
-  const isEmployee = userRole === 'employee' || userRole === 'موظف';
+  const isEmployee = userRole === 'employee';
 
-  // تصفية الألعاب حسب الفرع والحالة
   const branchGames = useMemo(() => {
     if (!games?.length || !branchId) return [];
     return games.filter(game => 
@@ -571,58 +447,34 @@ const GamesGrid = ({
     );
   }, [games, branchId]);
 
-  // استخراج الفئات المتاحة
   const categories = useMemo(() => {
-    if (!branchGames.length) return [{ value: 'all', label: 'جميع الألعاب', count: 0 }];
-    const catMap = new Map();
-    branchGames.forEach(game => {
-      const cat = game.category || 'أخرى';
-      catMap.set(cat, (catMap.get(cat) || 0) + 1);
-    });
+    if (!branchGames.length) return [{ value: 'all', label: 'جميع الألعاب' }];
+    const cats = [...new Set(branchGames.map(g => g.category).filter(Boolean))];
     return [
-      { value: 'all', label: 'جميع الألعاب', count: branchGames.length },
-      ...Array.from(catMap.entries())
-        .sort((a, b) => a[0].localeCompare(b[0]))
-        .map(([value, count]) => ({ value, label: value, count }))
+      { value: 'all', label: 'جميع الألعاب' },
+      ...cats.map(cat => ({ value: cat, label: cat }))
     ];
   }, [branchGames]);
 
-  // تصفية وترتيب الألعاب
   const filteredGames = useMemo(() => {
     if (!branchGames.length) return [];
 
-    let filtered = branchGames.filter(game => {
-      if (selectedCategory !== 'all' && game.category !== selectedCategory) {
-        return false;
-      }
+    let filtered = branchGames;
+    
+    if (selectedCategory !== 'all') {
+      filtered = filtered.filter(g => g.category === selectedCategory);
+    }
 
-      if (searchTerm) {
-        const term = searchTerm.toLowerCase();
-        return (
-          game.name?.toLowerCase().includes(term) ||
-          game.category?.toLowerCase().includes(term) ||
-          game.description?.toLowerCase().includes(term)
-        );
-      }
-
-      return true;
-    });
-
-    filtered.sort((a, b) => {
-      switch (sortBy) {
-        case 'price':
-          return (a.price_per_15min || 0) - (b.price_per_15min || 0);
-        case 'price-desc':
-          return (b.price_per_15min || 0) - (a.price_per_15min || 0);
-        case 'name':
-          return (a.name || '').localeCompare(b.name || '');
-        default:
-          return 0;
-      }
-    });
+    if (searchTerm) {
+      const term = searchTerm.toLowerCase();
+      filtered = filtered.filter(g =>
+        g.name?.toLowerCase().includes(term) ||
+        g.category?.toLowerCase().includes(term)
+      );
+    }
 
     return filtered;
-  }, [branchGames, searchTerm, selectedCategory, sortBy]);
+  }, [branchGames, searchTerm, selectedCategory]);
 
   const availableGames = useMemo(() => 
     filteredGames.filter(game => game.status !== 'maintenance'),
@@ -670,18 +522,11 @@ const GamesGrid = ({
           <Gamepad2 size={24} />
           <h3>
             الألعاب المتاحة
-            <span className="games-count">({branchGames.length})</span>
+            <span className="games-count">({availableGames.length})</span>
           </h3>
         </div>
         
         <div className="header-actions">
-          <button 
-            className={`btn-icon ${showFilters ? 'active' : ''}`}
-            onClick={() => setShowFilters(!showFilters)}
-            title="خيارات البحث"
-          >
-            <Filter size={18} />
-          </button>
           <div className="view-toggle">
             <button 
               className={`btn-icon ${viewMode === 'grid' ? 'active' : ''}`}
@@ -701,7 +546,7 @@ const GamesGrid = ({
         </div>
       </div>
 
-      <div className={`games-filters ${showFilters ? 'expanded' : ''}`}>
+      <div className="games-filters">
         <div className="search-wrapper">
           <Search size={18} className="search-icon" />
           <input
@@ -721,70 +566,35 @@ const GamesGrid = ({
           )}
         </div>
 
-        <div className="filter-group">
-          <select
-            value={selectedCategory}
-            onChange={(e) => setSelectedCategory(e.target.value)}
-            className="filter-select"
-          >
-            {categories.map(cat => (
-              <option key={cat.value} value={cat.value}>
-                {cat.label} ({cat.count})
-              </option>
-            ))}
-          </select>
-
-          <select
-            value={sortBy}
-            onChange={(e) => setSortBy(e.target.value)}
-            className="filter-select"
-          >
-            <option value="name">ترتيب أبجدي</option>
-            <option value="price">السعر: من الأقل للأعلى</option>
-            <option value="price-desc">السعر: من الأعلى للأقل</option>
-          </select>
-        </div>
+        <select
+          value={selectedCategory}
+          onChange={(e) => setSelectedCategory(e.target.value)}
+          className="filter-select"
+        >
+          {categories.map(cat => (
+            <option key={cat.value} value={cat.value}>
+              {cat.label}
+            </option>
+          ))}
+        </select>
       </div>
 
-      {branchGames.length === 0 ? (
+      {availableGames.length === 0 ? (
         <div className="games-empty">
           <Gamepad2 size={64} />
-          <h4>لا توجد ألعاب متاحة</h4>
-          <p>يبدو أنه لا توجد ألعاب مسجلة في هذا الفرع</p>
-        </div>
-      ) : filteredGames.length === 0 ? (
-        <div className="games-empty">
-          <Search size={64} />
-<p>
-  لا توجد نتائج لـ {"\""}{searchTerm}{"\""}
-</p>          <button 
-            className="btn btn-outline"
-            onClick={() => {
-              setSearchTerm('');
-              setSelectedCategory('all');
-            }}
-          >
-            <RefreshCw size={16} />
-            إعادة تعيين البحث
-          </button>
+          <p>لا توجد ألعاب متاحة</p>
         </div>
       ) : (
-        <>
-          <h4 className="games-subtitle">
-            <CheckCircle size={16} className="available-icon" />
-            الألعاب المتاحة ({availableGames.length})
-          </h4>
-          <div className={`games-${viewMode}`}>
-            {availableGames.map(game => (
-              <GameCard
-                key={game.id}
-                game={game}
-                onAddToCart={onAddToCart}
-                isAvailable={game.status !== 'maintenance'}
-              />
-            ))}
-          </div>
-        </>
+        <div className={`games-${viewMode}`}>
+          {availableGames.map(game => (
+            <GameCard
+              key={game.id}
+              game={game}
+              onAddToCart={onAddToCart}
+              isAvailable={true}
+            />
+          ))}
+        </div>
       )}
     </div>
   );
@@ -810,8 +620,8 @@ const RentalCart = ({
   const [discount, setDiscount] = useState(0);
   const [notes, setNotes] = useState('');
 
-  const isEmployee = userRole === 'employee' || userRole === 'موظف';
-  const isManager = userRole === 'admin' || userRole === 'manager' || userRole === 'مدير';
+  const isEmployee = userRole === 'employee';
+  const isManager = userRole === 'admin' || userRole === 'branch_manager';
 
   const calculateItemTotal = useCallback((item) => {
     if (item.rental_type === 'open') return 0;
@@ -1109,624 +919,6 @@ const RentalCart = ({
             </>
           )}
         </button>
-
-        <div className="shift-info">
-          <Zap size={14} />
-          <span>سيتم ربط التأجير بالشيفت الحالي #{currentShift?.shift_number || currentShift?.id}</span>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-// ==================== مكون التأجيرات المكتملة (للمدير فقط) ====================
-const CompletedRentals = ({
-  rentals,
-  items,
-  loading,
-  currentShift,
-  userRole
-}) => {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filterType, setFilterType] = useState('all');
-  const [expandedRental, setExpandedRental] = useState(null);
-
-  const isManager = userRole === 'admin' || userRole === 'manager' || userRole === 'مدير';
-
-
-  const rentalsWithItems = useMemo(() => {
-    return rentals.map(rental => ({
-      ...rental,
-      items: items.filter(item => item.rental_id === rental.id)
-    }));
-  }, [rentals, items]);
-
-  const filteredRentals = useMemo(() => {
-    if (!rentalsWithItems.length) return [];
-    
-    return rentalsWithItems.filter(rental => {
-      if (filterType !== 'all' && rental.rental_type !== filterType) {
-        return false;
-      }
-
-      if (searchTerm) {
-        const term = searchTerm.toLowerCase();
-        return (
-          rental.customer_name?.toLowerCase().includes(term) ||
-          rental.rental_number?.toLowerCase().includes(term) ||
-          rental.items?.some(item => item.game_name?.toLowerCase().includes(term))
-        );
-      }
-
-      return true;
-    });
-  }, [rentalsWithItems, searchTerm, filterType]);
-
-  if (!isManager) {
-  return null;
-}
-
-  if (loading.rentals) {
-    return (
-      <div className="completed-rentals-section">
-        <div className="section-header">
-          <h3>
-            <History size={24} />
-            التأجيرات المكتملة
-          </h3>
-        </div>
-        <div className="loading-state">
-          <Loader2 className="spinner" size={32} />
-          <p>جاري تحميل التأجيرات...</p>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="completed-rentals-section">
-      <div className="section-header">
-        <div className="header-title">
-          <History size={24} />
-          <h3>
-            التأجيرات المكتملة
-            <span className="section-count">({filteredRentals.length})</span>
-          </h3>
-        </div>
-
-        <div className="section-filters">
-          <div className="search-wrapper small">
-            <Search size={16} className="search-icon" />
-            <input
-              type="text"
-              placeholder="بحث..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="search-input small"
-            />
-          </div>
-
-          <select
-            value={filterType}
-            onChange={(e) => setFilterType(e.target.value)}
-            className="filter-select small"
-          >
-            <option value="all">الكل</option>
-            {RENTAL_TYPES.map(type => (
-              <option key={type.value} value={type.value}>
-                {type.label}
-              </option>
-            ))}
-          </select>
-        </div>
-      </div>
-
-      {filteredRentals.length === 0 ? (
-        <div className="empty-state">
-          <Archive size={48} />
-          <p>لا توجد تأجيرات مكتملة</p>
-        </div>
-      ) : (
-        <div className="rentals-grid">
-          {filteredRentals.map(rental => (
-            <div 
-              key={rental.id} 
-              className={`rental-card completed ${expandedRental === rental.id ? 'expanded' : ''}`}
-              onClick={() => setExpandedRental(expandedRental === rental.id ? null : rental.id)}
-            >
-              <div className="rental-card-header">
-                <div className="rental-number">
-                  <Hash size={14} />
-                  <span>{rental.rental_number}</span>
-                </div>
-                <span className={`rental-type-badge ${rental.rental_type}`}>
-                  {RENTAL_TYPES.find(t => t.value === rental.rental_type)?.label}
-                </span>
-                {rental.is_refunded && (
-                  <span className="refunded-badge">مسترد</span>
-                )}
-              </div>
-
-              <div className="rental-customer">
-                <User size={16} />
-                <span className="customer-name">{rental.customer_name}</span>
-              </div>
-
-              <div className="rental-items-preview">
-                {rental.items?.slice(0, 2).map(item => (
-                  <div key={item.id} className="rental-item-preview">
-                    <Gamepad2 size={12} />
-                    <span>{item.game_name}</span>
-                    {item.quantity > 1 && <span className="item-quantity">x{item.quantity}</span>}
-                  </div>
-                ))}
-                {rental.items?.length > 2 && (
-                  <span className="more-items">+{rental.items.length - 2}</span>
-                )}
-              </div>
-
-              <div className="rental-time-info">
-                <Clock size={14} />
-                <span>البداية: {formatTime(rental.start_time)}</span>
-                {rental.end_time && (
-                  <>
-                    <span className="separator">→</span>
-                    <span>{formatTime(rental.end_time)}</span>
-                  </>
-                )}
-              </div>
-
-              <div className="rental-duration">
-                <Hourglass size={14} />
-                <span>المدة: {rental.total_duration || calculateDuration(rental.start_time, rental.end_time)} دقيقة</span>
-              </div>
-
-              {!rental.is_refunded && (
-                <div className="rental-amount">
-                  <DollarSign size={14} />
-                  <span>{formatCurrency(rental.final_amount || rental.total_amount || 0)}</span>
-                </div>
-              )}
-
-              {expandedRental === rental.id && (
-                <div className="rental-expanded-details">
-                  <div className="expanded-items">
-                    <h5>تفاصيل التأجير:</h5>
-                    {rental.items?.map(item => (
-                      <div key={item.id} className="expanded-item">
-                        <div className="item-info">
-                          <Gamepad2 size={14} />
-                          <span className="item-name">{item.game_name}</span>
-                          {item.child_name && (
-                            <span className="child-name">- {item.child_name}</span>
-                          )}
-                        </div>
-                        <div className="item-details">
-                          <span className="item-duration">{item.duration_minutes} د</span>
-                          {item.quantity > 1 && (
-                            <span className="item-quantity">x{item.quantity}</span>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                  
-                  {isManager && (
-                    <div className="expanded-payment">
-                      <h5>معلومات الدفع:</h5>
-                      <div className="payment-details">
-                        <div className="detail-row">
-                          <span>المبلغ:</span>
-                          <span>{formatCurrency(rental.total_amount || 0)}</span>
-                        </div>
-                        {rental.final_amount && (
-                          <div className="detail-row">
-                            <span>المبلغ النهائي:</span>
-                            <span>{formatCurrency(rental.final_amount)}</span>
-                          </div>
-                        )}
-                        <div className="detail-row">
-                          <span>طريقة الدفع:</span>
-                          <span>{rental.payment_method || 'نقدي'}</span>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-};
-
-// ==================== مكون نافذة تغيير اللعبة ====================
-const ChangeGameModal = ({
-  show,
-  onClose,
-  rental,
-  items,
-  games,
-  onChangeGame,
-  userRole
-}) => {
-  const [selectedGame, setSelectedGame] = useState(null);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [calculatedDiff, setCalculatedDiff] = useState(null);
-
-  const rentalItems = useMemo(() => {
-    return items.filter(item => item.rental_id === rental?.id);
-  }, [rental, items]);
-
-  const currentGame = rentalItems[0];
-
-  const availableGames = useMemo(() => {
-    if (!games?.length) return [];
-    return games.filter(game => 
-      game.is_active && 
-      game.status !== 'maintenance' &&
-      game.id !== currentGame?.game_id
-    );
-  }, [games, currentGame]);
-
-  const filteredGames = useMemo(() => {
-    if (!availableGames.length) return [];
-    if (!searchTerm) return availableGames;
-    
-    const term = searchTerm.toLowerCase();
-    return availableGames.filter(g =>
-      g.name?.toLowerCase().includes(term) ||
-      g.category?.toLowerCase().includes(term)
-    );
-  }, [availableGames, searchTerm]);
-
-const calculateDifference = useCallback((newGame) => {
-  if (!currentGame || !newGame) return null;
-  
-  const elapsedMinutes = calculateDuration(rental?.start_time);
-  const usedUnits = Math.ceil(elapsedMinutes / 15);
-  
-  const oldPrice = currentGame.price_per_15min || 0;
-  const newPrice = newGame.price_per_15min || 0;
-  
-  const oldTotal = oldPrice * usedUnits;
-  const newTotal = newPrice * usedUnits;
-  const difference = newTotal - oldTotal;
-  
-  return {
-    elapsedMinutes,
-    usedUnits,
-    oldPrice,
-    newPrice,
-    oldTotal,
-    newTotal,
-    difference,
-    refund: difference < 0,
-    extra: difference > 0
-  };
-}, [currentGame, rental]);
-
-  useEffect(() => {
-    if (selectedGame) {
-      setCalculatedDiff(calculateDifference(selectedGame));
-    } else {
-      setCalculatedDiff(null);
-    }
-  }, [selectedGame, calculateDifference]);
-
-  const handleConfirm = async () => {
-    if (!selectedGame || !calculatedDiff) return;
-    
-    setIsSubmitting(true);
-    try {
-      await onChangeGame(rental, currentGame.game_id, selectedGame.id, calculatedDiff);
-      onClose();
-    } catch (error) {
-      console.error('خطأ في تغيير اللعبة:', error);
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  if (!show || !rental || !currentGame) return null;
-
-  return (
-    <div className="modal-overlay">
-      <div className="modal modal-large">
-        <div className="modal-header">
-          <div className="header-icon info">
-            <ArrowLeftRight size={24} />
-          </div>
-          <h3>تغيير اللعبة</h3>
-          <button onClick={onClose} className="modal-close" disabled={isSubmitting}>
-            <X size={24} />
-          </button>
-        </div>
-        
-        <div className="modal-body">
-          <div className="current-game-info">
-            <h4>اللعبة الحالية</h4>
-            <div className="game-info-card">
-              <GameImage src={currentGame.image_url} alt={currentGame.game_name} size="small" />
-              <div className="game-info-details">
-                <span className="game-name">{currentGame.game_name}</span>
-                <span className="game-price">{formatCurrency(currentGame.price_per_15min)} / 15 د</span>
-                <span className="game-time">بدأت منذ: {formatTimeAgo(rental.start_time)}</span>
-              </div>
-            </div>
-          </div>
-
-          <div className="new-game-selection">
-            <h4>اختر اللعبة الجديدة</h4>
-            
-            <div className="search-wrapper">
-              <Search size={18} className="search-icon" />
-              <input
-                type="text"
-                placeholder="ابحث عن لعبة..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="search-input"
-              />
-            </div>
-
-            <div className="games-list compact">
-              {filteredGames.length === 0 ? (
-                <div className="empty-state">
-                  <Gamepad2 size={32} />
-                  <p>لا توجد ألعاب متاحة</p>
-                </div>
-              ) : (
-                filteredGames.map(game => (
-                  <div
-                    key={game.id}
-                    className={`game-select-item ${selectedGame?.id === game.id ? 'selected' : ''}`}
-                    onClick={() => setSelectedGame(game)}
-                  >
-                    <GameImage src={game.image_url} alt={game.name} size="small" />
-                    <div className="game-select-info">
-                      <h4>{game.name}</h4>
-                      <div className="game-price">
-                        {formatCurrency(game.price_per_15min)} / 15 د
-                      </div>
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
-
-          {calculatedDiff && (
-            <div className="difference-calculation">
-              <h4>حساب الفرق</h4>
-              <div className="calculation-details">
-                <div className="calc-row">
-                  <span>الوقت المنقضي:</span>
-                  <span>{calculatedDiff.elapsedMinutes} دقيقة</span>
-                </div>
-                <div className="calc-row">
-                  <span>عدد الوحدات (15 د):</span>
-                  <span>{calculatedDiff.usedUnits} وحدة</span>
-                </div>
-                <div className="calc-row">
-                  <span>سعر الوحدة الحالي:</span>
-                  <span>{formatCurrency(calculatedDiff.oldPrice)}</span>
-                </div>
-                <div className="calc-row">
-                  <span>سعر الوحدة الجديد:</span>
-                  <span>{formatCurrency(calculatedDiff.newPrice)}</span>
-                </div>
-                <div className="calc-row total">
-                  <span>المبلغ المحسوب للعبة الحالية:</span>
-                  <span>{formatCurrency(calculatedDiff.oldTotal)}</span>
-                </div>
-                <div className="calc-row total">
-                  <span>المبلغ المحسوب للعبة الجديدة:</span>
-                  <span>{formatCurrency(calculatedDiff.newTotal)}</span>
-                </div>
-                <div className={`calc-row difference ${calculatedDiff.refund ? 'refund' : 'extra'}`}>
-                  <span>{calculatedDiff.refund ? 'مبلغ مسترد:' : 'مبلغ إضافي:'}</span>
-                  <span>{formatCurrency(Math.abs(calculatedDiff.difference))}</span>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-
-        <div className="modal-footer">
-          <button
-            onClick={onClose}
-            className="btn btn-secondary"
-            disabled={isSubmitting}
-          >
-            إلغاء
-          </button>
-          <button
-            onClick={handleConfirm}
-            className="btn btn-primary"
-            disabled={!selectedGame || isSubmitting}
-          >
-            {isSubmitting ? (
-              <>
-                <Loader2 className="spinner" size={16} />
-                جاري التغيير...
-              </>
-            ) : (
-              <>
-                <Check size={16} />
-                تأكيد التغيير
-              </>
-            )}
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-// ==================== مكون نافذة إلغاء واسترداد ====================
-const CancelAndRefundModal = ({
-  show,
-  onClose,
-  rental,
-  items,
-  onConfirm,
-  userRole
-}) => {
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [refundAmount, setRefundAmount] = useState(0);
-  const [reason, setReason] = useState('');
-
-  const rentalItems = useMemo(() => {
-    return items.filter(item => item.rental_id === rental?.id);
-  }, [rental, items]);
-
-const calculateRefund = useCallback(() => {
-  if (!rental?.start_time) return 0;
-  
-  const elapsedMinutes = calculateDuration(rental.start_time);
-  
-  // If less than 3 minutes elapsed, full refund
-  if (elapsedMinutes < 3) {
-    return rental.total_amount || 0;
-  }
-  
-  // If more than 3 minutes, deduct 15 minutes
-  const fifteenMinPrice = rentalItems.reduce((total, item) => {
-    return total + ((item.price_per_15min || 50) * (item.quantity || 1));
-  }, 0);
-  
-  return Math.max(0, (rental.total_amount || 0) - fifteenMinPrice);
-}, [rental, rentalItems]);
-
-  useEffect(() => {
-    setRefundAmount(calculateRefund());
-  }, [calculateRefund]);
-
-  const handleConfirm = async () => {
-    setIsSubmitting(true);
-    try {
-      await onConfirm(rental, {
-        refund_amount: refundAmount,
-        reason: reason || 'إلغاء خلال 3 دقائق'
-      });
-      onClose();
-    } catch (error) {
-      console.error('خطأ في إلغاء التأجير:', error);
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const elapsedMinutes = rental?.start_time ? calculateDuration(rental.start_time) : 0;
-  const isWithin3Minutes = elapsedMinutes < 3;
-
-  if (!show || !rental) return null;
-
-  return (
-    <div className="modal-overlay">
-      <div className="modal">
-        <div className="modal-header">
-          <div className="header-icon warning">
-            <Undo2 size={24} />
-          </div>
-          <h3>إلغاء التأجير واسترداد المبلغ</h3>
-          <button onClick={onClose} className="modal-close" disabled={isSubmitting}>
-            <X size={24} />
-          </button>
-        </div>
-        
-        <div className="modal-body">
-          <div className="alert alert-info">
-            <Info size={16} />
-            <div className="alert-content">
-              <strong>معلومات التأجير</strong>
-              <p>رقم: {rental.rental_number} - العميل: {rental.customer_name}</p>
-            </div>
-          </div>
-
-          <div className="time-info">
-            <Clock size={20} />
-            <div className="time-details">
-              <span>وقت البدء: {formatDateTime(rental.start_time)}</span>
-              <span>الوقت المنقضي: {elapsedMinutes} دقيقة</span>
-              {isWithin3Minutes ? (
-                <span className="badge success">ضمن فترة الاسترداد الكامل (أقل من 3 دقائق)</span>
-              ) : (
-                <span className="badge warning">تم تجاوز فترة الاسترداد الكامل</span>
-              )}
-            </div>
-          </div>
-
-          <div className="refund-calculation">
-            <h4>تفاصيل الاسترداد</h4>
-            
-            <div className="calc-row">
-              <span>المبلغ المدفوع:</span>
-              <span>{formatCurrency(rental.total_amount || 0)}</span>
-            </div>
-            
-            {!isWithin3Minutes && (
-              <div className="calc-row">
-                <span>خصم 15 دقيقة:</span>
-                <span>- {formatCurrency((rental.total_amount || 0) - refundAmount)}</span>
-              </div>
-            )}
-            
-            <div className="calc-row total highlight">
-              <span>المبلغ المسترد:</span>
-              <span>{formatCurrency(refundAmount)}</span>
-            </div>
-
-            {!isWithin3Minutes && (
-              <p className="note">
-                <Info size={12} />
-                تم تجاوز 3 دقائق، تم خصم قيمة أول 15 دقيقة
-              </p>
-            )}
-          </div>
-
-          <div className="form-group">
-            <label>سبب الإلغاء (اختياري):</label>
-            <textarea
-              value={reason}
-              onChange={(e) => setReason(e.target.value)}
-              placeholder="أدخل سبب الإلغاء..."
-              rows="3"
-              className="form-control"
-            />
-          </div>
-        </div>
-
-        <div className="modal-footer">
-          <button
-            onClick={onClose}
-            className="btn btn-secondary"
-            disabled={isSubmitting}
-          >
-            إلغاء
-          </button>
-          <button
-            onClick={handleConfirm}
-            className="btn btn-warning"
-            disabled={isSubmitting}
-          >
-            {isSubmitting ? (
-              <>
-                <Loader2 className="spinner" size={16} />
-                جاري الإلغاء...
-              </>
-            ) : (
-              <>
-                <Undo2 size={16} />
-                تأكيد الإلغاء والاسترداد
-              </>
-            )}
-          </button>
-        </div>
       </div>
     </div>
   );
@@ -1740,20 +932,15 @@ const ActiveRentals = ({
   onComplete,
   onCancel,
   onViewDetails,
-  onChangeGame,
   currentShift,
   userRole
 }) => {
   const [timeNow, setTimeNow] = useState(new Date());
   const [searchTerm, setSearchTerm] = useState('');
-  const [filterType, setFilterType] = useState('all');
   const [expandedRental, setExpandedRental] = useState(null);
-  const [showCancelModal, setShowCancelModal] = useState(false);
-  const [showChangeGameModal, setShowChangeGameModal] = useState(false);
-  const [selectedRental, setSelectedRental] = useState(null);
 
-  const isEmployee = userRole === 'employee' || userRole === 'موظف';
-  const isManager = userRole === 'admin' || userRole === 'manager' || userRole === 'مدير';
+  const isEmployee = userRole === 'employee';
+  const isManager = userRole === 'admin' || userRole === 'branch_manager';
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -1820,23 +1007,17 @@ const ActiveRentals = ({
     if (!rentalsWithItems.length) return [];
     
     return rentalsWithItems.filter(rental => {
-      if (filterType !== 'all' && rental.rental_type !== filterType) {
-        return false;
-      }
-
       if (searchTerm) {
         const term = searchTerm.toLowerCase();
         return (
           rental.customer_name?.toLowerCase().includes(term) ||
-          rental.customer_phone?.includes(term) ||
           rental.rental_number?.toLowerCase().includes(term) ||
           rental.items?.some(item => item.game_name?.toLowerCase().includes(term))
         );
       }
-
       return true;
     });
-  }, [rentalsWithItems, searchTerm, filterType]);
+  }, [rentalsWithItems, searchTerm]);
 
   if (!currentShift && isEmployee) {
     return null;
@@ -1871,30 +1052,15 @@ const ActiveRentals = ({
             </h3>
           </div>
 
-          <div className="section-filters">
-            <div className="search-wrapper small">
-              <Search size={16} className="search-icon" />
-              <input
-                type="text"
-                placeholder="بحث..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="search-input small"
-              />
-            </div>
-
-            <select
-              value={filterType}
-              onChange={(e) => setFilterType(e.target.value)}
-              className="filter-select small"
-            >
-              <option value="all">الكل</option>
-              {RENTAL_TYPES.map(type => (
-                <option key={type.value} value={type.value}>
-                  {type.label}
-                </option>
-              ))}
-            </select>
+          <div className="search-wrapper small">
+            <Search size={16} className="search-icon" />
+            <input
+              type="text"
+              placeholder="بحث..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="search-input small"
+            />
           </div>
         </div>
 
@@ -1907,14 +1073,13 @@ const ActiveRentals = ({
           <div className="rentals-grid">
             {filteredRentals.map(rental => {
               const elapsedMinutes = getElapsedMinutes(rental.start_time);
-              const canCancel = elapsedMinutes < 3; // يمكن الإلغاء خلال 3 دقائق فقط
+              const canCancel = elapsedMinutes < 3;
               const mainItem = rental.items?.[0];
               
               return (
                 <div 
                   key={rental.id} 
-                  className={`rental-card ${isExpired(rental) ? 'expired' : ''} ${rental.rental_type} ${expandedRental === rental.id ? 'expanded' : ''}`}
-                  onClick={() => setExpandedRental(expandedRental === rental.id ? null : rental.id)}
+                  className={`rental-card ${isExpired(rental) ? 'expired' : ''} ${rental.rental_type}`}
                 >
                   <div className="rental-card-header">
                     <div className="rental-number">
@@ -1939,14 +1104,6 @@ const ActiveRentals = ({
                     )}
                   </div>
 
-                  <div className="rental-duration-info">
-                    <Clock size={14} />
-                    <span>المدة: {rental.rental_type === 'fixed' ? `${rental.total_duration || 15} د` : 'مفتوح'}</span>
-                    {rental.rental_type === 'fixed' && (
-                      <span className="elapsed-time">({elapsedMinutes} د مضت)</span>
-                    )}
-                  </div>
-
                   {rental.rental_type === 'fixed' && (
                     <div className="rental-progress">
                       <div className="progress-bar">
@@ -1962,39 +1119,9 @@ const ActiveRentals = ({
                     </div>
                   )}
 
-                  {expandedRental === rental.id && (
-                    <div className="rental-expanded-details">
-                      <div className="expanded-items">
-                        <h5>جميع الألعاب:</h5>
-                        {rental.items?.map(item => (
-                          <div key={item.id} className="expanded-item">
-                            <div className="item-info">
-                              <Gamepad2 size={14} />
-                              <span className="item-name">{item.game_name}</span>
-                              {item.child_name && (
-                                <span className="child-name">- {item.child_name}</span>
-                              )}
-                            </div>
-                            <div className="item-details">
-                              {item.rental_type === 'fixed' && (
-                                <span className="item-duration">{item.duration_minutes} د</span>
-                              )}
-                              {item.quantity > 1 && (
-                                <span className="item-quantity">x{item.quantity}</span>
-                              )}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
                   <div className="rental-actions">
                     <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onViewDetails(rental);
-                      }}
+                      onClick={() => onViewDetails(rental)}
                       className="btn-action info"
                       title="تفاصيل"
                     >
@@ -2003,10 +1130,7 @@ const ActiveRentals = ({
 
                     {rental.rental_type === 'open' && (
                       <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onComplete(rental);
-                        }}
+                        onClick={() => onComplete(rental)}
                         className="btn-action success"
                         title="إنهاء التأجير"
                       >
@@ -2014,38 +1138,15 @@ const ActiveRentals = ({
                       </button>
                     )}
 
-                   {isManager && (
-  <>
-    <button
-      onClick={(e) => {
-        e.stopPropagation();
-        setSelectedRental(rental);
-        setShowChangeGameModal(true);
-      }}
-      className="btn-action primary"
-      title="تغيير اللعبة"
-    >
-      <RotateIcon size={16} />
-    </button>
-
-    <button
-      onClick={(e) => {
-        e.stopPropagation();
-        if (canCancel) {
-          setSelectedRental(rental);
-          setShowCancelModal(true);
-        } else {
-          alert('لا يمكن إلغاء التأجير بعد مرور 3 دقائق');
-        }
-      }}
-      className={`btn-action ${canCancel ? 'warning' : 'disabled'}`}
-      title={canCancel ? 'إلغاء واسترداد' : 'لا يمكن الإلغاء (تجاوز 3 دقائق)'}
-      disabled={!canCancel}
-    >
-      <Undo2 size={16} />
-    </button>
-  </>
-)}
+                    {isManager && canCancel && (
+                      <button
+                        onClick={() => onCancel(rental)}
+                        className="btn-action warning"
+                        title="إلغاء واسترداد"
+                      >
+                        <Undo2 size={16} />
+                      </button>
+                    )}
                   </div>
                 </div>
               );
@@ -2053,47 +1154,14 @@ const ActiveRentals = ({
           </div>
         )}
       </div>
-
-      {/* نافذة إلغاء واسترداد */}
-      <CancelAndRefundModal
-        show={showCancelModal}
-        onClose={() => {
-          setShowCancelModal(false);
-          setSelectedRental(null);
-        }}
-        rental={selectedRental}
-        items={items}
-        onConfirm={onCancel}
-        userRole={userRole}
-      />
-
-      {/* نافذة تغيير اللعبة */}
-      <ChangeGameModal
-        show={showChangeGameModal}
-        onClose={() => {
-          setShowChangeGameModal(false);
-          setSelectedRental(null);
-        }}
-        rental={selectedRental}
-        items={items}
-        games={items}
-        onChangeGame={onChangeGame}
-        userRole={userRole}
-      />
     </>
   );
 };
 
-// ==================== مكون إضافة لعبة للسلة مع الصور ====================
-const AddGameModal = ({
-  show,
-  onClose,
-  games,
-  onAddGame
-}) => {
+// ==================== مكون نافذة إضافة لعبة ====================
+const AddGameModal = ({ show, onClose, games, onAddGame }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
-  const [selectedGame, setSelectedGame] = useState(null);
 
   const availableGames = useMemo(() => {
     if (!games?.length) return [];
@@ -2171,79 +1239,36 @@ const AddGameModal = ({
             </select>
           </div>
 
-          {selectedGame ? (
-            <div className="game-quick-add">
-              <div className="selected-game-preview">
-                <GameImage src={selectedGame.image_url} alt={selectedGame.name} size="small" />
-                <div className="selected-game-info">
-                  <h4>{selectedGame.name}</h4>
-                  <div className="selected-game-price">
-                    {formatCurrency(selectedGame.price_per_15min)} / 15 دقيقة
-                  </div>
-                </div>
+          <div className="games-list">
+            {filteredGames.length === 0 ? (
+              <div className="empty-state">
+                <Search size={48} />
+                <p>لا توجد نتائج</p>
               </div>
-              <div className="quick-add-actions">
-                <button 
-                  className="btn btn-primary"
+            ) : (
+              filteredGames.map(game => (
+                <div
+                  key={game.id}
+                  className="game-select-item"
                   onClick={() => {
-                    onAddGame(selectedGame);
-                    setSelectedGame(null);
+                    onAddGame(game);
+                    onClose();
                   }}
                 >
-                  <Plus size={16} />
-                  إضافة للسلة
-                </button>
-                <button 
-                  className="btn btn-outline"
-                  onClick={() => setSelectedGame(null)}
-                >
-                  رجوع
-                </button>
-              </div>
-            </div>
-          ) : (
-            <div className="games-list">
-              {filteredGames.length === 0 ? (
-                <div className="empty-state">
-                  {availableGames.length === 0 ? (
-                    <>
-                      <Gamepad2 size={48} />
-                      <p>لا توجد ألعاب متاحة</p>
-                    </>
-                  ) : (
-                    <>
-                      <Search size={48} />
-                      <p>
-                        لا توجد نتائج لـ {"\""}{searchTerm}{"\""}
-                      </p>
-                    </>
-                  )}
-                </div>
-              ) : (
-                filteredGames.map(game => (
-                  <div
-                    key={game.id}
-                    className="game-select-item"
-                    onClick={() => setSelectedGame(game)}
-                  >
-                    <GameImage src={game.image_url} alt={game.name} size="small" />
-                    <div className="game-select-info">
-                      <h4>{game.name}</h4>
-                      {game.category && (
-                        <span className="game-category">{game.category}</span>
-                      )}
-                      <div className="game-price">
-                        {formatCurrency(game.price_per_15min)} / 15 دقيقة
-                      </div>
+                  <GameImage src={game.image_url} alt={game.name} size="small" />
+                  <div className="game-select-info">
+                    <h4>{game.name}</h4>
+                    <div className="game-price">
+                      {formatCurrency(game.price_per_15min)} / 15 دقيقة
                     </div>
-                    <button className="add-btn">
-                      <Plus size={20} />
-                    </button>
                   </div>
-                ))
-              )}
-            </div>
-          )}
+                  <button className="add-btn">
+                    <Plus size={20} />
+                  </button>
+                </div>
+              ))
+            )}
+          </div>
         </div>
       </div>
     </div>
@@ -2251,25 +1276,14 @@ const AddGameModal = ({
 };
 
 // ==================== مكون تفاصيل التأجير ====================
-const RentalDetailsModal = ({
-  show,
-  onClose,
-  rental,
-  items,
-  userRole
-}) => {
-  const [activeTab, setActiveTab] = useState('info');
-
-  const isEmployee = userRole === 'employee' || userRole === 'موظف';
-  const isManager = userRole === 'admin' || userRole === 'manager' || userRole === 'مدير';
-
+const RentalDetailsModal = ({ show, onClose, rental, items }) => {
   if (!show || !rental) return null;
 
   const rentalItems = items.filter(item => item.rental_id === rental.id);
 
   return (
     <div className="modal-overlay">
-      <div className="modal modal-xlarge">
+      <div className="modal">
         <div className="modal-header">
           <h3>
             <Eye size={24} />
@@ -2280,146 +1294,70 @@ const RentalDetailsModal = ({
           </button>
         </div>
         
-        <div className="modal-tabs">
-          <button 
-            className={`tab-btn ${activeTab === 'info' ? 'active' : ''}`}
-            onClick={() => setActiveTab('info')}
-          >
-            <Info size={16} />
-            المعلومات الأساسية
-          </button>
-          <button 
-            className={`tab-btn ${activeTab === 'games' ? 'active' : ''}`}
-            onClick={() => setActiveTab('games')}
-          >
-            <Gamepad2 size={16} />
-            الألعاب
-          </button>
-          {isManager && (
-            <button 
-              className={`tab-btn ${activeTab === 'payment' ? 'active' : ''}`}
-              onClick={() => setActiveTab('payment')}
-            >
-              <DollarSign size={16} />
-              معلومات الدفع
-            </button>
-          )}
-        </div>
-        
         <div className="modal-body">
-          {activeTab === 'info' && (
-            <div className="details-section">
-              <div className="details-grid">
+          <div className="details-section">
+            <div className="details-grid">
+              <div className="detail-item">
+                <span className="detail-label">العميل:</span>
+                <span className="detail-value">{rental.customer_name}</span>
+              </div>
+              {rental.customer_phone && (
                 <div className="detail-item">
-                  <span className="detail-label">رقم التأجير:</span>
-                  <span className="detail-value highlight">{rental.rental_number}</span>
+                  <span className="detail-label">الهاتف:</span>
+                  <span className="detail-value">{rental.customer_phone}</span>
                 </div>
-                <div className="detail-item">
-                  <span className="detail-label">العميل:</span>
-                  <span className="detail-value">{rental.customer_name}</span>
-                </div>
-                {rental.customer_phone && rental.customer_phone !== '00000000000' && (
-                  <div className="detail-item">
-                    <span className="detail-label">الهاتف:</span>
-                    <span className="detail-value">{rental.customer_phone}</span>
-                  </div>
-                )}
-                <div className="detail-item">
-                  <span className="detail-label">النوع:</span>
-                  <span className={`rental-type-badge ${rental.rental_type}`}>
-                    {RENTAL_TYPES.find(t => t.value === rental.rental_type)?.label}
-                  </span>
-                </div>
-                <div className="detail-item">
-                  <span className="detail-label">وقت البدء:</span>
-                  <span className="detail-value">{formatDateTime(rental.start_time)}</span>
-                </div>
-                {rental.end_time && (
-                  <div className="detail-item">
-                    <span className="detail-label">وقت الانتهاء:</span>
-                    <span className="detail-value">{formatDateTime(rental.end_time)}</span>
-                  </div>
-                )}
-                <div className="detail-item">
-                  <span className="detail-label">بواسطة:</span>
-                  <span className="detail-value">{rental.employee_name || rental.user_name}</span>
-                </div>
+              )}
+              <div className="detail-item">
+                <span className="detail-label">النوع:</span>
+                <span className={`rental-type-badge ${rental.rental_type}`}>
+                  {RENTAL_TYPES.find(t => t.value === rental.rental_type)?.label}
+                </span>
+              </div>
+              <div className="detail-item">
+                <span className="detail-label">وقت البدء:</span>
+                <span className="detail-value">{formatDateTime(rental.start_time)}</span>
               </div>
             </div>
-          )}
+          </div>
 
-          {activeTab === 'games' && (
-            <div className="details-section">
-              <h4>الألعاب ({rentalItems.length})</h4>
-              <div className="items-grid">
-                {rentalItems.map(item => (
-                  <div key={item.id} className="item-card">
-                    <div className="item-card-header">
-                      <Gamepad2 size={16} />
-                      <span className="item-name">{item.game_name}</span>
-                    </div>
-                    <div className="item-card-details">
+          <div className="details-section">
+            <h4>الألعاب ({rentalItems.length})</h4>
+            <div className="items-grid">
+              {rentalItems.map(item => (
+                <div key={item.id} className="item-card">
+                  <div className="item-card-header">
+                    <Gamepad2 size={16} />
+                    <span className="item-name">{item.game_name}</span>
+                  </div>
+                  <div className="item-card-details">
+                    {item.child_name && (
                       <div className="item-detail">
                         <User size={12} />
-                        <span>الطفل: {item.child_name || 'غير محدد'}</span>
+                        <span>{item.child_name}</span>
                       </div>
+                    )}
+                    {item.rental_type === 'fixed' && (
                       <div className="item-detail">
                         <Clock size={12} />
-                        <span>المدة: {item.duration_minutes || 0} دقيقة</span>
+                        <span>{item.duration_minutes} دقيقة</span>
                       </div>
+                    )}
+                    {item.quantity > 1 && (
                       <div className="item-detail">
                         <Package size={12} />
-                        <span>الكمية: {item.quantity || 1}</span>
+                        <span>x{item.quantity}</span>
                       </div>
-                    </div>
+                    )}
                   </div>
-                ))}
-              </div>
+                </div>
+              ))}
             </div>
-          )}
-
-          {activeTab === 'payment' && isManager && (
-            <div className="details-section">
-              <h4>معلومات الدفع</h4>
-              <div className="details-grid">
-                <div className="detail-item">
-                  <span className="detail-label">المبلغ الإجمالي:</span>
-                  <span className="detail-value highlight">{formatCurrency(rental.total_amount || 0)}</span>
-                </div>
-                {rental.final_amount && (
-                  <div className="detail-item">
-                    <span className="detail-label">المبلغ النهائي:</span>
-                    <span className="detail-value">{formatCurrency(rental.final_amount)}</span>
-                  </div>
-                )}
-                <div className="detail-item">
-                  <span className="detail-label">طريقة الدفع:</span>
-                  <span className="detail-value">{rental.payment_method || 'نقدي'}</span>
-                </div>
-                <div className="detail-item">
-                  <span className="detail-label">حالة الدفع:</span>
-                  <span className={`payment-status-badge ${rental.payment_status}`}>
-                    {rental.payment_status === 'paid' ? 'مدفوع' : 'معلق'}
-                  </span>
-                </div>
-                {rental.is_refunded && (
-                  <div className="detail-item">
-                    <span className="detail-label">حالة الاسترداد:</span>
-                    <span className="refunded-badge">مسترد</span>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
+          </div>
         </div>
 
         <div className="modal-footer">
           <button onClick={onClose} className="btn btn-secondary">
             إغلاق
-          </button>
-          <button className="btn btn-outline">
-            <Printer size={16} />
-            طباعة
           </button>
         </div>
       </div>
@@ -2428,18 +1366,9 @@ const RentalDetailsModal = ({
 };
 
 // ==================== مكون إنهاء تأجير مفتوح ====================
-const CompleteOpenRentalModal = ({
-  show,
-  onClose,
-  rental,
-  items,
-  onConfirm,
-  userRole
-}) => {
+const CompleteOpenRentalModal = ({ show, onClose, rental, items, onConfirm }) => {
   const [paymentMethod, setPaymentMethod] = useState('cash');
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  const isManager = userRole === 'admin' || userRole === 'manager' || userRole === 'مدير';
 
   const rentalItems = useMemo(() => {
     return items.filter(item => item.rental_id === rental?.id);
@@ -2447,7 +1376,7 @@ const CompleteOpenRentalModal = ({
 
   const calculateDuration = useCallback(() => {
     if (!rental?.start_time) return 0;
-    return Math.max(15, calculateDuration(rental.start_time, new Date()));
+    return Math.max(15, Math.floor((new Date() - new Date(rental.start_time)) / (1000 * 60)));
   }, [rental]);
 
   const calculateTotal = useCallback(() => {
@@ -2499,11 +1428,7 @@ const CompleteOpenRentalModal = ({
               <span className="summary-value">{rental.customer_name}</span>
             </div>
             <div className="summary-row">
-              <span>وقت البدء:</span>
-              <span>{formatDateTime(rental.start_time)}</span>
-            </div>
-            <div className="summary-row highlight">
-              <span>المدة المنقضية:</span>
+              <span>المدة:</span>
               <span>{duration} دقيقة</span>
             </div>
           </div>
@@ -2513,9 +1438,7 @@ const CompleteOpenRentalModal = ({
             {rentalItems.map(item => (
               <div key={item.id} className="summary-row">
                 <span>
-                  <Gamepad2 size={14} />
-                  {item.game_name} 
-                  {item.child_name && ` (${item.child_name})`} 
+                  {item.game_name} {item.child_name && `(${item.child_name})`}
                   {item.quantity > 1 && ` x${item.quantity}`}
                 </span>
                 <span>{formatCurrency((item.price_per_15min || 50) * Math.ceil(duration / 15) * (item.quantity || 1))}</span>
@@ -2578,6 +1501,143 @@ const CompleteOpenRentalModal = ({
   );
 };
 
+// ==================== مكون إلغاء واسترداد ====================
+const CancelRentalModal = ({ show, onClose, rental, items, onConfirm }) => {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [reason, setReason] = useState('');
+
+  const rentalItems = useMemo(() => {
+    return items.filter(item => item.rental_id === rental?.id);
+  }, [rental, items]);
+
+  const calculateRefund = useCallback(() => {
+    if (!rental?.start_time) return 0;
+    
+    const elapsedMinutes = Math.floor((new Date() - new Date(rental.start_time)) / (1000 * 60));
+    
+    if (elapsedMinutes < 3) {
+      return rental.total_amount || 0;
+    }
+    
+    const fifteenMinPrice = rentalItems.reduce((total, item) => {
+      return total + ((item.price_per_15min || 50) * (item.quantity || 1));
+    }, 0);
+    
+    return Math.max(0, (rental.total_amount || 0) - fifteenMinPrice);
+  }, [rental, rentalItems]);
+
+  const refundAmount = calculateRefund();
+  const elapsedMinutes = rental?.start_time ? Math.floor((new Date() - new Date(rental.start_time)) / (1000 * 60)) : 0;
+  const isWithin3Minutes = elapsedMinutes < 3;
+
+  const handleConfirm = async () => {
+    setIsSubmitting(true);
+    try {
+      await onConfirm(rental, {
+        refund_amount: refundAmount,
+        reason: reason || 'إلغاء التأجير'
+      });
+      onClose();
+    } catch (error) {
+      console.error('خطأ في إلغاء التأجير:', error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  if (!show || !rental) return null;
+
+  return (
+    <div className="modal-overlay">
+      <div className="modal">
+        <div className="modal-header">
+          <div className="header-icon warning">
+            <Undo2 size={24} />
+          </div>
+          <h3>إلغاء التأجير</h3>
+          <button onClick={onClose} className="modal-close" disabled={isSubmitting}>
+            <X size={24} />
+          </button>
+        </div>
+        
+        <div className="modal-body">
+          <div className="alert alert-info">
+            <Info size={16} />
+            <div className="alert-content">
+              <strong>العميل: {rental.customer_name}</strong>
+              <p>رقم التأجير: {rental.rental_number}</p>
+            </div>
+          </div>
+
+          <div className="refund-calculation">
+            <h4>تفاصيل الاسترداد</h4>
+            
+            <div className="calc-row">
+              <span>الوقت المنقضي:</span>
+              <span>{elapsedMinutes} دقيقة</span>
+            </div>
+            
+            <div className="calc-row">
+              <span>المبلغ المدفوع:</span>
+              <span>{formatCurrency(rental.total_amount || 0)}</span>
+            </div>
+            
+            {!isWithin3Minutes && (
+              <div className="calc-row">
+                <span>خصم 15 دقيقة:</span>
+                <span>- {formatCurrency((rental.total_amount || 0) - refundAmount)}</span>
+              </div>
+            )}
+            
+            <div className="calc-row total highlight">
+              <span>المبلغ المسترد:</span>
+              <span>{formatCurrency(refundAmount)}</span>
+            </div>
+          </div>
+
+          <div className="form-group">
+            <label>سبب الإلغاء (اختياري):</label>
+            <textarea
+              value={reason}
+              onChange={(e) => setReason(e.target.value)}
+              placeholder="أدخل سبب الإلغاء..."
+              rows="3"
+              className="form-control"
+            />
+          </div>
+        </div>
+
+        <div className="modal-footer">
+          <button
+            onClick={onClose}
+            className="btn btn-secondary"
+            disabled={isSubmitting}
+          >
+            إلغاء
+          </button>
+          <button
+            onClick={handleConfirm}
+            className="btn btn-warning"
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? (
+              <>
+                <Loader2 className="spinner" size={16} />
+                جاري الإلغاء...
+              </>
+            ) : (
+              <>
+                <Undo2 size={16} />
+                تأكيد الإلغاء
+              </>
+            )}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 // ==================== المكون الرئيسي ====================
 const Rentals = () => {
   const { user } = useAuth();
@@ -2585,7 +1645,6 @@ const Rentals = () => {
   const [loading, setLoading] = useState({
     games: false,
     rentals: false,
-    completed: false,
     shift: false,
     processing: false
   });
@@ -2594,7 +1653,6 @@ const Rentals = () => {
   const [currentShift, setCurrentShift] = useState(null);
   const [shiftStats, setShiftStats] = useState(null);
   const [activeRentals, setActiveRentals] = useState([]);
-  const [completedRentals, setCompletedRentals] = useState([]);
   const [rentalItems, setRentalItems] = useState([]);
   
   const [cartItems, setCartItems] = useState([]);
@@ -2606,27 +1664,23 @@ const Rentals = () => {
   const [showAddGameModal, setShowAddGameModal] = useState(false);
   const [showRentalDetailsModal, setShowRentalDetailsModal] = useState(false);
   const [showCompleteOpenModal, setShowCompleteOpenModal] = useState(false);
+  const [showCancelModal, setShowCancelModal] = useState(false);
   const [selectedRental, setSelectedRental] = useState(null);
   
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
 
   const userRole = user?.role || 'employee';
-  const isEmployee = userRole === 'employee' || userRole === 'موظف';
-  const isManager = userRole === 'admin' || userRole === 'manager' || userRole === 'مدير';
+  const isEmployee = userRole === 'employee';
+  const isManager = userRole === 'admin' || userRole === 'branch_manager';
 
-  // تحميل الألعاب مع الصور
+  // تحميل الألعاب
   const loadGames = useCallback(async () => {
     if (!user?.branch_id) return;
     
     setLoading(prev => ({ ...prev, games: true }));
     try {
-      const response = await api.get('/games', {
-        params: { 
-          branch_id: user.branch_id,
-          include_images: true 
-        }
-      });
+      const response = await api.getGames({ branch_id: user.branch_id });
       
       if (response.success) {
         setGames(response.data || []);
@@ -2643,109 +1697,59 @@ const Rentals = () => {
   const loadCurrentShift = useCallback(async () => {
     setLoading(prev => ({ ...prev, shift: true }));
     try {
-      const response = await api.get('/shifts/current');
+      const response = await api.getCurrentShift();
       
       if (response.success && response.data) {
-        const shift = response.data;
-        if (shift.employee_id === user?.id || isManager) {
-          setCurrentShift(shift);
-        } else {
-          setCurrentShift(null);
-        }
+        setCurrentShift(response.data);
+        setShiftStats(response.data);
       } else {
         setCurrentShift(null);
+        setShiftStats(null);
       }
     } catch (error) {
       console.error('خطأ في تحميل الشيفت:', error);
+      setCurrentShift(null);
     } finally {
       setLoading(prev => ({ ...prev, shift: false }));
     }
-  }, [user?.id, isManager]);
+  }, []);
 
-  // تحميل التأجيرات المكتملة (للمدير فقط)
-  const loadCompletedRentals = useCallback(async () => {
-    if (!currentShift?.id || !isManager) return;
-    
-    setLoading(prev => ({ ...prev, completed: true }));
-    try {
-      const response = await api.get('/rentals/completed', {
-        params: { shift_id: currentShift.id, limit: 100 }
-      });
-      
-      if (response?.success) {
-        setCompletedRentals(response.data || []);
-        console.log(`📊 تم تحميل ${response.data?.length || 0} تأجير مكتمل`);
-      }
-    } catch (error) {
-      console.error('خطأ في تحميل التأجيرات المكتملة:', error);
-    } finally {
-      setLoading(prev => ({ ...prev, completed: false }));
-    }
-  }, [currentShift?.id, isManager]);
-
-// تحميل التأجيرات النشطة
-const loadActiveRentals = useCallback(async () => {
-  if (!currentShift?.id) {
-    console.log('⏳ لا يوجد شيفت نشط، تخطي تحميل التأجيرات');
-    setActiveRentals([]);
-    setRentalItems([]);
-    return;
-  }
-  
-  setLoading(prev => ({ ...prev, rentals: true }));
-  
-  try {
-    const token = localStorage.getItem('token');
-    const cleanToken = token?.startsWith('Bearer ') ? token.substring(7) : token;
-    
-    console.log(`🔍 جلب التأجيرات النشطة للشيفت: ${currentShift.id}`);
-    
-const response = await fetch(
-  `${API_BASE_URL}/api/rentals/active?shift_id=${currentShift.id}`,
-  {
-    headers: {
-      Authorization: `Bearer ${cleanToken}`,
-      "Content-Type": "application/json",
-    },
-  }
-);
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    
-    const result = await response.json();
-    console.log('📥 استجابة التأجيرات:', result);
-    
-    if (result.success) {
-      const rentals = result.data || [];
-      console.log(`📊 تم العثور على ${rentals.length} تأجير نشط`);
-      
-      setActiveRentals(rentals);
-      
-      // جمع العناصر
-      const allItems = [];
-      rentals.forEach(rental => {
-        if (rental.items && rental.items.length > 0) {
-          allItems.push(...rental.items);
-        }
-      });
-      
-      setRentalItems(allItems);
-      console.log(`📦 إجمالي العناصر: ${allItems.length}`);
-    } else {
+  // تحميل التأجيرات النشطة
+  const loadActiveRentals = useCallback(async () => {
+    if (!currentShift?.id) {
       setActiveRentals([]);
       setRentalItems([]);
+      return;
     }
     
-  } catch (error) {
-    console.error('🔥 خطأ في تحميل التأجيرات:', error);
-    setActiveRentals([]);
-    setRentalItems([]);
-  } finally {
-    setLoading(prev => ({ ...prev, rentals: false }));
-  }
-}, [currentShift?.id]);
+    setLoading(prev => ({ ...prev, rentals: true }));
+    
+    try {
+      const response = await api.getActiveRentals(currentShift.id);
+      
+      if (response.success) {
+        const rentals = response.data || [];
+        setActiveRentals(rentals);
+        
+        const allItems = [];
+        rentals.forEach(rental => {
+          if (rental.items && rental.items.length > 0) {
+            allItems.push(...rental.items);
+          }
+        });
+        setRentalItems(allItems);
+      } else {
+        setActiveRentals([]);
+        setRentalItems([]);
+      }
+    } catch (error) {
+      console.error('خطأ في تحميل التأجيرات:', error);
+      setActiveRentals([]);
+      setRentalItems([]);
+    } finally {
+      setLoading(prev => ({ ...prev, rentals: false }));
+    }
+  }, [currentShift?.id]);
 
   // تحديث جميع البيانات
   const refreshAllData = useCallback(async () => {
@@ -2762,9 +1766,7 @@ const response = await fetch(
 
     setLoading(prev => ({ ...prev, processing: true }));
     try {
-      const response = await api.post('/shifts/start', {
-        opening_cash: 0
-      });
+      const response = await api.startShift(0);
 
       if (response.success) {
         setCurrentShift(response.data);
@@ -2787,7 +1789,7 @@ const response = await fetch(
 
     setLoading(prev => ({ ...prev, processing: true }));
     try {
-      const response = await api.put(`/shifts/${currentShift.id}/end`, {
+      const response = await api.endShift(currentShift.id, {
         closing_cash: closingCash || 0,
         notes
       });
@@ -2795,7 +1797,6 @@ const response = await fetch(
       if (response.success) {
         setCurrentShift(null);
         setActiveRentals([]);
-        setCompletedRentals([]);
         setRentalItems([]);
         setSuccess('✅ تم إنهاء الشيفت بنجاح');
       } else {
@@ -2833,6 +1834,7 @@ const response = await fetch(
     setShowAddGameModal(false);
   }, [currentShift, isEmployee]);
 
+  // تحديث عنصر في السلة
   const handleUpdateCartItem = useCallback((itemId, updates) => {
     setCartItems(prev =>
       prev.map(item =>
@@ -2841,90 +1843,65 @@ const response = await fetch(
     );
   }, []);
 
+  // حذف عنصر من السلة
   const handleRemoveCartItem = useCallback((itemId) => {
     setCartItems(prev => prev.filter(item => item.id !== itemId));
   }, []);
 
+  // تفريغ السلة
   const handleClearCart = useCallback(() => {
     setCartItems([]);
     setCustomerInfo({ name: '', phone: '' });
   }, []);
 
-// إنشاء تأجير جديد
-const handleCreateRental = useCallback(async (data) => {
-  if (!currentShift) {
-    setError('❌ لا يوجد شيفت نشط');
-    return;
-  }
-
-  if (cartItems.length === 0) {
-    setError('❌ السلة فارغة');
-    return;
-  }
-
-  if (!customerInfo.name?.trim()) {
-    setError('❌ اسم العميل مطلوب');
-    return;
-  }
-
-  setLoading(prev => ({ ...prev, processing: true }));
-  try {
-    const token = localStorage.getItem('token');
-    
-    const rentalData = {
-      customer_name: customerInfo.name.trim(),
-      customer_phone: customerInfo.phone || null,
-      items: cartItems.map(item => ({
-        game_id: item.game_id,
-        child_name: item.child_name || null,
-        duration_minutes: item.rental_type === 'fixed' ? item.duration_minutes : null,
-        quantity: item.quantity,
-        rental_type: item.rental_type
-      }))
-    };
-
-    console.log('📦 إرسال بيانات التأجير:', rentalData);
-
- const response = await fetch(
-  `${API_BASE_URL}/api/rentals`,
-  {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`
-    },
-    body: JSON.stringify(rentalData)
-  }
-);
-
-    const responseText = await response.text();
-    console.log('📥 استجابة خام:', responseText);
-
-    let result;
-    try {
-      result = JSON.parse(responseText);
-    } catch (e) {
-      console.error('❌ الرد مش JSON:', responseText);
-      setError('الخادم أرجع رد غير متوقع');
+  // إنشاء تأجير جديد
+  const handleCreateRental = useCallback(async (data) => {
+    if (!currentShift) {
+      setError('❌ لا يوجد شيفت نشط');
       return;
     }
 
-    console.log('📥 نتيجة:', result);
-
-    if (result.success) {
-      setSuccess(`✅ تم إنشاء التأجير للعميل ${customerInfo.name} بنجاح`);
-      handleClearCart();
-      await loadActiveRentals();
-    } else {
-      setError(`❌ ${result.message}`);
+    if (cartItems.length === 0) {
+      setError('❌ السلة فارغة');
+      return;
     }
-  } catch (error) {
-    console.error('❌ خطأ في الاتصال:', error);
-    setError('فشل الاتصال بالخادم: ' + error.message);
-  } finally {
-    setLoading(prev => ({ ...prev, processing: false }));
-  }
-}, [currentShift, cartItems, customerInfo, handleClearCart, loadActiveRentals]);
+
+    if (!customerInfo.name?.trim()) {
+      setError('❌ اسم العميل مطلوب');
+      return;
+    }
+
+    setLoading(prev => ({ ...prev, processing: true }));
+    
+    try {
+      const rentalData = {
+        customer_name: customerInfo.name.trim(),
+        customer_phone: customerInfo.phone || null,
+        items: cartItems.map(item => ({
+          game_id: item.game_id,
+          child_name: item.child_name || null,
+          duration_minutes: item.rental_type === 'fixed' ? item.duration_minutes : null,
+          quantity: item.quantity,
+          rental_type: item.rental_type
+        }))
+      };
+
+      const response = await api.createRental(rentalData);
+
+      if (response.success) {
+        setSuccess(`✅ تم إنشاء التأجير للعميل ${customerInfo.name} بنجاح`);
+        handleClearCart();
+        await loadActiveRentals();
+      } else {
+        setError(`❌ ${response.message}`);
+      }
+    } catch (error) {
+      console.error('خطأ في إنشاء التأجير:', error);
+      setError('فشل إنشاء التأجير: ' + (error.message || 'خطأ غير معروف'));
+    } finally {
+      setLoading(prev => ({ ...prev, processing: false }));
+    }
+  }, [currentShift, cartItems, customerInfo, handleClearCart, loadActiveRentals]);
 
   // إنهاء تأجير مفتوح
   const handleCompleteOpenRental = useCallback(async (rental, data) => {
@@ -2932,7 +1909,7 @@ const handleCreateRental = useCallback(async (data) => {
 
     setLoading(prev => ({ ...prev, processing: true }));
     try {
-      const response = await api.post(`/rentals/${rental.id}/complete-open`, {
+      const response = await api.completeOpenTime(rental.id, {
         payment_method: data.payment_method,
         actual_minutes: data.actual_minutes,
         final_amount: data.final_amount
@@ -2941,7 +1918,6 @@ const handleCreateRental = useCallback(async (data) => {
       if (response.success) {
         setSuccess(`✅ تم إنهاء التأجير ${rental.rental_number} بنجاح`);
         await loadActiveRentals();
-        await loadCompletedRentals();
       } else {
         setError(`❌ فشل إنهاء التأجير: ${response.message}`);
       }
@@ -2951,9 +1927,9 @@ const handleCreateRental = useCallback(async (data) => {
     } finally {
       setLoading(prev => ({ ...prev, processing: false }));
     }
-  }, [loadActiveRentals, loadCompletedRentals]);
+  }, [loadActiveRentals]);
 
-  // إلغاء تأجير (مع استرداد)
+  // إلغاء تأجير
   const handleCancelRental = useCallback(async (rental, data) => {
     if (!isManager) {
       setError('❌ ليس لديك صلاحية إلغاء التأجيرات');
@@ -2962,16 +1938,11 @@ const handleCreateRental = useCallback(async (data) => {
 
     setLoading(prev => ({ ...prev, processing: true }));
     try {
-      const response = await api.post(`/rentals/${rental.id}/cancel`, {
-        reason: data.reason,
-        refund_amount: data.refund_amount,
-        is_refunded: true
-      });
+      const response = await api.cancelRental(rental.id, data.reason);
 
       if (response.success) {
         setSuccess(`✅ تم إلغاء التأجير ${rental.rental_number} واسترداد ${formatCurrency(data.refund_amount)}`);
         await loadActiveRentals();
-        await loadCompletedRentals();
       } else {
         setError(`❌ فشل إلغاء التأجير: ${response.message}`);
       }
@@ -2981,42 +1952,7 @@ const handleCreateRental = useCallback(async (data) => {
     } finally {
       setLoading(prev => ({ ...prev, processing: false }));
     }
-  }, [isManager, loadActiveRentals, loadCompletedRentals]);
-
-  // تغيير اللعبة
-  const handleChangeGame = useCallback(async (rental, oldGameId, newGameId, diff) => {
-    if (!isManager) {
-      setError('❌ ليس لديك صلاحية تغيير الألعاب');
-      return;
-    }
-
-    setLoading(prev => ({ ...prev, processing: true }));
-    try {
-      const response = await api.post(`/rentals/${rental.id}/change-game`, {
-        old_game_id: oldGameId,
-        new_game_id: newGameId,
-        difference: diff.difference,
-        refund: diff.refund
-      });
-
-      if (response.success) {
-        const diffText = diff.refund 
-          ? `استرداد ${formatCurrency(Math.abs(diff.difference))}`
-          : `إضافة ${formatCurrency(diff.difference)}`;
-        
-        setSuccess(`✅ تم تغيير اللعبة بنجاح (${diffText})`);
-        await loadActiveRentals();
-        await loadCompletedRentals();
-      } else {
-        setError(`❌ فشل تغيير اللعبة: ${response.message}`);
-      }
-    } catch (error) {
-      console.error('خطأ في تغيير اللعبة:', error);
-      setError('حدث خطأ في تغيير اللعبة');
-    } finally {
-      setLoading(prev => ({ ...prev, processing: false }));
-    }
-  }, [isManager, loadActiveRentals, loadCompletedRentals]);
+  }, [isManager, loadActiveRentals]);
 
   // Effects
   useEffect(() => {
@@ -3026,9 +1962,8 @@ const handleCreateRental = useCallback(async (data) => {
   useEffect(() => {
     if (currentShift?.id) {
       loadActiveRentals();
-      loadCompletedRentals();
     }
-  }, [currentShift?.id, loadActiveRentals, loadCompletedRentals]);
+  }, [currentShift?.id, loadActiveRentals]);
 
   useEffect(() => {
     if (!currentShift?.id) return;
@@ -3060,7 +1995,7 @@ const handleCreateRental = useCallback(async (data) => {
         loading={loading.processing}
         userRole={userRole}
         activeRentals={activeRentals}
-        completedRentals={completedRentals}
+        completedRentals={[]}
       />
 
       <div className="rentals-content">
@@ -3080,11 +2015,15 @@ const handleCreateRental = useCallback(async (data) => {
             games={games}
             loading={loading}
             onComplete={(rental) => {
-              setSelectedRental(rental);
-              setShowCompleteOpenModal(true);
+              if (rental.rental_type === 'open') {
+                setSelectedRental(rental);
+                setShowCompleteOpenModal(true);
+              }
             }}
-            onCancel={handleCancelRental}
-            onChangeGame={handleChangeGame}
+            onCancel={(rental) => {
+              setSelectedRental(rental);
+              setShowCancelModal(true);
+            }}
             onViewDetails={(rental) => {
               setSelectedRental(rental);
               setShowRentalDetailsModal(true);
@@ -3092,17 +2031,6 @@ const handleCreateRental = useCallback(async (data) => {
             currentShift={currentShift}
             userRole={userRole}
           />
-
-          {/* جدول التأجيرات المكتملة - يظهر للمدير فقط */}
-          {isManager && (
-            <CompletedRentals
-              rentals={completedRentals}
-              items={rentalItems}
-              loading={loading}
-              currentShift={currentShift}
-              userRole={userRole}
-            />
-          )}
         </div>
 
         <div className="cart-panel">
@@ -3140,7 +2068,6 @@ const handleCreateRental = useCallback(async (data) => {
         }}
         rental={selectedRental}
         items={rentalItems}
-        userRole={userRole}
       />
 
       <CompleteOpenRentalModal
@@ -3152,7 +2079,17 @@ const handleCreateRental = useCallback(async (data) => {
         rental={selectedRental}
         items={rentalItems}
         onConfirm={handleCompleteOpenRental}
-        userRole={userRole}
+      />
+
+      <CancelRentalModal
+        show={showCancelModal}
+        onClose={() => {
+          setShowCancelModal(false);
+          setSelectedRental(null);
+        }}
+        rental={selectedRental}
+        items={rentalItems}
+        onConfirm={handleCancelRental}
       />
 
       {error && (
