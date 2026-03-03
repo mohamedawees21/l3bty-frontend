@@ -1,13 +1,39 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import api from '../services/api';
-
+import { useAuth } from '../context/AuthContext'; // 👈 استيراد useAuth
+import './Login.css';
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  
   const navigate = useNavigate();
+  const { login, user, isAuthenticated } = useAuth(); // 👈 استخدام AuthContext
+
+  // إذا كان المستخدم مسجل دخوله بالفعل، وجهه فوراً
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      console.log('🔄 مستخدم مسجل بالفعل، توجيه تلقائي:', user);
+      redirectBasedOnRole(user);
+    }
+  }, [isAuthenticated, user]);
+
+  const redirectBasedOnRole = (userData) => {
+    const role = userData?.role;
+    
+    console.log('🎯 توجيه المستخدم حسب دوره:', role);
+    
+    if (role === 'admin' || role === 'مدير') {
+      navigate('/admin/dashboard', { replace: true });
+    } else if (role === 'branch_manager' || role === 'manager' || role === 'مشرف') {
+      navigate('/employee/rentals', { replace: true });
+    } else if (role === 'employee' || role === 'موظف') {
+      navigate('/employee/rentals', { replace: true });
+    } else {
+      navigate('/dashboard', { replace: true });
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -17,27 +43,22 @@ const Login = () => {
     try {
       console.log('🔐 محاولة تسجيل الدخول...');
       
-      // استخدام api.login مباشرة
-      const result = await api.login(email, password);
+      // 👈 استخدم login من AuthContext
+      const result = await login(email, password);
       
-      if (result.success && result.data?.success) {
-        console.log('✅ تم تسجيل الدخول بنجاح');
+      if (result.success) {
+        console.log('✅ تم تسجيل الدخول بنجاح', result.data);
         
-        // التحقق من وجود المستخدم
-        const user = api.getCurrentUser();
-        console.log('👤 المستخدم:', user);
-        
-        // التوجيه بناءً على الدور
-        if (user?.role === 'admin') {
-          navigate('/admin/dashboard');
-        } else if (user?.role === 'branch_manager') {
-          navigate('/manager/dashboard');
-        } else {
-          navigate('/dashboard');
-        }
+        // لا تقم بالتوجيه هنا - useEffect سيتولى ذلك بعد تحديث الـ Context
+        // لكن نضيف تأخير بسيط للتأكد
+        setTimeout(() => {
+          if (result.data) {
+            redirectBasedOnRole(result.data);
+          }
+        }, 100);
       } else {
-        console.error('❌ فشل تسجيل الدخول:', result.message);
-        setError(result.message || 'فشل تسجيل الدخول');
+        console.error('❌ فشل تسجيل الدخول:', result.error);
+        setError(result.error || 'فشل تسجيل الدخول');
       }
     } catch (err) {
       console.error('🔥 خطأ غير متوقع:', err);
@@ -47,148 +68,126 @@ const Login = () => {
     }
   };
 
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-500 to-purple-600 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8 bg-white p-10 rounded-xl shadow-2xl">
-        <div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            L3BTY
-          </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
-            نظام إدارة الألعاب
-          </p>
+  // مستخدمين تجريبيين
+  const fillTestCredentials = (role) => {
+    if (role === 'admin') {
+      setEmail('admin@l3bty.com');
+      setPassword('admin123');
+    } else if (role === 'manager') {
+      setEmail('manager@l3bty.com');
+      setPassword('123456');
+    } else if (role === 'employee') {
+      setEmail('employee@l3bty.com');
+      setPassword('123456');
+    }
+  };
+
+ return (
+    <div className="login-page">
+      <div className="glow-effect"></div>
+      <div className="login-card">
+        <div className="login-logo">
+          <img src="/images/l3bty.png" alt="L3BTY" />
+          <h1>L3BTY</h1>
+          <p>نظام إدارة الألعاب</p>
         </div>
-        
+
         {error && (
-          <div className="bg-red-50 border-r-4 border-red-500 p-4 rounded">
-            <div className="flex">
-              <div className="flex-shrink-0">
-                <svg className="h-5 w-5 text-red-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                </svg>
-              </div>
-              <div className="mr-3">
-                <p className="text-sm text-red-700">{error}</p>
-              </div>
-            </div>
+          <div className="error-message">
+            <svg viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+            </svg>
+            {error}
           </div>
         )}
-        
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          <div className="space-y-4">
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-                البريد الإلكتروني
-              </label>
+
+        <form className="login-form" onSubmit={handleSubmit}>
+          <div className="form-group">
+            <label>البريد الإلكتروني</label>
+            <div className="input-wrapper">
+              <span className="input-icon">📧</span>
               <input
-                id="email"
-                name="email"
                 type="email"
-                required
-                className="appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-                placeholder="admin@l3bty.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                dir="ltr"
+                placeholder="admin@l3bty.com"
+                disabled={loading}
+                required
               />
             </div>
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
-                كلمة المرور
-              </label>
+          </div>
+
+          <div className="form-group">
+            <label>كلمة المرور</label>
+            <div className="input-wrapper">
+              <span className="input-icon">🔒</span>
               <input
-                id="password"
-                name="password"
                 type="password"
-                required
-                className="appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-                placeholder="••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                dir="ltr"
+                placeholder="••••••"
+                disabled={loading}
+                required
               />
             </div>
           </div>
 
-          <div className="flex items-center justify-between">
-            <div className="flex items-center">
-              <input
-                id="remember-me"
-                name="remember-me"
-                type="checkbox"
-                className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
-              />
-              <label htmlFor="remember-me" className="mr-2 block text-sm text-gray-900">
-                تذكرني
-              </label>
-            </div>
-
-            <div className="text-sm">
-              <a href="#" className="font-medium text-indigo-600 hover:text-indigo-500">
-                نسيت كلمة المرور؟
-              </a>
-            </div>
+          <div className="form-options">
+            <label className="remember-me">
+              <input type="checkbox" />
+              <span>تذكرني</span>
+            </label>
+            <a href="#" className="forgot-password">نسيت كلمة المرور؟</a>
           </div>
 
-          <div>
+          <button 
+            type="submit" 
+            className="login-button"
+            disabled={loading}
+          >
+            {loading ? (
+              <>
+                <svg className="spinner" width="20" height="20" viewBox="0 0 24 24">
+                  <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" strokeDasharray="32" strokeDashoffset="32">
+                    <animate attributeName="stroke-dashoffset" dur="1.5s" values="32;0" repeatCount="indefinite" />
+                  </circle>
+                </svg>
+                جاري تسجيل الدخول...
+              </>
+            ) : 'تسجيل الدخول'}
+          </button>
+        </form>
+
+        <div className="test-users">
+          <p>مستخدمين تجريبيين</p>
+          <div className="test-buttons">
             <button
-              type="submit"
-              disabled={loading}
-              className={`group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-lg text-white ${
-                loading ? 'bg-indigo-400 cursor-not-allowed' : 'bg-indigo-600 hover:bg-indigo-700'
-              } focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors duration-200`}
+              type="button"
+              onClick={() => fillTestCredentials('admin')}
+              className="test-button admin"
             >
-              {loading ? (
-                <>
-                  <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                  جاري تسجيل الدخول...
-                </>
-              ) : 'تسجيل الدخول'}
+              👑 مدير
+            </button>
+            <button
+              type="button"
+              onClick={() => fillTestCredentials('manager')}
+              className="test-button manager"
+            >
+              👔 مدير فرع
+            </button>
+            <button
+              type="button"
+              onClick={() => fillTestCredentials('employee')}
+              className="test-button employee"
+            >
+              👤 موظف
             </button>
           </div>
-        </form>
-        
-        {/* مستخدمين تجريبيين للتطوير */}
-        {process.env.NODE_ENV === 'development' && (
-          <div className="mt-6 pt-6 border-t border-gray-200">
-            <p className="text-xs text-center text-gray-500 mb-3">مستخدمين تجريبيين:</p>
-            <div className="grid grid-cols-3 gap-2 text-xs">
-              <button
-                type="button"
-                onClick={() => {
-                  setEmail('admin@l3bty.com');
-                  setPassword('123456');
-                }}
-                className="p-2 bg-gray-100 rounded hover:bg-gray-200"
-              >
-                مدير
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setEmail('manager@l3bty.com');
-                  setPassword('123456');
-                }}
-                className="p-2 bg-gray-100 rounded hover:bg-gray-200"
-              >
-                مدير فرع
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setEmail('employee@l3bty.com');
-                  setPassword('123456');
-                }}
-                className="p-2 bg-gray-100 rounded hover:bg-gray-200"
-              >
-                موظف
-              </button>
-            </div>
-          </div>
-        )}
+        </div>
+
+        <div className="login-footer">
+          © 2024 L3BTY - جميع الحقوق محفوظة
+        </div>
       </div>
     </div>
   );
