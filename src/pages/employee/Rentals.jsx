@@ -105,31 +105,28 @@ const GameImage = ({ src, alt, className, size = 'medium' }) => {
   const [imageError, setImageError] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
   
-const getLocalImage = (gameName) => {
-  // استخدام المسار الصحيح للصور عبر API
-  const baseUrl = process.env.REACT_APP_API_URL || 'http://localhost:3001';
-  
-  const imageMap = {
-    'Car': `${baseUrl}/images/Car.jpg`,
-    'Driftcar': `${baseUrl}/images/Driftcar.jpg`,
-    'harley': `${baseUrl}/images/harley.jpg`,
-    'Hoverboard': `${baseUrl}/images/Hoverboard.jpg`,
-    'I3bty': `${baseUrl}/images/I3bty.png`,
-    'Motor': `${baseUrl}/images/Motor.jpg`,
-    'motorcycle': `${baseUrl}/images/motorcycle.jpg`,
-    'Ninebot': `${baseUrl}/images/Ninebot.jpg`,
-    'pingpong': `${baseUrl}/images/pingpong.jpg`,
-    'playstation': `${baseUrl}/images/playstation.jpg`,
-    'Scooter': `${baseUrl}/images/Scooter.jpg`,
-    'Segway': `${baseUrl}/images/Segway.jpg`,
-    'Simulator': `${baseUrl}/images/Simulator.jpg`,
-    'Skate': `${baseUrl}/images/Skate.jpg`,
-    'Trampoline': `${baseUrl}/images/Trampoline.jpg`,
-    'VR': `${baseUrl}/images/VR.jpg`,
-    'waterslide': `${baseUrl}/images/waterslide.jpg`,
-    'wheel': `${baseUrl}/images/wheel.jpg`,
-    'default': `${baseUrl}/images/playstation.jpg`
-  };
+  const getLocalImage = (gameName) => {
+    const imageMap = {
+      'Car': '/images/Car.jpg',
+      'Driftcar': '/images/Driftcar.jpg',
+      'harley': '/images/harley.jpg',
+      'Hoverboard': '/images/Hoverboard.jpg',
+      'I3bty': '/images/I3bty.png',
+      'Motor': '/images/Motor.jpg',
+      'motorcycle': '/images/motorcycle.jpg',
+      'Ninebot': '/images/Ninebot.jpg',
+      'pingpong': '/images/pingpong.jpg',
+      'playstation': '/images/playstation.jpg',
+      'Scooter': '/images/Scooter.jpg',
+      'Segway': '/images/Segway.jpg',
+      'Simulator': '/images/Simulator.jpg',
+      'Skate': '/images/Skate.jpg',
+      'Trampoline': '/images/Trampoline.jpg',
+      'VR': '/images/VR.jpg',
+      'waterslide': '/images/waterslide.jpg',
+      'wheel': '/images/wheel.jpg',
+      'default': '/images/playstation.jpg'
+    };
 
     if (!gameName) return imageMap.default;
     
