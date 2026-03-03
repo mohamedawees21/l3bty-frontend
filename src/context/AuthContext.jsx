@@ -1,152 +1,120 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
-import authService from '../services/authService';
+import { supabase } from '../supabaseClient';
 
 const AuthContext = createContext({});
-
 export const useAuth = () => useContext(AuthContext);
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // تحميل بيانات المستخدم من localStorage عند البدء
-  useEffect(() => {
-    console.log('🔍 AuthContext: تحميل بيانات المستخدم...');
-    
-    const loadUser = () => {
-      try {
-        const token = authService.getToken();
-        const userData = authService.getCurrentUser();
-        
-        console.log(`📊 حالة المصادقة: token=${token ? 'موجود' : 'غير موجود'}, user=${userData ? 'موجود' : 'غير موجود'}`);
-        
-        if (token && userData) {
-          setUser(userData);
-          setIsAuthenticated(true);
-          console.log(`✅ مستخدم مسجل دخول: ${userData.name} (${userData.role})`);
-        } else {
-          console.log('⚠️ لا يوجد مستخدم مسجل دخول');
-          setUser(null);
-          setIsAuthenticated(false);
-        }
-      } catch (error) {
-        console.error(`❌ خطأ في تحميل بيانات المستخدم: ${error.message}`);
-        setError(error.message);
-        setUser(null);
-        setIsAuthenticated(false);
-      } finally {
-        setLoading(false);
-      }
-    };
+  // 🔹 جلب بروفايل المستخدم (بدون كسر لو مش موجود)
+  const fetchProfile = async (userId) => {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', userId)
+      .maybeSingle(); // 🔥 مهم بدل single()
 
-    loadUser();
-  }, []);
+    if (error) {
+      console.log('Profile error:', error.message);
+      return null;
+    }
 
-  const login = async (email, password) => {
+    return data;
+  };
+  
+useEffect(() => {
+  let isMounted = true;
+
+  const initAuth = async () => {
     try {
-      setLoading(true);
-      setError(null);
-      
-      console.log(`🔐 محاولة تسجيل دخول: ${email}`);
-      
-      const response = await authService.login(email, password);
-      
-      if (response.success) {
-        const userData = response.data?.user || authService.getCurrentUser();
-        
-        setUser(userData);
-        setIsAuthenticated(true);
-        
-        console.log(`✅ تسجيل الدخول ناجح: ${userData?.name}`);
-        return { success: true, user: userData };
+      const { data } = await supabase.auth.getSession();
+
+      if (!isMounted) return;
+
+      if (data?.session?.user) {
+        const currentUser = data.session.user;
+        const userProfile = await fetchProfile(currentUser.id);
+
+        setUser(currentUser);
+        setProfile(userProfile);
       } else {
-        setError(response.message || 'فشل تسجيل الدخول');
-        return { success: false, message: response.message };
+        setUser(null);
+        setProfile(null);
       }
-    } catch (error) {
-      console.error(`🔥 خطأ في تسجيل الدخول: ${error.message}`);
-      setError(error.message || 'تعذر الاتصال بالخادم');
-      return { success: false, message: error.message };
+
+    } catch (err) {
+      console.error(err);
     } finally {
+      if (isMounted) setLoading(false); // 🔥 تأكد إنها هنا
+    }
+  };
+
+  initAuth();
+
+  const { data: { subscription } } =
+    supabase.auth.onAuthStateChange(() => {
+      // 🔥 مهم جدًا
       setLoading(false);
-    }
-  };
+    });
 
-  const logout = () => {
-    console.log('🚪 تسجيل الخروج...');
-    authService.logout();
-    setUser(null);
-    setIsAuthenticated(false);
+  return () => {
+    isMounted = false;
+    subscription.unsubscribe();
+  };
+}, []);
+  // 🔐 تسجيل الدخول
+  const login = async (email, password) => {
     setError(null);
+
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (error) {
+      setError(error.message);
+      return { success: false, error };
+    }
+
+    const userProfile = await fetchProfile(data.user.id);
+
+    setUser(data.user);
+    setProfile(userProfile);
+
+    return { success: true };
   };
 
-  const updateUser = (userData) => {
-    setUser(userData);
-    localStorage.setItem('user', JSON.stringify(userData));
-    console.log(`✏️ تم تحديث بيانات المستخدم: ${userData.name}`);
+  // 🚪 تسجيل الخروج
+  const logout = async () => {
+    await supabase.auth.signOut();
+    setUser(null);
+    setProfile(null);
   };
 
-  // دالة محسنة للتحقق من الصلاحيات
+  // 🎭 التحقق من الصلاحيات
   const checkPermission = (allowedRoles) => {
-    if (!user) {
-      console.log('🔐 لا يوجد مستخدم');
-      return false;
-    }
-    
-    // المدير له جميع الصلاحيات
-    if (user.role === 'admin' || user.role === 'مدير') {
-      console.log('✅ مستخدم مدير - لديه جميع الصلاحيات');
-      return true;
-    }
-    
-    // تحويل الأدوار العربية إلى إنجليزية للتوحيد
-    const roleMap = {
-      'مدير': 'admin',
-      'مشرف': 'manager',
-      'موظف': 'employee'
-    };
-    
-    const normalizedUserRole = roleMap[user.role] || user.role;
-    
-    // إذا كانت allowedRoles مصفوفة
-    if (Array.isArray(allowedRoles)) {
-      const normalizedAllowedRoles = allowedRoles.map(role => roleMap[role] || role);
-      return normalizedAllowedRoles.includes(normalizedUserRole);
-    }
-    
-    // إذا كانت نصاً
-    const normalizedRequiredRole = roleMap[allowedRoles] || allowedRoles;
-    return normalizedUserRole === normalizedRequiredRole;
-  };
+    if (!profile?.role) return false;
 
-  // دالة للحصول على الدور الموحد
-  const getNormalizedRole = () => {
-    if (!user) return null;
-    
-    const roleMap = {
-      'مدير': 'admin',
-      'مشرف': 'manager',
-      'موظف': 'employee',
-      'admin': 'admin',
-      'manager': 'manager',
-      'employee': 'employee'
-    };
-    
-    return roleMap[user.role] || user.role;
+    if (Array.isArray(allowedRoles)) {
+      return allowedRoles.includes(profile.role);
+    }
+
+    return profile.role === allowedRoles;
   };
 
   const value = {
     user,
-    isAuthenticated,
+    profile,
     loading,
     error,
     login,
     logout,
-    updateUser,
     checkPermission,
-    getNormalizedRole
+    isAuthenticated: !!user,
   };
 
   return (
@@ -155,5 +123,3 @@ export const AuthProvider = ({ children }) => {
     </AuthContext.Provider>
   );
 };
-
-export default AuthContext;

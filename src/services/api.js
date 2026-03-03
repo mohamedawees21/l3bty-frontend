@@ -1,19 +1,20 @@
 import axios from 'axios';
 
 // ==================== إعدادات البيئة ====================
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
-
+// استخدم الخادم المحلي في development و Vercel في production
+const API_URL = "https://l3btybackend-myz7yrsw5-l3btystore-projects.vercel.app";
 console.log('🌐 عنوان API:', API_URL);
 console.log('🔧 البيئة:', process.env.NODE_ENV);
 
 const api = axios.create({
-  baseURL: API_URL,  // ✅ استخدام المتغير
+  baseURL: API_URL,
   timeout: 30000,
   headers: {
     'Content-Type': 'application/json',
     'Accept': 'application/json',
     'Accept-Language': 'ar'
-  }
+  },
+  withCredentials: true
 });
 
 // ==================== Interceptors ====================
@@ -21,75 +22,44 @@ api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token');
     
-    let authToken = token;
-    if (token && token.startsWith('Bearer ')) {
-      authToken = token.substring(7);
+    if (token) {
+      config.headers.Authorization = token.startsWith('Bearer ') ? token : `Bearer ${token}`;
     }
     
-    if (authToken) {
-      config.headers.Authorization = `Bearer ${authToken}`;
-    }
+    // إزالة أي Origin header قد يسبب مشكلة
+    delete config.headers.Origin;
     
     if (process.env.NODE_ENV === 'development') {
-      console.log('🌐 API Request:', {
+      console.log('📤 Request:', {
         method: config.method?.toUpperCase(),
         url: config.url,
-        fullUrl: `${API_URL}${config.url}`, // ✅ استخدام المتغير
-        tokenExists: !!authToken
+        tokenExists: !!token
       });
     }
     
     return config;
   },
-  (error) => {
-    console.error('❌ Request Interceptor Error:', error);
-    return Promise.reject(error);
-  }
+  (error) => Promise.reject(error)
 );
-
 
 api.interceptors.response.use(
   (response) => {
-    if (process.env.NODE_ENV === 'development') {
-      console.log('✅ API Response:', {
-        url: response.config.url,
-        status: response.status,
-        success: response.data?.success
-      });
-    }
-    
-    if (response.data && typeof response.data === 'object') {
-      return response.data;
-    }
-    
-    return {
-      success: true,
-      status: response.status,
-      data: response.data,
-      message: 'تم تنفيذ العملية بنجاح'
-    };
+    return response.data;
   },
   (error) => {
-    console.error('❌ خطأ في API:', {
+    console.error('❌ API Error:', {
       url: error.config?.url,
       status: error.response?.status,
-      message: error.message,
-      data: error.response?.data
+      message: error.message
     });
     
-
+    // معالجة خطأ 401 (توكن منتهي)
     if (error.response?.status === 401) {
-      console.log('🔒 توكن منتهي الصلاحية');
       localStorage.removeItem('token');
       localStorage.removeItem('user');
-      
-      if (typeof window !== 'undefined' && !window.location.pathname.includes('/login')) {
+      if (!window.location.pathname.includes('/login')) {
         window.location.href = '/login';
       }
-    }
-    
-    if (error.response?.status === 500) {
-      console.log('⚠️ خطأ في الخادم (500) - يمكن معالجته محلياً');
     }
     
     return Promise.reject({
@@ -104,11 +74,7 @@ api.interceptors.response.use(
 // ==================== دوال إدارة التوكن ====================
 api.setToken = (token) => {
   if (token) {
-    let cleanToken = token;
-    if (token.startsWith('Bearer ')) {
-      cleanToken = token.substring(7);
-    }
-    
+    const cleanToken = token.startsWith('Bearer ') ? token.substring(7) : token;
     api.defaults.headers.common['Authorization'] = `Bearer ${cleanToken}`;
     localStorage.setItem('token', cleanToken);
   } else {
@@ -138,584 +104,7 @@ api.getCurrentUser = () => {
   }
 };
 
-// ==================== USERS ENDPOINTS ====================
-
-// جلب قائمة المستخدمين
-api.getUsers = async (params = {}) => {
-  try {
-    const response = await api.get('/users', { params });
-    return {
-      success: true,
-      data: response.data || [],
-      count: response.count || 0
-    };
-  } catch (error) {
-    console.error('❌ خطأ في جلب المستخدمين:', error);
-    return { success: false, data: [], message: error.message };
-  }
-};
-
-// جلب مستخدم محدد
-api.getUserById = async (id) => {
-  try {
-    const response = await api.get(`/users/${id}`);
-    return {
-      success: true,
-      data: response.data
-    };
-  } catch (error) {
-    console.error(`❌ خطأ في جلب مستخدم ${id}:`, error);
-    return { success: false, message: error.message };
-  }
-};
-
-// إنشاء مستخدم جديد (الفانكشن المطلوبة)
-api.createUser = async (userData) => {
-  try {
-    console.log('📝 إنشاء مستخدم جديد:', userData);
-    
-    const response = await api.post('/users', userData);
-    
-    console.log('✅ تم إنشاء المستخدم:', response);
-    
-    return {
-      success: true,
-      data: response.data,
-      message: response.message || 'تم إنشاء المستخدم بنجاح'
-    };
-  } catch (error) {
-    console.error('❌ خطأ في إنشاء المستخدم:', error);
-    return { 
-      success: false, 
-      message: error.message || 'فشل إنشاء المستخدم',
-      error: error 
-    };
-  }
-};
-
-// تحديث مستخدم
-api.updateUser = async (id, userData) => {
-  try {
-    const response = await api.put(`/users/${id}`, userData);
-    return {
-      success: true,
-      data: response.data,
-      message: response.message || 'تم تحديث المستخدم بنجاح'
-    };
-  } catch (error) {
-    console.error(`❌ خطأ في تحديث مستخدم ${id}:`, error);
-    return { success: false, message: error.message };
-  }
-};
-
-// حذف مستخدم
-api.deleteUser = async (id, permanent = false) => {
-  try {
-    const response = await api.delete(`/users/${id}?permanent=${permanent}`);
-    return {
-      success: true,
-      message: response.message || 'تم حذف المستخدم بنجاح'
-    };
-  } catch (error) {
-    console.error(`❌ خطأ في حذف مستخدم ${id}:`, error);
-    return { success: false, message: error.message };
-  }
-};
-
-// تغيير كلمة المرور
-api.changePassword = async (id, passwordData) => {
-  try {
-    const response = await api.put(`/users/${id}/change-password`, passwordData);
-    return {
-      success: true,
-      message: response.message || 'تم تغيير كلمة المرور بنجاح'
-    };
-  } catch (error) {
-    console.error(`❌ خطأ في تغيير كلمة المرور:`, error);
-    return { success: false, message: error.message };
-  }
-};
-
-// ==================== إنشاء تأجير جديد ====================
-api.createRental = async (rentalData) => {
-  try {
-    console.log('📦 إنشاء تأجير جديد:', rentalData);
-    
-    if (!rentalData.customer_name) {
-      throw new Error('اسم العميل مطلوب');
-    }
-    
-    if (!rentalData.items || !rentalData.items.length) {
-      throw new Error('يجب إضافة لعبة واحدة على الأقل');
-    }
-    
-    const payload = {
-      customer_name: rentalData.customer_name,
-      customer_phone: rentalData.customer_phone || '',
-      items: rentalData.items.map(item => ({
-        game_id: item.game_id,
-        child_name: item.child_name || '',
-        duration_minutes: item.duration_minutes || 15,
-        quantity: item.quantity || 1,
-        rental_type: item.rental_type || 'fixed'
-      })),
-      notes: rentalData.notes || ''
-    };
-    
-    console.log('📤 إرسال البيانات إلى:', `${API_URL}/rentals`); // ✅ استخدام المتغير
-    
-    // استخدام المتغير مباشرة في الطلب
-    const token = localStorage.getItem('token');
-    const response = await axios.post(
-      `${API_URL}/rentals`,  // ✅ استخدام المتغير
-      payload,
-      {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      }
-    );
-    
-    console.log('✅ استجابة الخادم:', response.data);
-    
-    if (response.data && response.data.success) {
-      return response.data;
-    } else {
-      throw new Error(response.data?.message || 'فشل إنشاء التأجير');
-    }
-    
-  } catch (error) {
-    console.error('❌ خطأ في إنشاء التأجير:', error);
-    
-    // تخزين محلي
-    try {
-      const localRentals = JSON.parse(localStorage.getItem('local_rentals') || '[]');
-      const localRental = {
-        id: `local-${Date.now()}`,
-        rental_number: `RNT-${Date.now().toString().slice(-8)}`,
-        customer_name: rentalData.customer_name,
-        items: rentalData.items,
-        created_at: new Date().toISOString(),
-        local: true,
-        synced: false
-      };
-      localRentals.push(localRental);
-      localStorage.setItem('local_rentals', JSON.stringify(localRentals.slice(-20)));
-      
-      return {
-        success: true,
-        data: localRental,
-        message: 'تم حفظ التأجير محلياً (سيتم مزامنته لاحقاً)',
-        local: true
-      };
-    } catch (e) {
-      console.error('❌ فشل التخزين المحلي:', e);
-    }
-    
-    return {
-      success: false,
-      message: error.response?.data?.message || error.message || 'فشل إنشاء التأجير'
-    };
-  }
-};
-
-// ==================== استراتيجيات متعددة للمسارات ====================
-api.createGameUnbreakable = async (gameData) => {
-  try {
-    console.log('🛡️ محاولة إنشاء لعبة بأي طريقة:', gameData);
-    
-    const token = localStorage.getItem('token');
-    const userStr = localStorage.getItem('user');
-    const user = userStr ? JSON.parse(userStr) : null;
-    
-    if (!token || !user) {
-      return {
-        success: false,
-        message: 'يجب تسجيل الدخول أولاً'
-      };
-    }
-    
-    const branchId = gameData.branch_id || user.branch_id || 1;
-    
-    const gamePayload = {
-      name: gameData.name,
-      description: gameData.description || `${gameData.name}`,
-      category: gameData.category || 'سيارات',
-      price_per_15min: parseFloat(gameData.price_per_15min) || 50,
-      branch_id: branchId,
-      status: gameData.status || 'available',
-      min_rental_time: gameData.min_rental_time || 15,
-      max_rental_time: gameData.max_rental_time || 120,
-      image_url: gameData.image_url || 'default-game.jpg',
-      is_active: true
-    };
-    
-    // استراتيجيات متعددة - كلها تستخدم API_URL
-    const strategies = [
-      {
-        name: 'المسار الرئيسي POST /games',
-        executor: async () => {
-          return await api.post('/games', gamePayload);
-        }
-      },
-      {
-        name: 'إضافة لعبة لفرع POST /branches/{branchId}/add-game',
-        executor: async () => {
-          return await api.post(`/branches/${branchId}/add-game`, gamePayload);
-        }
-      },
-      {
-        name: 'طريقة fetch مباشرة',
-        executor: async () => {
-          const response = await fetch(`${API_URL}/games`, {  // ✅ استخدام المتغير
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${token}`
-            },
-            body: JSON.stringify(gamePayload)
-          });
-          
-          if (!response.ok) {
-            throw new Error(`HTTP ${response.status}`);
-          }
-          
-          return await response.json();
-        }
-      }
-    ];
-    
-    // تنفيذ الاستراتيجيات
-    for (let i = 0; i < strategies.length; i++) {
-      try {
-        console.log(`🔄 المحاولة ${i + 1}: ${strategies[i].name}`);
-        const response = await strategies[i].executor();
-        
-        if (response && (response.status === 201 || response.status === 200 || response.success)) {
-          console.log(`✅ نجحت المحاولة ${i + 1}`);
-          return {
-            success: true,
-            data: response.data || response,
-            method: strategies[i].name
-          };
-        }
-      } catch (error) {
-        console.log(`❌ فشلت المحاولة ${i + 1}:`, error.message);
-      }
-    }
-    
-    // تخزين محلي
-    const localGame = {
-      id: 'local-' + Date.now(),
-      ...gamePayload,
-      local: true,
-      created_at: new Date().toISOString()
-    };
-    
-    try {
-      const localGames = JSON.parse(localStorage.getItem('local_games') || '[]');
-      localGames.push(localGame);
-      localStorage.setItem('local_games', JSON.stringify(localGames));
-    } catch (e) {
-      console.warn('⚠️ لا يمكن حفظ اللعبة محلياً');
-    }
-    
-    return {
-      success: true,
-      data: localGame,
-      message: 'تم حفظ اللعبة محلياً',
-      local: true
-    };
-    
-  } catch (error) {
-    console.error('🔥 خطأ شامل:', error);
-    return {
-      success: false,
-      message: error.message
-    };
-  }
-};
-
-
-api.getActiveRentalsUnbreakable = async (params = {}) => {
-  console.log('🔄 محاولة جلب التأجيرات النشطة:', params);
-  
-  const strategies = [
-    {
-      name: 'GET /rentals/active',
-      executor: async () => {
-        return await api.get('/rentals/active', { params });
-      }
-    },
-    {
-      name: 'GET /rentals/active-all',
-      executor: async () => {
-        return await api.get('/rentals/active-all', { params });
-      }
-    },
-    {
-      name: 'GET /rentals?status=active',
-      executor: async () => {
-        return await api.get('/rentals', { params: { ...params, status: 'active' } });
-      }
-    },
-    {
-      name: 'GET /rentals/list?active=true',
-      executor: async () => {
-        return await api.get('/rentals/list', { params: { ...params, active: true } });
-      }
-    }
-  ];
-  
-  for (const strategy of strategies) {
-    try {
-      const response = await strategy.executor();
-      
-      if (response.success) {
-        const rentals = response.data || [];
-        console.log(`✅ نجحت ${strategy.name}:`, rentals.length, 'تأجير');
-        
-        // دمج التأجيرات المحلية
-        const localRentals = JSON.parse(localStorage.getItem('local_rentals') || '[]');
-        const activeLocal = localRentals.filter(r => r.status === 'active');
-        
-        if (activeLocal.length > 0) {
-          console.log('📦 دمج تأجيرات محلية:', activeLocal.length);
-          return {
-            success: true,
-            data: [...rentals, ...activeLocal],
-            local_count: activeLocal.length,
-            method: strategy.name
-          };
-        }
-        
-        return {
-          success: true,
-          data: rentals,
-          method: strategy.name
-        };
-      }
-    } catch (error) {
-      if (error.status !== 404 && error.response?.status !== 404) {
-        console.log(`⚠️ خطأ في ${strategy.name}:`, error.message);
-      }
-    }
-  }
-  
-  // إذا فشلت جميع المحاولات، نرجع التأجيرات المحلية
-  const localRentals = JSON.parse(localStorage.getItem('local_rentals') || '[]');
-  const activeLocal = localRentals.filter(r => r.status === 'active');
-  
-  return {
-    success: true,
-    data: activeLocal,
-    local_only: true,
-    message: 'تم تحميل التأجيرات المحلية فقط'
-  };
-};
-
-/**
- * إنهاء تأجير مفتوح مع دعم تعدد المسارات
- */
-api.completeOpenRentalUnbreakable = async (rentalId, data = {}) => {
-  console.log(`🔄 محاولة إنهاء تأجير مفتوح ${rentalId}:`, data);
-  
-  const strategies = [
-    {
-      name: `POST /rentals/${rentalId}/complete-open`,
-      executor: async () => {
-        return await api.post(`/rentals/${rentalId}/complete-open`, {
-          payment_method: data.payment_method || 'كاش',
-          actual_minutes: data.actual_minutes,
-          final_amount: data.final_amount
-        });
-      }
-    },
-    {
-      name: `POST /rentals/complete/${rentalId}`,
-      executor: async () => {
-        return await api.post(`/rentals/complete/${rentalId}`, {
-          type: 'open',
-          ...data
-        });
-      }
-    },
-    {
-      name: `PUT /rentals/${rentalId}/complete`,
-      executor: async () => {
-        return await api.put(`/rentals/${rentalId}/complete`, {
-          rental_type: 'open',
-          ...data
-        });
-      }
-    },
-    {
-      name: `POST /rentals/${rentalId}/finish`,
-      executor: async () => {
-        return await api.post(`/rentals/${rentalId}/finish`, data);
-      }
-    }
-  ];
-  
-  for (const strategy of strategies) {
-    try {
-      const response = await strategy.executor();
-      
-      if (response && response.success) {
-        console.log(`✅ نجحت ${strategy.name}`);
-        
-        // تحديث التأجيرات المحلية
-        try {
-          const localRentals = JSON.parse(localStorage.getItem('local_rentals') || '[]');
-          const updatedRentals = localRentals.map(r => 
-            r.id === rentalId || r.id === `local-${rentalId}` 
-              ? { ...r, status: 'completed', synced: true } 
-              : r
-          );
-          localStorage.setItem('local_rentals', JSON.stringify(updatedRentals));
-        } catch (e) {
-          console.warn('⚠️ فشل تحديث التأجيرات المحلية:', e.message);
-        }
-        
-        return response;
-      }
-    } catch (error) {
-      if (error.status !== 404 && error.response?.status !== 404) {
-        console.log(`⚠️ خطأ في ${strategy.name}:`, error.message);
-      }
-    }
-  }
-  
-  // إذا فشلت جميع المحاولات، نعالج محلياً
-  console.warn('⚠️ فشلت جميع محاولات إنهاء التأجير، سيتم المعالجة محلياً');
-  
-  try {
-    const localRentals = JSON.parse(localStorage.getItem('local_rentals') || '[]');
-    const updatedRentals = localRentals.map(r => 
-      r.id === rentalId || r.id === `local-${rentalId}` 
-        ? { 
-            ...r, 
-            status: 'completed', 
-            end_time: new Date().toISOString(),
-            final_amount: data.final_amount || r.total_amount || 0,
-            local_completed: true 
-          } 
-        : r
-    );
-    localStorage.setItem('local_rentals', JSON.stringify(updatedRentals));
-  } catch (e) {
-    console.warn('⚠️ فشل التحديث المحلي:', e.message);
-  }
-  
-  return {
-    success: true,
-    data: {
-      id: rentalId,
-      final_amount: data.final_amount || 0,
-      actual_minutes: data.actual_minutes || 15,
-      completed_at: new Date().toISOString()
-    },
-    message: 'تم إنهاء التأجير محلياً',
-    local: true
-  };
-};
-
-/**
- * إلغاء تأجير مع دعم تعدد المسارات
- */
-api.cancelRentalUnbreakable = async (rentalId, reason = '') => {
-  console.log(`🔄 محاولة إلغاء تأجير ${rentalId}`);
-  
-  const strategies = [
-    {
-      name: `POST /rentals/${rentalId}/cancel`,
-      executor: async () => {
-        return await api.post(`/rentals/${rentalId}/cancel`, { reason });
-      }
-    },
-    {
-      name: `DELETE /rentals/${rentalId}`,
-      executor: async () => {
-        return await api.delete(`/rentals/${rentalId}`);
-      }
-    },
-    {
-      name: `PUT /rentals/${rentalId}/cancel`,
-      executor: async () => {
-        return await api.put(`/rentals/${rentalId}/cancel`, { reason });
-      }
-    },
-    {
-      name: `POST /rentals/cancel/${rentalId}`,
-      executor: async () => {
-        return await api.post(`/rentals/cancel/${rentalId}`, { reason });
-      }
-    }
-  ];
-  
-  for (const strategy of strategies) {
-    try {
-      const response = await strategy.executor();
-      
-      if (response && response.success) {
-        console.log(`✅ نجحت ${strategy.name}`);
-        
-        // تحديث التأجيرات المحلية
-        try {
-          const localRentals = JSON.parse(localStorage.getItem('local_rentals') || '[]');
-          const updatedRentals = localRentals.map(r => 
-            r.id === rentalId || r.id === `local-${rentalId}` 
-              ? { ...r, status: 'cancelled', synced: true } 
-              : r
-          );
-          localStorage.setItem('local_rentals', JSON.stringify(updatedRentals));
-        } catch (e) {
-          console.warn('⚠️ فشل تحديث التأجيرات المحلية:', e.message);
-        }
-        
-        return response;
-      }
-    } catch (error) {
-      if (error.status !== 404 && error.response?.status !== 404) {
-        console.log(`⚠️ خطأ في ${strategy.name}:`, error.message);
-      }
-    }
-  }
-  
-  // معالجة محلية
-  try {
-    const localRentals = JSON.parse(localStorage.getItem('local_rentals') || '[]');
-    const updatedRentals = localRentals.map(r => 
-      r.id === rentalId || r.id === `local-${rentalId}` 
-        ? { ...r, status: 'cancelled', cancelled_at: new Date().toISOString() } 
-        : r
-    );
-    localStorage.setItem('local_rentals', JSON.stringify(updatedRentals));
-  } catch (e) {
-    console.warn('⚠️ فشل التحديث المحلي:', e.message);
-  }
-  
-  return {
-    success: true,
-    data: { id: rentalId, cancelled: true },
-    message: 'تم إلغاء التأجير محلياً',
-    local: true
-  };
-};
-
-// ==================== واجهة برمجة التطبيقات الموحدة ====================
-
-// تأجيرات
-api.createRental = api.createRentalUnbreakable;
-api.getActiveRentals = api.getActiveRentalsUnbreakable;
-api.completeOpenRental = api.completeOpenRentalUnbreakable;
-api.cancelRental = api.cancelRentalUnbreakable;
-
-// ==================== باقي الدوال (محذوفة للاختصار ولكن تبقى كما هي) ====================
-// ... (باقي الدوال من ملفك الأصلي تبقى كما هي)
-
-// AUTH ENDPOINTS
+// ==================== AUTH ENDPOINTS ====================
 api.login = async (email, password) => {
   try {
     console.log('🔐 محاولة تسجيل دخول:', email);
@@ -764,6 +153,7 @@ api.logout = async (redirect = true) => {
     api.setToken(null);
     localStorage.removeItem('user');
     localStorage.removeItem('lastLogin');
+    localStorage.removeItem('current_shift');
     
     if (redirect) {
       window.location.href = '/login';
@@ -779,7 +169,15 @@ api.getProfile = async () => {
   }
 };
 
-// BRANCHES ENDPOINTS
+api.verifyToken = async () => {
+  try {
+    return await api.get('/auth/verify');
+  } catch (error) {
+    return { success: false, message: 'توكن غير صالح' };
+  }
+};
+
+// ==================== BRANCHES ENDPOINTS ====================
 api.getBranches = async (params = {}) => {
   try {
     const response = await api.get('/branches', { params });
@@ -797,25 +195,7 @@ api.getBranches = async (params = {}) => {
 api.getBranch = async (branchId) => {
   try {
     const response = await api.get(`/branches/${branchId}`);
-    
-    if (response.success) {
-      return { success: true, data: response.data };
-    }
-    
-    return {
-      success: true,
-      data: {
-        id: branchId,
-        name: `فرع ${branchId}`,
-        location: 'القاهرة',
-        city: 'القاهرة',
-        contact_phone: '01000000000',
-        opening_time: '09:00:00',
-        closing_time: '22:00:00',
-        is_active: true
-      },
-      fromCache: true
-    };
+    return { success: true, data: response.data };
   } catch (error) {
     console.error(`❌ خطأ في جلب فرع ${branchId}:`, error.message);
     return {
@@ -876,13 +256,10 @@ api.getBranchGames = async (branchId) => {
   }
 };
 
-// GAMES ENDPOINTS
+// ==================== GAMES ENDPOINTS ====================
 api.getGames = async (params = {}) => {
   try {
-    const requestParams = { ...params };
-    delete requestParams.status;
-    
-    const response = await api.get('/games', { params: requestParams, timeout: 15000 });
+    const response = await api.get('/games', { params, timeout: 15000 });
     
     if (response.success) {
       return {
@@ -892,7 +269,6 @@ api.getGames = async (params = {}) => {
         message: response.message || 'تم تحميل الألعاب بنجاح'
       };
     }
-    
     return { success: false, data: [] };
   } catch (error) {
     console.error('❌ خطأ في getGames:', error);
@@ -950,25 +326,14 @@ api.deleteGame = async (id, permanent = false) => {
   }
 };
 
-// SHIFTS ENDPOINTS
+// ==================== SHIFTS ENDPOINTS ====================
 api.getCurrentShift = async () => {
   try {
     const response = await api.get('/shifts/current');
-    
-    if (response.success && response.data) {
-      return {
-        success: true,
-        data: response.data,
-        exists: true,
-        message: 'تم جلب الشيفت النشط'
-      };
-    }
-    
     return {
       success: true,
-      data: null,
-      exists: false,
-      message: 'لا يوجد شيفت نشط'
+      data: response.data,
+      exists: !!response.data
     };
   } catch (error) {
     console.error('❌ خطأ في جلب الشيفت الحالي:', error.message);
@@ -979,45 +344,21 @@ api.getCurrentShift = async () => {
 api.startShift = async (openingCash = 0) => {
   try {
     console.log('🔄 بدء شيفت جديد...');
+    const response = await api.post('/shifts/start', { opening_cash: openingCash });
     
-    // المحاولات المتعددة
-    const endpoints = [
-      { method: 'post', url: '/shifts/start', data: { opening_cash: openingCash } },
-      { method: 'post', url: '/shifts/start-simple', data: {} },
-      { method: 'post', url: '/shifts/start-clean', data: {} }
-    ];
-    
-    for (const endpoint of endpoints) {
-      try {
-        const response = await api[endpoint.method](endpoint.url, endpoint.data);
-        if (response && response.success) {
-          console.log(`✅ نجح بدء الشيفت عبر ${endpoint.url}`);
-          
-          if (response.data) {
-            localStorage.setItem('current_shift', JSON.stringify(response.data));
-          }
-          
-          return response;
-        }
-      } catch (error) {
-        console.warn(`⚠️ فشل ${endpoint.url}:`, error.message);
-      }
+    if (response && response.success && response.data) {
+      localStorage.setItem('current_shift', JSON.stringify(response.data));
     }
-    
-    return {
-      success: false,
-      message: 'فشل في بدء الشيفت. تأكد من تشغيل الخادم'
-    };
+    return response;
   } catch (error) {
     console.error('🔥 خطأ في startShift:', error);
-    return { success: false, message: 'حدث خطأ غير متوقع' };
+    return { success: false, message: 'حدث خطأ في بدء الشيفت' };
   }
 };
 
 api.endShift = async (shiftId, closingData = {}) => {
   try {
     console.log(`🏁 إنهاء الشيفت ${shiftId}...`);
-    
     const response = await api.put(`/shifts/${shiftId}/end`, {
       closing_cash: closingData.closing_cash,
       notes: closingData.notes || 'تم إنهاء الشيفت'
@@ -1026,24 +367,10 @@ api.endShift = async (shiftId, closingData = {}) => {
     if (response.success) {
       localStorage.removeItem('current_shift');
     }
-    
     return response;
   } catch (error) {
     console.error('❌ خطأ في إنهاء الشيفت:', error);
-    
-    try {
-      const altResponse = await api.post(`/shifts/${shiftId}/end-quick`, {
-        notes: closingData.notes || 'إنهاء سريع'
-      });
-      
-      if (altResponse.success) {
-        localStorage.removeItem('current_shift');
-      }
-      
-      return altResponse;
-    } catch (altError) {
-      return { success: false, message: error.message || 'تعذر إنهاء الشيفت' };
-    }
+    return { success: false, message: error.message || 'تعذر إنهاء الشيفت' };
   }
 };
 
@@ -1063,7 +390,7 @@ api.getShiftDetails = async (shiftId) => {
 
 api.getAllActiveShifts = async () => {
   try {
-    const response = await api.get('/shifts/active-all');
+    const response = await api.get('/shifts/active-all-branches');
     return {
       success: true,
       data: response.data || [],
@@ -1102,7 +429,298 @@ api.getShifts = async (params = {}) => {
   }
 };
 
-// DASHBOARD & STATS
+// ==================== RENTALS ENDPOINTS ====================
+api.getActiveRentals = async (shiftId = null) => {
+  try {
+    const params = shiftId ? { shift_id: shiftId } : {};
+    const response = await api.get('/rentals/active', { params });
+    return {
+      success: true,
+      data: response.data || [],
+      count: response.count || 0
+    };
+  } catch (error) {
+    console.error('❌ خطأ في getActiveRentals:', error);
+    return { success: false, data: [] };
+  }
+};
+
+api.getCompletedRentals = async (params = {}) => {
+  try {
+    const response = await api.get('/rentals/completed', { params });
+    return {
+      success: true,
+      data: response.data || [],
+      count: response.count || 0
+    };
+  } catch (error) {
+    console.error('❌ خطأ في getCompletedRentals:', error);
+    return { success: false, data: [] };
+  }
+};
+
+api.createRental = async (rentalData) => {
+  try {
+    console.log('📦 إنشاء تأجير جديد:', rentalData);
+    
+    if (!rentalData.customer_name) {
+      throw new Error('اسم العميل مطلوب');
+    }
+    if (!rentalData.items || !rentalData.items.length) {
+      throw new Error('يجب إضافة لعبة واحدة على الأقل');
+    }
+    
+    const response = await api.post('/rentals', rentalData);
+    return response;
+  } catch (error) {
+    console.error('❌ خطأ في إنشاء التأجير:', error);
+    return { success: false, message: error.message || 'فشل إنشاء التأجير' };
+  }
+};
+
+api.completeRental = async (rentalId, paymentData = {}) => {
+  try {
+    return await api.post(`/rentals/${rentalId}/complete`, paymentData);
+  } catch (error) {
+    console.error('❌ خطأ في completeRental:', error);
+    return { success: false, message: error.message };
+  }
+};
+
+api.cancelRental = async (rentalId, reason = '') => {
+  try {
+    return await api.post(`/rentals/${rentalId}/cancel`, { reason });
+  } catch (error) {
+    console.error('❌ خطأ في cancelRental:', error);
+    return { success: false, message: error.message };
+  }
+};
+
+api.getRentalById = async (rentalId) => {
+  try {
+    const response = await api.get(`/rentals/${rentalId}`);
+    return { success: true, data: response.data };
+  } catch (error) {
+    console.error(`❌ خطأ في جلب تأجير ${rentalId}:`, error);
+    return { success: false, message: 'تعذر جلب التأجير', data: null };
+  }
+};
+
+// ==================== OPEN TIME RENTALS ENDPOINTS ====================
+api.startOpenTime = async (openTimeData) => {
+  try {
+    console.log('⏱️ بدء وقت مفتوح:', openTimeData);
+    
+    if (!openTimeData.game_id || !openTimeData.customer_name) {
+      throw new Error('معرف اللعبة واسم العميل مطلوبان');
+    }
+    
+    const response = await api.post('/rentals/open-time', openTimeData);
+    return response;
+  } catch (error) {
+    console.error('❌ خطأ في بدء الوقت المفتوح:', error);
+    return { success: false, message: error.message || 'فشل بدء الوقت المفتوح' };
+  }
+};
+
+api.completeOpenTime = async (rentalId, completionData) => {
+  try {
+    console.log(`⏱️ إنهاء وقت مفتوح ${rentalId}:`, completionData);
+    
+    if (!completionData.final_amount || !completionData.actual_minutes) {
+      throw new Error('المبلغ النهائي والوقت الفعلي مطلوبان');
+    }
+    
+    const response = await api.post(`/rentals/${rentalId}/complete-open`, completionData);
+    return response;
+  } catch (error) {
+    console.error(`❌ خطأ في إنهاء الوقت المفتوح ${rentalId}:`, error);
+    return { success: false, message: error.message || 'فشل إنهاء الوقت المفتوح' };
+  }
+};
+
+api.completeFixedTime = async (rentalId) => {
+  try {
+    console.log(`⏱️ إنهاء وقت ثابت ${rentalId}`);
+    const response = await api.post(`/rentals/${rentalId}/complete-fixed`);
+    return response;
+  } catch (error) {
+    console.error(`❌ خطأ في إنهاء الوقت الثابت ${rentalId}:`, error);
+    return { success: false, message: error.message || 'فشل إنهاء الوقت الثابت' };
+  }
+};
+
+// ==================== RENTAL ITEMS ENDPOINTS ====================
+api.getRentalItems = async (rentalId) => {
+  try {
+    const response = await api.get('/rental-items', { params: { rental_id: rentalId } });
+    return {
+      success: true,
+      data: response.data || [],
+      count: response.count || 0
+    };
+  } catch (error) {
+    console.error('❌ خطأ في جلب عناصر التأجير:', error);
+    return { success: false, data: [] };
+  }
+};
+
+
+// ==================== REPORTS ENDPOINTS ====================
+api.getRentalsReport = async (params = {}) => {
+  try {
+    const response = await api.get('/reports/rentals', { params });
+    return {
+      success: true,
+      data: response.data || [],
+      count: response.count || 0
+    };
+  } catch (error) {
+    console.error('❌ خطأ في جلب تقرير التأجيرات:', error);
+    return { success: false, data: [] };
+  }
+};
+
+api.getRevenueReport = async (params = {}) => {
+  try {
+    const response = await api.get('/reports/revenue', { params });
+    return {
+      success: true,
+      data: response.data || [],
+      summary: response.summary || { total_rentals: 0, total_revenue: 0 }
+    };
+  } catch (error) {
+    console.error('❌ خطأ في جلب تقرير الإيرادات:', error);
+    return { success: false, data: [], summary: { total_rentals: 0, total_revenue: 0 } };
+  }
+};
+// ==================== ADMIN DASHBOARD ENDPOINTS ====================
+// ✅ الدوال المفقودة التي كانت تسبب الأخطاء
+
+api.getAllActiveRentals = async () => {
+  try {
+    const response = await api.get('/admin/rentals/active-all-branches');
+    return {
+      success: true,
+      data: response.data || [],
+      count: response.count || 0
+    };
+  } catch (error) {
+    console.error('❌ خطأ في getAllActiveRentals:', error);
+    return { success: false, data: [] };
+  }
+};
+
+api.getTodayCompletedRentalsAllBranches = async () => {
+  try {
+    const response = await api.get('/admin/rentals/completed-today-all-branches');
+    return {
+      success: true,
+      data: response.data || [],
+      total_revenue: response.total_revenue || 0,
+      count: response.count || 0
+    };
+  } catch (error) {
+    console.error('❌ خطأ في getTodayCompletedRentalsAllBranches:', error);
+    return { success: false, data: [], total_revenue: 0 };
+  }
+};
+
+api.getRecentRentalsAllBranches = async (limit = 20) => {
+  try {
+    const response = await api.get('/admin/rentals/recent-all-branches', { params: { limit } });
+    return {
+      success: true,
+      data: response.data || [],
+      count: response.count || 0
+    };
+  } catch (error) {
+    console.error('❌ خطأ في getRecentRentalsAllBranches:', error);
+    return { success: false, data: [] };
+  }
+};
+
+// ==================== USERS ENDPOINTS ====================
+api.getUsers = async (params = {}) => {
+  try {
+    const response = await api.get('/users', { params });
+    return {
+      success: true,
+      data: response.data || [],
+      count: response.count || 0
+    };
+  } catch (error) {
+    console.error('❌ خطأ في جلب المستخدمين:', error);
+    return { success: false, data: [] };
+  }
+};
+
+api.getUserById = async (id) => {
+  try {
+    const response = await api.get(`/users/${id}`);
+    return { success: true, data: response.data };
+  } catch (error) {
+    console.error(`❌ خطأ في جلب مستخدم ${id}:`, error);
+    return { success: false, message: error.message };
+  }
+};
+
+api.createUser = async (userData) => {
+  try {
+    console.log('📝 إنشاء مستخدم جديد:', userData);
+    const response = await api.post('/users', userData);
+    return {
+      success: true,
+      data: response.data,
+      message: response.message || 'تم إنشاء المستخدم بنجاح'
+    };
+  } catch (error) {
+    console.error('❌ خطأ في إنشاء المستخدم:', error);
+    return { success: false, message: error.message || 'فشل إنشاء المستخدم' };
+  }
+};
+
+api.updateUser = async (id, userData) => {
+  try {
+    const response = await api.put(`/users/${id}`, userData);
+    return {
+      success: true,
+      data: response.data,
+      message: response.message || 'تم تحديث المستخدم بنجاح'
+    };
+  } catch (error) {
+    console.error(`❌ خطأ في تحديث مستخدم ${id}:`, error);
+    return { success: false, message: error.message };
+  }
+};
+
+api.deleteUser = async (id, permanent = false) => {
+  try {
+    const response = await api.delete(`/users/${id}?permanent=${permanent}`);
+    return {
+      success: true,
+      message: response.message || 'تم حذف المستخدم بنجاح'
+    };
+  } catch (error) {
+    console.error(`❌ خطأ في حذف مستخدم ${id}:`, error);
+    return { success: false, message: error.message };
+  }
+};
+
+api.changePassword = async (id, passwordData) => {
+  try {
+    const response = await api.put(`/users/${id}/change-password`, passwordData);
+    return {
+      success: true,
+      message: response.message || 'تم تغيير كلمة المرور بنجاح'
+    };
+  } catch (error) {
+    console.error(`❌ خطأ في تغيير كلمة المرور:`, error);
+    return { success: false, message: error.message };
+  }
+};
+
+// ==================== DASHBOARD & STATS ====================
 api.getSimpleStats = async () => {
   try {
     const response = await api.get('/dashboard/stats/simple');
@@ -1142,7 +760,130 @@ api.getDashboardAllStats = async () => {
   }
 };
 
-// HEALTH & TEST
+// ==================== SIMPLE SHIFTS ENDPOINT ====================
+api.getSimpleShifts = async () => {
+  try {
+    const response = await api.get('/shifts/simple');
+    return {
+      success: true,
+      data: response.data || [],
+      count: response.count || 0
+    };
+  } catch (error) {
+    console.error('❌ خطأ في getSimpleShifts:', error);
+    return { success: false, data: [] };
+  }
+};
+
+
+// ==================== دوال التوافق مع الإصدارات السابقة ====================
+// هذه الدوال تضمن عدم كسر الكود القديم
+
+api.getBranchesApi = api.getBranches; // alias
+api.getGamesApi = api.getGames; // alias
+api.getShiftsApi = api.getShifts; // alias
+api.getUsersApi = api.getUsers; // alias
+
+// دالة مساعدة لفحص صلاحيات المستخدم
+api.hasPermission = (requiredRole) => {
+  const user = api.getCurrentUser();
+  if (!user) return false;
+  
+  const roleHierarchy = {
+    'admin': 3,
+    'branch_manager': 2,
+    'employee': 1
+  };
+  
+  return roleHierarchy[user.role] >= roleHierarchy[requiredRole];
+};
+
+// دالة لجلب إحصائيات الفرع
+api.getBranchStats = async (branchId) => {
+  try {
+    const [games, rentals] = await Promise.all([
+      api.getGames({ branch_id: branchId }),
+      api.getActiveRentals()
+    ]);
+    
+    return {
+      success: true,
+      data: {
+        totalGames: games.data.length,
+        availableGames: games.data.filter(g => g.status === 'available').length,
+        activeRentals: rentals.data.length,
+        rentedGames: games.data.filter(g => g.status === 'rented').length,
+        maintenanceGames: games.data.filter(g => g.status === 'maintenance').length
+      }
+    };
+  } catch (error) {
+    console.error('❌ خطأ في جلب إحصائيات الفرع:', error);
+    return { success: false, data: {} };
+  }
+};
+
+// دالة للبحث
+api.searchGames = async (query, branchId = null) => {
+  try {
+    const params = { search: query };
+    if (branchId) params.branch_id = branchId;
+    
+    const response = await api.get('/games/search', { params });
+    return {
+      success: true,
+      data: response.data || []
+    };
+  } catch (error) {
+    console.error('❌ خطأ في البحث عن الألعاب:', error);
+    return { success: false, data: [] };
+  }
+};
+
+api.searchCustomers = async (query) => {
+  try {
+    const response = await api.get('/customers/search', { params: { q: query } });
+    return {
+      success: true,
+      data: response.data || []
+    };
+  } catch (error) {
+    console.error('❌ خطأ في البحث عن العملاء:', error);
+    return { success: false, data: [] };
+  }
+};
+
+// دالة لجلب العملاء المتكررين
+api.getFrequentCustomers = async (limit = 10) => {
+  try {
+    const response = await api.get('/customers/frequent', { params: { limit } });
+    return {
+      success: true,
+      data: response.data || []
+    };
+  } catch (error) {
+    console.error('❌ خطأ في جلب العملاء المتكررين:', error);
+    return { success: false, data: [] };
+  }
+};
+
+// دالة لتصدير البيانات
+api.exportData = async (type, params = {}) => {
+  try {
+    const response = await api.get(`/export/${type}`, { 
+      params,
+      responseType: 'blob'
+    });
+    return {
+      success: true,
+      blob: response
+    };
+  } catch (error) {
+    console.error(`❌ خطأ في تصدير ${type}:`, error);
+    return { success: false, message: error.message };
+  }
+};
+
+// ==================== HEALTH & TEST ====================
 api.healthCheck = async () => {
   try {
     return await api.get('/health');
@@ -1167,10 +908,33 @@ api.testConnection = async () => {
   }
 };
 
-// ==================== التهيئة الأولية ====================
+// api.js - أضف هذا السطر بعد تعريف api
 const savedToken = localStorage.getItem('token');
 if (savedToken) {
+  console.log('✅ تم العثور على توكن محفوظ:', savedToken.substring(0, 20) + '...');
   api.setToken(savedToken);
 }
+
+
+
+
+// وأضف هذه الدالة للتحقق من حالة التوكن
+api.checkAuthAndToken = () => {
+  const token = localStorage.getItem('token');
+  const user = localStorage.getItem('user');
+  
+  console.log('🔍 حالة المصادقة:', {
+    hasToken: !!token,
+    tokenPrefix: token ? token.substring(0, 10) + '...' : null,
+    hasUser: !!user,
+    user: user ? JSON.parse(user).email : null
+  });
+  
+  return {
+    isAuthenticated: !!token,
+    token: token,
+    user: user ? JSON.parse(user) : null
+  };
+};
 
 export default api;

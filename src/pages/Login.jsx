@@ -1,216 +1,194 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
-import './Login.css';
+import api from '../services/api';
 
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
-  const { login, isAuthenticated, loading: authLoading, error: authError } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const navigate = useNavigate();
 
-  useEffect(() => {
-    console.log('📊 حالة المصادقة:', isAuthenticated);
-    
-    if (isAuthenticated) {
-      console.log('✅ المستخدم مسجل دخول، توجيه إلى الصفحة المناسبة...');
-      
-      // الحصول على دور المستخدم
-      const user = JSON.parse(localStorage.getItem('user'));
-      const role = user?.role;
-      
-      console.log('🎭 دور المستخدم:', role);
-      
-      // توجيه بناءً على الدور - مع دعم العربية والإنجليزية
-      if (role === 'admin' || role === 'مدير') {
-        navigate('/admin/dashboard');
-      } else if (role === 'manager' || role === 'مشرف' || role === 'branch_manager') {
-        navigate('/manager/dashboard');
-      } else if (role === 'employee' || role === 'موظف') {
-        navigate('/employee/dashboard');
-      } else {
-        navigate('/dashboard');
-      }
-    }
-  }, [isAuthenticated, navigate]);
-
-  const handleLogin = async (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    if (!email || !password) {
-      setError('البريد الإلكتروني وكلمة المرور مطلوبان');
-      return;
-    }
-
     setLoading(true);
     setError('');
 
     try {
-      console.log(`🔐 محاولة تسجيل دخول: ${email}`);
+      console.log('🔐 محاولة تسجيل الدخول...');
       
-      const result = await login(email, password);
+      // استخدام api.login مباشرة
+      const result = await api.login(email, password);
       
-      if (result.success) {
-        console.log('✅ تسجيل الدخول ناجح من صفحة Login');
+      if (result.success && result.data?.success) {
+        console.log('✅ تم تسجيل الدخول بنجاح');
         
-        // ✅ التحقق من التخزين فوراً
-        const token = localStorage.getItem('token');
-        const user = localStorage.getItem('user');
+        // التحقق من وجود المستخدم
+        const user = api.getCurrentUser();
+        console.log('👤 المستخدم:', user);
         
-        console.log('🔑 التوكن بعد التخزين:', token ? '✅ موجود' : '❌ غير موجود');
-        console.log('👤 المستخدم بعد التخزين:', user ? '✅ موجود' : '❌ غير موجود');
-        
-        // التوجيه سيتم في useEffect بناءً على isAuthenticated
+        // التوجيه بناءً على الدور
+        if (user?.role === 'admin') {
+          navigate('/admin/dashboard');
+        } else if (user?.role === 'branch_manager') {
+          navigate('/manager/dashboard');
+        } else {
+          navigate('/dashboard');
+        }
       } else {
+        console.error('❌ فشل تسجيل الدخول:', result.message);
         setError(result.message || 'فشل تسجيل الدخول');
       }
-    } catch (error) {
-      console.error('🔥 خطأ في تسجيل الدخول:', error);
-      setError('تعذر الاتصال بالخادم. تأكد من تشغيل الخادم على المنفذ 5000');
+    } catch (err) {
+      console.error('🔥 خطأ غير متوقع:', err);
+      setError('حدث خطأ في الاتصال بالخادم');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleTestLogin = (type = 'admin') => {
-    const credentials = {
-      admin: { email: 'admin@l3bty.com', password: '123456' },
-      manager: { email: 'manager@l3bty.com', password: '123456' },
-      employee: { email: 'employee@l3bty.com', password: '123456' }
-    };
-    
-    const cred = credentials[type];
-    setEmail(cred.email);
-    setPassword(cred.password);
-    
-    // ✅ تسجيل الدخول التلقائي بعد تعبئة البيانات
-    setTimeout(() => handleLogin(new Event('submit')), 100);
-  };
-
-  // ✅ إضافة أزرار اختبار سريعة للتطوير فقط
-  const showTestButtons = process.env.NODE_ENV === 'development';
-
-  if (authLoading) {
-    return (
-      <div className="loading-screen">
-        <div className="spinner"></div>
-        <p>جاري التحميل...</p>
-      </div>
-    );
-  }
-
   return (
-    <div className="login-container">
-      <div className="login-box">
-        <div className="login-header">
-          <h1>
-            <img
-              src="/images/l3bty.png"
-              alt="L3BTY Store Logo"
-              className="logo-icon"
-            />
-            L3BTY Store
-          </h1>
-          <p className="login-subtitle">نظام إدارة تأجير الألعاب</p>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-500 to-purple-600 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-md w-full space-y-8 bg-white p-10 rounded-xl shadow-2xl">
+        <div>
+          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+            L3BTY
+          </h2>
+          <p className="mt-2 text-center text-sm text-gray-600">
+            نظام إدارة الألعاب
+          </p>
         </div>
-
-        <form onSubmit={handleLogin} className="login-form">
-          {(error || authError) && (
-            <div className="alert alert-error">
-              <span className="alert-icon">⚠️</span>
-              {error || authError}
+        
+        {error && (
+          <div className="bg-red-50 border-r-4 border-red-500 p-4 rounded">
+            <div className="flex">
+              <div className="flex-shrink-0">
+                <svg className="h-5 w-5 text-red-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <div className="mr-3">
+                <p className="text-sm text-red-700">{error}</p>
+              </div>
             </div>
-          )}
-
-          <div className="form-group">
-            <label htmlFor="email">البريد الإلكتروني</label>
-            <input
-              id="email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="أدخل بريدك الإلكتروني"
-              className="form-input"
-              required
-            />
           </div>
-
-          <div className="form-group">
-            <label htmlFor="password">كلمة المرور</label>
-            <div className="password-input">
+        )}
+        
+        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+          <div className="space-y-4">
+            <div>
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+                البريد الإلكتروني
+              </label>
+              <input
+                id="email"
+                name="email"
+                type="email"
+                required
+                className="appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                placeholder="admin@l3bty.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                dir="ltr"
+              />
+            </div>
+            <div>
+              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+                كلمة المرور
+              </label>
               <input
                 id="password"
-                type={showPassword ? "text" : "password"}
+                name="password"
+                type="password"
+                required
+                className="appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                placeholder="••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="أدخل كلمة المرور"
-                className="form-input"
-                required
+                dir="ltr"
               />
-              <button
-                type="button"
-                className="password-toggle"
-                onClick={() => setShowPassword(!showPassword)}
-              >
-                {showPassword ? "🙈" : "👁️"}
-              </button>
             </div>
           </div>
 
-          <div className="form-actions">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center">
+              <input
+                id="remember-me"
+                name="remember-me"
+                type="checkbox"
+                className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+              />
+              <label htmlFor="remember-me" className="mr-2 block text-sm text-gray-900">
+                تذكرني
+              </label>
+            </div>
+
+            <div className="text-sm">
+              <a href="#" className="font-medium text-indigo-600 hover:text-indigo-500">
+                نسيت كلمة المرور؟
+              </a>
+            </div>
+          </div>
+
+          <div>
             <button
               type="submit"
-              className="btn-login"
               disabled={loading}
+              className={`group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-lg text-white ${
+                loading ? 'bg-indigo-400 cursor-not-allowed' : 'bg-indigo-600 hover:bg-indigo-700'
+              } focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors duration-200`}
             >
               {loading ? (
                 <>
-                  <span className="spinner-small"></span>
+                  <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
                   جاري تسجيل الدخول...
                 </>
-              ) : (
-                'تسجيل الدخول'
-              )}
+              ) : 'تسجيل الدخول'}
             </button>
           </div>
-
-          {/* ✅ أزرار اختبار سريعة - تظهر فقط في بيئة التطوير */}
-          {showTestButtons && (
-            <div className="test-login-buttons">
-              <p className="test-label">حسابات تجريبية:</p>
-              <div className="test-buttons">
-                <button 
-                  type="button" 
-                  className="test-btn admin"
-                  onClick={() => handleTestLogin('admin')}
-                >
-                  مدير
-                </button>
-                <button 
-                  type="button" 
-                  className="test-btn manager"
-                  onClick={() => handleTestLogin('manager')}
-                >
-                  مشرف
-                </button>
-                <button 
-                  type="button" 
-                  className="test-btn employee"
-                  onClick={() => handleTestLogin('employee')}
-                >
-                  موظف
-                </button>
-              </div>
-            </div>
-          )}
         </form>
-
-        <div className="login-footer">
-          <p>جميع الحقوق محفوظة © 2024 L3BTY Store</p>
-        </div>
+        
+        {/* مستخدمين تجريبيين للتطوير */}
+        {process.env.NODE_ENV === 'development' && (
+          <div className="mt-6 pt-6 border-t border-gray-200">
+            <p className="text-xs text-center text-gray-500 mb-3">مستخدمين تجريبيين:</p>
+            <div className="grid grid-cols-3 gap-2 text-xs">
+              <button
+                type="button"
+                onClick={() => {
+                  setEmail('admin@l3bty.com');
+                  setPassword('123456');
+                }}
+                className="p-2 bg-gray-100 rounded hover:bg-gray-200"
+              >
+                مدير
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setEmail('manager@l3bty.com');
+                  setPassword('123456');
+                }}
+                className="p-2 bg-gray-100 rounded hover:bg-gray-200"
+              >
+                مدير فرع
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setEmail('employee@l3bty.com');
+                  setPassword('123456');
+                }}
+                className="p-2 bg-gray-100 rounded hover:bg-gray-200"
+              >
+                موظف
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

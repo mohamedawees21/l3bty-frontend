@@ -1494,6 +1494,17 @@ const refreshAllData = useCallback(async (force = false) => {
     return () => clearInterval(interval);
   }, [refreshAllData]);
 
+  // قبل كل طلب API، تحقق من التوكن
+useEffect(() => {
+  const authStatus = api.checkAuthStatus();
+  console.log('🔐 حالة المصادقة في Dashboard:', authStatus);
+  
+  if (!authStatus.isAuthenticated) {
+    console.log('⚠️ لا يوجد توكن، سيتم إعادة التوجيه للصفحة الرئيسية');
+    // يمكنك إضافة إعادة توجيه هنا إذا أردت
+  }
+}, []);
+
   // ==================== معالجة الأحداث ====================
 
   const handleBranchClick = (branch) => {

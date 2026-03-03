@@ -17,91 +17,42 @@ import GamesManagement from './pages/admin/GamesManagement';
 
 // صفحات الموظف
 import Rentals from './pages/employee/Rentals';
+import ProtectedRoute from './components/ProtectedRoute';
 
-const ProtectedRoute = ({ children, allowedRoles = [] }) => {
-  const { isAuthenticated, user, loading } = useAuth();
-  
-  console.log('🔐 ProtectedRoute - isAuthenticated:', isAuthenticated);
-  console.log('🔐 ProtectedRoute - user:', user);
-  console.log('🔐 ProtectedRoute - allowedRoles:', allowedRoles);
-  
-  if (loading) {
-    return <div className="loading-screen">جاري التحميل...</div>;
-  }
-  
-  if (!isAuthenticated) {
-    console.log('⛔ غير مصادق، توجيه إلى /login');
-    return <Navigate to="/login" />;
-  }
-  
-  // ✅ تحويل الأدوار العربية إلى إنجليزية
-  const normalizedUserRole = (() => {
-    const roleMap = {
-      'مدير': 'admin',
-      'مشرف': 'manager',
-      'موظف': 'employee'
-    };
-    return roleMap[user?.role] || user?.role;
-  })();
-  
-  // ✅ المدير (admin) يمكنه الوصول إلى جميع الصفحات
-  if (normalizedUserRole === 'admin') {
-    console.log('✅ مستخدم admin - مسموح له بالوصول');
-    return children;
-  }
-  
-  // التحقق من الصلاحيات للمستخدمين العاديين
-  if (allowedRoles.length > 0) {
-    const normalizedAllowedRoles = allowedRoles.map(role => {
-      const roleMap = {
-        'مدير': 'admin',
-        'مشرف': 'manager',
-        'موظف': 'employee'
-      };
-      return roleMap[role] || role;
-    });
-    
-    if (!normalizedAllowedRoles.includes(normalizedUserRole)) {
-      console.log(`⛔ مستخدم ليس لديه الصلاحية المطلوبة: user.role=${user?.role}, normalized=${normalizedUserRole}, allowedRoles=${allowedRoles}`);
-      return <Navigate to="/unauthorized" />;
-    }
-  }
-  
-  return children;
-};
+
 
 const AppRoutes = () => {
-  const { user, isAuthenticated } = useAuth();
-  
+const { user, profile, isAuthenticated, loading } = useAuth();
   // للتأكد من القيم (debugging)
   console.log('👤 Current user in AppRoutes:', user);
   console.log('👤 User role:', user?.role);
   console.log('👤 isAuthenticated:', isAuthenticated);
   
-  // ✅ دالة مساعدة لتحديد الصفحة الافتراضية حسب دور المستخدم
-  const getDefaultRoute = () => {
-    if (!isAuthenticated || !user) {
-      console.log('👉 غير مصادق، توجيه إلى /login');
-      return '/login';
-    }
-    
-    // تحويل الدور إلى صيغة موحدة
-    const role = user.role || '';
-    const normalizedRole = role === 'مدير' ? 'admin' : 
-                          role === 'مشرف' ? 'manager' : 
-                          role === 'موظف' ? 'employee' : role;
-    
-    if (normalizedRole === 'admin') {
-      console.log('👉 توجيه admin إلى /admin/dashboard');
-      return '/admin/dashboard';
-    } else if (normalizedRole === 'employee' || normalizedRole === 'manager' || normalizedRole === 'branch_manager') {
-      console.log('👉 توجيه موظف إلى /employee/rentals');
-      return '/employee/rentals';
-    } else {
-      console.log(`👉 دور غير معروف: ${role}، توجيه إلى /login`);
-      return '/login';
-    }
-  };
+const getDefaultRoute = () => {
+  if (!isAuthenticated || !user) {
+    return '/login';
+  }
+
+  const role = profile?.role;
+
+  const normalizedRole =
+    role === 'مدير' ? 'admin' :
+    role === 'مشرف' ? 'manager' :
+    role === 'موظف' ? 'employee' :
+    role;
+
+  if (normalizedRole === 'admin') {
+    return '/admin/dashboard';
+  } else if (
+    normalizedRole === 'employee' ||
+    normalizedRole === 'manager' ||
+    normalizedRole === 'branch_manager'
+  ) {
+    return '/employee/rentals';
+  } else {
+    return '/login';
+  }
+};
   
   return (
     <Routes>
@@ -111,12 +62,16 @@ const AppRoutes = () => {
       {/* صفحة غير مصرح */}
       <Route path="/unauthorized" element={<Unauthorized />} />
       
-      {/* ✅ المسار الرئيسي - إعادة توجيه ذكية */}
-      <Route path="/" element={
-        <ProtectedRoute>
-          <Navigate to={getDefaultRoute()} replace />
-        </ProtectedRoute>
-      } />
+    <Route
+  path="/"
+  element={
+    loading ? (
+      <div className="loading-screen">جاري التحميل...</div>
+    ) : (
+      <Navigate to={getDefaultRoute()} replace />
+    )
+  }
+/>
       
       {/* ✅ Routes للمدير */}
       <Route path="/admin/*" element={
