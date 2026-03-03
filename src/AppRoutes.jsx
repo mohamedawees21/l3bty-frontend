@@ -33,7 +33,7 @@ const getDefaultRoute = () => {
     return '/login';
   }
 
-  const role = profile?.role;
+  const role = user?.role; // 👈 استخدم user بدل profile
 
   const normalizedRole =
     role === 'مدير' ? 'admin' :
@@ -43,15 +43,17 @@ const getDefaultRoute = () => {
 
   if (normalizedRole === 'admin') {
     return '/admin/dashboard';
-  } else if (
+  }
+
+  if (
     normalizedRole === 'employee' ||
     normalizedRole === 'manager' ||
     normalizedRole === 'branch_manager'
   ) {
     return '/employee/rentals';
-  } else {
-    return '/login';
   }
+
+  return '/login';
 };
   
   return (
