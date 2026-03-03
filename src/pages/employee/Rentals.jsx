@@ -100,61 +100,104 @@ const calculateDuration = (startTime, endTime = new Date()) => {
   return Math.max(0, Math.round((end - start) / (1000 * 60)));
 };
 
+// src/pages/employee/Rentals.jsx
+// فقط المكون المعدل للصور - باقي الكود كما هو
+
 // ==================== مكون الصور مع الملفات المحلية ====================
 const GameImage = ({ src, alt, className, size = 'medium' }) => {
   const [imageError, setImageError] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
+  const [imageSrc, setImageSrc] = useState('');
   
-  const getLocalImage = (gameName) => {
-    const imageMap = {
-      'Car': '/images/Car.jpg',
-      'Driftcar': '/images/Driftcar.jpg',
-      'harley': '/images/harley.jpg',
-      'Hoverboard': '/images/Hoverboard.jpg',
-      'I3bty': '/images/I3bty.png',
-      'Motor': '/images/Motor.jpg',
-      'motorcycle': '/images/motorcycle.jpg',
-      'Ninebot': '/images/Ninebot.jpg',
-      'pingpong': '/images/pingpong.jpg',
-      'playstation': '/images/playstation.jpg',
-      'Scooter': '/images/Scooter.jpg',
-      'Segway': '/images/Segway.jpg',
-      'Simulator': '/images/Simulator.jpg',
-      'Skate': '/images/Skate.jpg',
-      'Trampoline': '/images/Trampoline.jpg',
-      'VR': '/images/VR.jpg',
-      'waterslide': '/images/waterslide.jpg',
-      'wheel': '/images/wheel.jpg',
-      'default': '/images/playstation.jpg'
+  // تعيين الصورة المناسبة بناءً على اسم اللعبة
+  useEffect(() => {
+    // إذا كان هناك رابط صورة من API
+    if (src) {
+      // تحقق مما إذا كان الرابط كاملاً (يبدأ بـ http) أو مسار محلي
+      if (src.startsWith('http')) {
+        setImageSrc(src);
+      } else {
+        // إذا كان مجرد اسم ملف، أضف المسار الكامل
+        setImageSrc(`https://l3btybackend.vercel.app/images/${src}`);
+      }
+      return;
+    }
+    
+    // إذا لم يكن هناك رابط، استخدم الخريطة المحلية
+    const getLocalImage = (gameName) => {
+      if (!gameName) return '/images/playstation.jpg';
+      
+      const imageMap = {
+        'Car': '/images/Car.jpg',
+        'Driftcar': '/images/Driftcar.jpg',
+        'harley': '/images/harley.jpg',
+        'Hoverboard': '/images/Hoverboard.jpg',
+        'I3bty': '/images/I3bty.png',
+        'Motor': '/images/Motor.jpg',
+        'motorcycle': '/images/motorcycle.jpg',
+        'Ninebot': '/images/Ninebot.jpg',
+        'pingpong': '/images/pingpong.jpg',
+        'playstation': '/images/playstation.jpg',
+        'Scooter': '/images/Scooter.jpg',
+        'Segway': '/images/Segway.jpg',
+        'Simulator': '/images/Simulator.jpg',
+        'Skate': '/images/Skate.jpg',
+        'Trampoline': '/images/Trampoline.jpg',
+        'VR': '/images/VR.jpg',
+        'waterslide': '/images/waterslide.jpg',
+        'wheel': '/images/wheel.jpg',
+      };
+
+      const gameNameLower = gameName.toLowerCase();
+      
+      // ابحث عن تطابق في الخريطة
+      for (const [key, value] of Object.entries(imageMap)) {
+        if (gameNameLower.includes(key.toLowerCase())) {
+          return value;
+        }
+      }
+      
+      // إذا لم يتم العثور على تطابق
+      return '/images/playstation.jpg';
     };
 
-    if (!gameName) return imageMap.default;
-    
-    const gameNameLower = gameName.toLowerCase();
-    const matchedKey = Object.keys(imageMap).find(key => 
-      key !== 'default' && gameNameLower.includes(key.toLowerCase())
-    );
+    setImageSrc(getLocalImage(alt));
+  }, [src, alt]);
 
-    return matchedKey ? imageMap[matchedKey] : imageMap.default;
+  // معالج خطأ تحميل الصورة
+  const handleError = () => {
+    console.log('❌ فشل تحميل الصورة:', imageSrc);
+    setImageError(true);
+    // استخدم الصورة الافتراضية
+    setImageSrc('/images/playstation.jpg');
   };
-
-  const imageSrc = src || getLocalImage(alt);
 
   return (
     <div className={`game-image-container ${className} ${imageLoaded ? 'loaded' : 'loading'}`}>
-      {!imageLoaded && (
+      {!imageLoaded && !imageError && (
         <div className="image-placeholder">
           <ImageIcon size={size === 'large' ? 48 : 24} />
         </div>
       )}
-      <img
-        src={imageSrc}
-        alt={alt}
-        className={`game-image ${imageLoaded ? 'visible' : 'hidden'}`}
-        onLoad={() => setImageLoaded(true)}
-        onError={() => setImageError(true)}
-        loading="lazy"
-      />
+      {imageError ? (
+        <div className="image-error">
+          <ImageIcon size={size === 'large' ? 32 : 16} />
+          <span>لا توجد صورة</span>
+        </div>
+      ) : (
+        <img
+          src={imageSrc}
+          alt={alt || 'صورة اللعبة'}
+          className={`game-image ${imageLoaded ? 'visible' : 'hidden'}`}
+          onLoad={() => {
+            console.log('✅ تم تحميل الصورة:', imageSrc);
+            setImageLoaded(true);
+            setImageError(false);
+          }}
+          onError={handleError}
+          loading="lazy"
+        />
+      )}
     </div>
   );
 };
