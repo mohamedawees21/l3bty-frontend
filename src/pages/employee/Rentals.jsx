@@ -100,12 +100,6 @@ const calculateDuration = (startTime, endTime = new Date()) => {
   return Math.max(0, Math.round((end - start) / (1000 * 60)));
 };
 
-// src/pages/employee/Rentals.jsx
-// فقط المكون المعدل للصور - باقي الكود كما هو
-
-// src/pages/employee/Rentals.jsx
-// ==================== مكون الصور المعدل بالكامل ====================
-
 const GameImage = ({ src, alt, className, size = 'medium' }) => {
   const [imageError, setImageError] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
@@ -163,42 +157,30 @@ const GameImage = ({ src, alt, className, size = 'medium' }) => {
     'دراجة': '/images/wheel.jpg'
   };
 
-  // الحصول على مسار الصورة المناسب
-  const getImagePath = useCallback((gameName, imageUrl) => {
-    // 1. إذا كان هناك رابط صورة صحيح من API
-    if (imageUrl) {
-      // إذا كان الرابط كامل (يبدأ بـ http)
-      if (imageUrl.startsWith('http')) {
-        return imageUrl;
-      }
-      // إذا كان مجرد اسم ملف
-      if (imageUrl.includes('.')) {
-        return `https://l3btybackend.vercel.app/images/${imageUrl}`;
-      }
+const getImagePath = useCallback((gameName, imageUrl) => {
+  // لو فيه صورة من API كاملة
+  if (imageUrl) {
+    if (imageUrl.startsWith('http')) {
+      return imageUrl;
     }
 
-    // 2. إذا كان اسم اللعبة موجود، ابحث في الخريطة
-    if (gameName) {
-      const gameNameLower = gameName.toLowerCase();
-      
-      // ابحث عن تطابق تام أولاً
-      for (const [key, value] of Object.entries(imageMap)) {
-        if (gameNameLower === key.toLowerCase()) {
-          return `https://l3btybackend.vercel.app${value}`;
-        }
-      }
-      
-      // ثم ابحث عن تطابق جزئي
-      for (const [key, value] of Object.entries(imageMap)) {
-        if (gameNameLower.includes(key.toLowerCase())) {
-          return `https://l3btybackend.vercel.app${value}`;
-        }
+    if (imageUrl.includes('.')) {
+      return `/images/${imageUrl}`;
+    }
+  }
+
+  if (gameName) {
+    const gameNameLower = gameName.toLowerCase();
+
+    for (const [key, value] of Object.entries(imageMap)) {
+      if (gameNameLower.includes(key.toLowerCase())) {
+        return value; // 👈 بدون دومين
       }
     }
+  }
 
-    // 3. الصورة الافتراضية
-    return 'https://l3btybackend.vercel.app/images/playstation.jpg';
-  }, []);
+  return '/images/playstation.jpg';
+}, []);
 
   // تحديث مصدر الصورة عند تغير البيانات
   useEffect(() => {
@@ -211,20 +193,7 @@ const GameImage = ({ src, alt, className, size = 'medium' }) => {
     });
   }, [src, alt, getImagePath]);
 
-  // محاولة تحميل صورة بديلة عند الخطأ
-  const handleImageError = () => {
-    console.log('❌ فشل تحميل الصورة:', currentSrc);
-    
-    // جرب الصورة الافتراضية
-    if (!currentSrc.includes('playstation.jpg')) {
-      const defaultPath = 'https://l3btybackend.vercel.app/images/playstation.jpg';
-      console.log('🔄 محاولة الصورة الافتراضية:', defaultPath);
-      setCurrentSrc(defaultPath);
-      setImageError(false);
-    } else {
-      setImageError(true);
-    }
-  };
+ 
 
   return (
     <div className={`game-image-container ${className} ${imageLoaded ? 'loaded' : 'loading'}`}>
