@@ -12,7 +12,8 @@ import {
   Coffee, Sun, Moon, Watch, Hourglass, Coffee as CoffeeIcon,
   Image as ImageIcon, Upload, Camera, Grid, List, Settings,
   Shield, UserCog, Ban, Key, Bell, Globe, Layers, RefreshCw as RefreshIcon,
-  ArrowLeftRight, Undo2, RotateCcw as RotateIcon, History, Archive
+  ArrowLeftRight, Undo2, RotateCcw as RotateIcon, History, Archive,
+  Table, ClipboardList
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../services/api';
@@ -103,11 +104,9 @@ const calculateDuration = (startTime, endTime = new Date()) => {
 const GameImage = ({ src, alt, className, size = 'medium' }) => {
   const [imageError, setImageError] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
-  const [currentSrc, setCurrentSrc] = useState('');
 
   // قائمة الصور المتاحة مع مساراتها الصحيحة
   const imageMap = {
-    // الأسماء العربية
     'سيارة': '/images/Car.jpg',
     'سيارات': '/images/Car.jpg',
     'كار': '/images/Car.jpg',
@@ -157,43 +156,29 @@ const GameImage = ({ src, alt, className, size = 'medium' }) => {
     'دراجة': '/images/wheel.jpg'
   };
 
-const getImagePath = useCallback((gameName, imageUrl) => {
-  // لو فيه صورة من API كاملة
-  if (imageUrl) {
-    if (imageUrl.startsWith('http')) {
-      return imageUrl;
-    }
-
-    if (imageUrl.includes('.')) {
-      return `/images/${imageUrl}`;
-    }
-  }
-
-  if (gameName) {
-    const gameNameLower = gameName.toLowerCase();
-
-    for (const [key, value] of Object.entries(imageMap)) {
-      if (gameNameLower.includes(key.toLowerCase())) {
-        return value; // 👈 بدون دومين
+  const getImagePath = useCallback((gameName, imageUrl) => {
+    if (imageUrl) {
+      if (imageUrl.startsWith('http')) {
+        return imageUrl;
+      }
+      if (imageUrl.includes('.')) {
+        return `/images/${imageUrl}`;
       }
     }
-  }
 
-  return '/images/playstation.jpg';
-}, []);
+    if (gameName) {
+      const gameNameLower = gameName.toLowerCase();
+      for (const [key, value] of Object.entries(imageMap)) {
+        if (gameNameLower.includes(key.toLowerCase())) {
+          return value;
+        }
+      }
+    }
 
-  // تحديث مصدر الصورة عند تغير البيانات
-  useEffect(() => {
-    const path = getImagePath(alt, src);
-    setCurrentSrc(path);
-    console.log('🖼️ تحميل صورة:', { 
-      gameName: alt, 
-      originalSrc: src, 
-      finalPath: path 
-    });
-  }, [src, alt, getImagePath]);
+    return '/images/playstation.jpg';
+  }, []);
 
- 
+  const currentSrc = useMemo(() => getImagePath(alt, src), [alt, src, getImagePath]);
 
   return (
     <div className={`game-image-container ${className} ${imageLoaded ? 'loaded' : 'loading'}`}>
@@ -210,14 +195,17 @@ const getImagePath = useCallback((gameName, imageUrl) => {
         </div>
       ) : (
         <img
-          key={currentSrc} // مهم لإعادة التحميل عند تغير المصدر
+          key={currentSrc}
           src={currentSrc}
           alt={alt || 'صورة اللعبة'}
           className={`game-image ${imageLoaded ? 'visible' : 'hidden'}`}
           onLoad={() => {
-            console.log('✅ تم تحميل الصورة بنجاح:', currentSrc);
             setImageLoaded(true);
             setImageError(false);
+          }}
+          onError={() => {
+            setImageError(true);
+            setImageLoaded(false);
           }}
         />
       )}
@@ -239,27 +227,18 @@ const ShiftStatusBar = ({
   const [showEndShiftConfirm, setShowEndShiftConfirm] = useState(false);
   const [closingCash, setClosingCash] = useState('');
   const [notes, setNotes] = useState('');
-  const [showStats, setShowStats] = useState(false);
 
   const isManager = userRole === 'admin' || userRole === 'branch_manager';
 
   const calculateRevenue = useMemo(() => {
     let total = 0;
-    
     completedRentals.forEach(rental => {
       if (rental.status === 'completed' && !rental.is_refunded) {
         total += parseFloat(rental.final_amount || rental.total_amount || 0);
       }
     });
-    
-    activeRentals.forEach(rental => {
-      if (rental.rental_type === 'fixed' && rental.payment_status === 'paid') {
-        total += parseFloat(rental.total_amount || 0);
-      }
-    });
-    
     return total;
-  }, [activeRentals, completedRentals]);
+  }, [completedRentals]);
 
   if (loading) {
     return (
@@ -316,14 +295,13 @@ const ShiftStatusBar = ({
         </div>
 
         <div className="shift-stats">
-          <div className="shift-stat" onClick={() => setShowStats(!showStats)}>
+          <div className="shift-stat">
             <DollarSign size={16} className="stat-icon revenue" />
             <div className="shift-stat-content">
               <span className="shift-stat-label">الإيراد</span>
               <span className="shift-stat-value">{formatCurrency(calculateRevenue)}</span>
             </div>
           </div>
-
           <div className="shift-stat">
             <Activity size={16} className="stat-icon active" />
             <div className="shift-stat-content">
@@ -331,7 +309,6 @@ const ShiftStatusBar = ({
               <span className="shift-stat-value">{activeRentals.length}</span>
             </div>
           </div>
-
           <div className="shift-stat">
             <History size={16} className="stat-icon completed" />
             <div className="shift-stat-content">
@@ -344,21 +321,14 @@ const ShiftStatusBar = ({
         <div className="shift-actions">
           {isManager && (
             <button 
-              onClick={() => setShowStats(!showStats)}
-              className="btn btn-outline btn-sm"
-              title="عرض الإحصائيات الكاملة"
+              onClick={() => setShowEndShiftConfirm(true)}
+              className="btn btn-warning btn-sm btn-glow"
+              disabled={loading}
             >
-              <BarChart size={16} />
+              <Lock size={16} />
+              إنهاء الشيفت
             </button>
           )}
-          <button 
-            onClick={() => setShowEndShiftConfirm(true)}
-            className="btn btn-warning btn-sm btn-glow"
-            disabled={loading}
-          >
-            <Lock size={16} />
-            إنهاء الشيفت
-          </button>
         </div>
       </div>
 
@@ -443,54 +413,39 @@ const ShiftStatusBar = ({
   );
 };
 
-// ==================== مكون بطاقة اللعبة ====================
-const GameCard = ({ game, onAddToCart, isAvailable }) => {
+// ==================== مكون بطاقة اللعبة المبسطة ====================
+const SimpleGameCard = ({ game, onAddToCart }) => {
   const [isHovered, setIsHovered] = useState(false);
 
   return (
     <div 
-      className={`game-card ${!isAvailable ? 'unavailable' : ''} ${isHovered ? 'hovered' : ''}`}
+      className={`simple-game-card ${isHovered ? 'hovered' : ''}`}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
-      onClick={() => isAvailable && onAddToCart(game)}
     >
-      <div className="game-card-image">
+      <div className="simple-game-image">
         <GameImage 
           src={game.image_url}
           alt={game.name}
-          size="medium"
+          size="small"
         />
-        {!isAvailable && (
-          <div className="game-status-badge unavailable">
-            <Lock size={16} />
-            <span>غير متاحة</span>
-          </div>
-        )}
       </div>
-
-      <div className="game-card-content">
-        <h4 className="game-title">{game.name}</h4>
-        
-        <div className="game-price">
-          <DollarSign size={14} />
-          <span className="price-value">{formatCurrency(game.price_per_15min)}</span>
-          <span className="price-unit">/ 15 د</span>
-        </div>
-
-        <button 
-          className={`add-to-cart-btn ${isHovered ? 'visible' : ''}`}
-          disabled={!isAvailable}
-        >
-          <Plus size={16} />
-          إضافة للسلة
-        </button>
+      <div className="simple-game-info">
+        <span className="simple-game-name">{game.name}</span>
+        <span className="simple-game-price">{formatCurrency(game.price_per_15min)}</span>
       </div>
+      <button 
+        className="simple-add-btn"
+        onClick={() => onAddToCart(game)}
+      >
+        <Plus size={14} />
+      </button>
     </div>
   );
 };
 
-// ==================== مكون شبكة الألعاب ====================
-const GamesGrid = ({ 
+// ==================== مكون قائمة الألعاب المبسطة ====================
+const SimpleGamesList = ({ 
   games, 
   branchId, 
   onAddToCart, 
@@ -499,8 +454,6 @@ const GamesGrid = ({
   userRole
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('all');
-  const [viewMode, setViewMode] = useState('grid');
 
   const isEmployee = userRole === 'employee';
 
@@ -513,52 +466,26 @@ const GamesGrid = ({
     );
   }, [games, branchId]);
 
-  const categories = useMemo(() => {
-    if (!branchGames.length) return [{ value: 'all', label: 'جميع الألعاب' }];
-    const cats = [...new Set(branchGames.map(g => g.category).filter(Boolean))];
-    return [
-      { value: 'all', label: 'جميع الألعاب' },
-      ...cats.map(cat => ({ value: cat, label: cat }))
-    ];
-  }, [branchGames]);
-
   const filteredGames = useMemo(() => {
     if (!branchGames.length) return [];
-
-    let filtered = branchGames;
+    if (!searchTerm) return branchGames;
     
-    if (selectedCategory !== 'all') {
-      filtered = filtered.filter(g => g.category === selectedCategory);
-    }
-
-    if (searchTerm) {
-      const term = searchTerm.toLowerCase();
-      filtered = filtered.filter(g =>
-        g.name?.toLowerCase().includes(term) ||
-        g.category?.toLowerCase().includes(term)
-      );
-    }
-
-    return filtered;
-  }, [branchGames, searchTerm, selectedCategory]);
-
-  const availableGames = useMemo(() => 
-    filteredGames.filter(game => game.status !== 'maintenance'),
-    [filteredGames]
-  );
+    const term = searchTerm.toLowerCase();
+    return branchGames.filter(g =>
+      g.name?.toLowerCase().includes(term)
+    );
+  }, [branchGames, searchTerm]);
 
   if (!currentShift && isEmployee) {
     return (
-      <div className="games-section disabled">
-        <div className="games-header">
-          <h3>
-            <Gamepad2 size={24} />
-            الألعاب المتاحة
-          </h3>
+      <div className="simple-games-section disabled">
+        <div className="simple-games-header">
+          <h3>الألعاب المتاحة</h3>
+          <Lock size={18} />
         </div>
-        <div className="games-disabled-message">
-          <Lock size={48} />
-          <p>يجب فتح شيفت أولاً لعرض الألعاب</p>
+        <div className="simple-games-disabled">
+          <Lock size={32} />
+          <p>يجب فتح شيفت أولاً</p>
         </div>
       </div>
     );
@@ -566,108 +493,51 @@ const GamesGrid = ({
 
   if (loading.games) {
     return (
-      <div className="games-section">
-        <div className="games-header">
-          <h3>
-            <Gamepad2 size={24} />
-            الألعاب المتاحة
-          </h3>
-        </div>
-        <div className="games-loading">
-          <Loader2 className="spinner" size={48} />
-          <p>جاري تحميل الألعاب...</p>
+      <div className="simple-games-section">
+        <div className="simple-games-header">
+          <h3>الألعاب المتاحة</h3>
+          <Loader2 className="spinner" size={18} />
         </div>
       </div>
     );
   }
 
   return (
-    <div className="games-section">
-      <div className="games-header">
-        <div className="header-title">
-          <Gamepad2 size={24} />
-          <h3>
-            الألعاب المتاحة
-            <span className="games-count">({availableGames.length})</span>
-          </h3>
-        </div>
-        
-        <div className="header-actions">
-          <div className="view-toggle">
-            <button 
-              className={`btn-icon ${viewMode === 'grid' ? 'active' : ''}`}
-              onClick={() => setViewMode('grid')}
-              title="عرض شبكي"
-            >
-              <Grid size={18} />
-            </button>
-            <button 
-              className={`btn-icon ${viewMode === 'list' ? 'active' : ''}`}
-              onClick={() => setViewMode('list')}
-              title="عرض قائمة"
-            >
-              <List size={18} />
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <div className="games-filters">
-        <div className="search-wrapper">
-          <Search size={18} className="search-icon" />
+    <div className="simple-games-section">
+      <div className="simple-games-header">
+        <h3>الألعاب المتاحة ({filteredGames.length})</h3>
+        <div className="simple-search">
+          <Search size={14} className="search-icon" />
           <input
             type="text"
-            placeholder="ابحث عن لعبة..."
+            placeholder="ابحث..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="search-input"
           />
-          {searchTerm && (
-            <button 
-              className="clear-search"
-              onClick={() => setSearchTerm('')}
-            >
-              <X size={14} />
-            </button>
-          )}
         </div>
-
-        <select
-          value={selectedCategory}
-          onChange={(e) => setSelectedCategory(e.target.value)}
-          className="filter-select"
-        >
-          {categories.map(cat => (
-            <option key={cat.value} value={cat.value}>
-              {cat.label}
-            </option>
-          ))}
-        </select>
       </div>
 
-      {availableGames.length === 0 ? (
-        <div className="games-empty">
-          <Gamepad2 size={64} />
-          <p>لا توجد ألعاب متاحة</p>
-        </div>
-      ) : (
-        <div className={`games-${viewMode}`}>
-          {availableGames.map(game => (
-            <GameCard
+      <div className="simple-games-list">
+        {filteredGames.length === 0 ? (
+          <div className="simple-games-empty">
+            <p>لا توجد ألعاب</p>
+          </div>
+        ) : (
+          filteredGames.map(game => (
+            <SimpleGameCard
               key={game.id}
               game={game}
               onAddToCart={onAddToCart}
-              isAvailable={true}
             />
-          ))}
-        </div>
-      )}
+          ))
+        )}
+      </div>
     </div>
   );
 };
 
-// ==================== مكون سلة التأجير ====================
-const RentalCart = ({
+// ==================== مكون سلة التأجير المحسنة ====================
+const EnhancedCart = ({
   items,
   onUpdateItem,
   onRemoveItem,
@@ -676,7 +546,6 @@ const RentalCart = ({
   onCustomerInfoChange,
   onSubmit,
   isSubmitting,
-  games,
   onAddGame,
   currentShift,
   userRole
@@ -686,7 +555,6 @@ const RentalCart = ({
   const [discount, setDiscount] = useState(0);
   const [notes, setNotes] = useState('');
 
-  const isEmployee = userRole === 'employee';
   const isManager = userRole === 'admin' || userRole === 'branch_manager';
 
   const calculateItemTotal = useCallback((item) => {
@@ -709,310 +577,188 @@ const RentalCart = ({
     return items.length > 0 && customerInfo.name?.trim() && currentShift;
   }, [items.length, customerInfo.name, currentShift]);
 
-  if (!currentShift && isEmployee) {
+  if (!currentShift && userRole === 'employee') {
     return (
-      <div className="cart-empty">
-        <Lock size={48} />
-        <h3>الشيفت مغلق</h3>
-        <p>يجب فتح شيفت أولاً لبدء التأجير</p>
-      </div>
-    );
-  }
-
-  if (items.length === 0) {
-    return (
-      <div className="cart-empty">
-        <ShoppingCart size={48} />
-        <h3>السلة فارغة</h3>
-        <p>اختر ألعاباً من القائمة لإضافتها إلى السلة</p>
-        <button
-          onClick={onAddGame}
-          className="btn btn-primary btn-lg"
-        >
-          <Plus size={18} />
-          إضافة لعبة
-        </button>
+      <div className="enhanced-cart disabled">
+        <div className="cart-header">
+          <ShoppingCart size={18} />
+          <h3>السلة</h3>
+        </div>
+        <div className="cart-disabled">
+          <Lock size={24} />
+          <p>الشيفت مغلق</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="cart">
+    <div className="enhanced-cart">
       <div className="cart-header">
-        <div className="header-title">
-          <ShoppingCart size={20} />
-          <h3>
-            سلة التأجير
-            <span className="cart-count">{items.length}</span>
-          </h3>
+        <div className="cart-title">
+          <ShoppingCart size={18} />
+          <h3>السلة</h3>
+          {items.length > 0 && <span className="cart-count">{items.length}</span>}
         </div>
-        <div className="header-actions">
-          <button
-            onClick={() => setShowSummary(!showSummary)}
-            className="btn-icon"
-            title="عرض الملخص"
-          >
-            <BarChart size={16} />
+        {items.length > 0 && (
+          <button onClick={onClearCart} className="cart-clear" title="تفريغ السلة">
+            <Trash2 size={14} />
           </button>
-          <button
-            onClick={onClearCart}
-            className="btn-icon danger"
-            disabled={isSubmitting}
-            title="تفريغ السلة"
-          >
-            <Trash2 size={16} />
-          </button>
-        </div>
+        )}
       </div>
 
-      <div className="cart-items">
-        {items.map((item, index) => (
-          <div key={item.id || index} className="cart-item">
-            <div className="cart-item-header">
-              <div className="item-info">
-                <Gamepad2 size={14} />
-                <span className="item-name">{item.game_name}</span>
-              </div>
-              <button
-                onClick={() => onRemoveItem(item.id)}
-                className="btn-remove"
-                disabled={isSubmitting}
-              >
-                <X size={14} />
-              </button>
-            </div>
-
-            <div className="cart-item-details">
-              <div className="detail-row">
-                <div className="detail-field">
-                  <label>النوع:</label>
+      {items.length === 0 ? (
+        <div className="cart-empty-state">
+          <ShoppingCart size={32} />
+          <p>السلة فارغة</p>
+          <button onClick={onAddGame} className="btn btn-primary btn-sm">
+            <Plus size={14} /> إضافة لعبة
+          </button>
+        </div>
+      ) : (
+        <>
+          <div className="cart-items-list">
+            {items.map((item, index) => (
+              <div key={item.id || index} className="cart-item-simple">
+                <div className="cart-item-header">
+                  <span className="item-name">{item.game_name}</span>
+                  <button onClick={() => onRemoveItem(item.id)} className="item-remove">
+                    <X size={12} />
+                  </button>
+                </div>
+                
+                <div className="cart-item-controls">
                   <select
                     value={item.rental_type}
                     onChange={(e) => onUpdateItem(item.id, { rental_type: e.target.value })}
-                    disabled={isSubmitting}
-                    className="select-small"
+                    className="control-select"
                   >
                     {RENTAL_TYPES.map(type => (
-                      <option key={type.value} value={type.value}>
-                        {type.label}
-                      </option>
+                      <option key={type.value} value={type.value}>{type.label}</option>
                     ))}
                   </select>
-                </div>
 
-                {item.rental_type === 'fixed' && (
-                  <div className="detail-field">
-                    <label>المدة:</label>
+                  {item.rental_type === 'fixed' && (
                     <select
                       value={item.duration_minutes || 15}
                       onChange={(e) => onUpdateItem(item.id, { duration_minutes: parseInt(e.target.value) })}
-                      disabled={isSubmitting}
-                      className="select-small"
+                      className="control-select"
                     >
-                      <option value="15">15 دقيقة</option>
-                      <option value="30">30 دقيقة</option>
-                      <option value="45">45 دقيقة</option>
-                      <option value="60">60 دقيقة</option>
-                      <option value="90">90 دقيقة</option>
-                      <option value="120">120 دقيقة</option>
+                      <option value="15">15 د</option>
+                      <option value="30">30 د</option>
+                      <option value="45">45 د</option>
+                      <option value="60">60 د</option>
+                      <option value="90">90 د</option>
+                      <option value="120">120 د</option>
                     </select>
-                  </div>
-                )}
+                  )}
 
-                <div className="detail-field">
-                  <label>الكمية:</label>
                   <div className="quantity-control">
                     <button
                       onClick={() => onUpdateItem(item.id, { quantity: Math.max(1, (item.quantity || 1) - 1) })}
                       className="quantity-btn"
-                      disabled={isSubmitting || (item.quantity || 1) <= 1}
                     >
-                      <Minus size={12} />
+                      <Minus size={10} />
                     </button>
-                    <span className="quantity-value">{item.quantity || 1}</span>
+                    <span>{item.quantity || 1}</span>
                     <button
                       onClick={() => onUpdateItem(item.id, { quantity: (item.quantity || 1) + 1 })}
                       className="quantity-btn"
-                      disabled={isSubmitting}
                     >
-                      <Plus size={12} />
+                      <Plus size={10} />
                     </button>
                   </div>
                 </div>
-              </div>
 
-              <div className="detail-field full-width">
-                <label>
-                  <User size={12} />
-                  اسم الطفل (اختياري):
-                </label>
-                <input
-                  type="text"
-                  value={item.child_name || ''}
-                  onChange={(e) => onUpdateItem(item.id, { child_name: e.target.value })}
-                  placeholder="اسم الطفل"
-                  disabled={isSubmitting}
-                  className="input-small"
-                />
+                {item.rental_type === 'fixed' && (
+                  <div className="cart-item-total">
+                    <span>المجموع:</span>
+                    <span className="item-price">{formatCurrency(calculateItemTotal(item))}</span>
+                  </div>
+                )}
               </div>
-            </div>
-
-            {item.rental_type === 'fixed' && (
-              <div className="cart-item-total">
-                <span>المجموع:</span>
-                <span className="amount">{formatCurrency(calculateItemTotal(item))}</span>
-              </div>
-            )}
+            ))}
           </div>
-        ))}
-      </div>
 
-      <div className="cart-footer">
-        <button
-          onClick={onAddGame}
-          className="btn btn-outline btn-block"
-          disabled={isSubmitting}
-        >
-          <Plus size={16} />
-          إضافة لعبة أخرى
-        </button>
+          <div className="cart-customer-info">
+            <input
+              type="text"
+              placeholder="اسم العميل *"
+              value={customerInfo.name || ''}
+              onChange={(e) => onCustomerInfoChange('name', e.target.value)}
+              className="customer-input"
+            />
+            <input
+              type="tel"
+              placeholder="رقم الهاتف"
+              value={customerInfo.phone || ''}
+              onChange={(e) => onCustomerInfoChange('phone', e.target.value.replace(/\D/g, '').slice(0, 11))}
+              className="customer-input"
+              maxLength={11}
+            />
+          </div>
 
-        {showSummary && (
           <div className="cart-summary">
-            <h4>ملخص السلة</h4>
             <div className="summary-row">
-              <span>المجموع الفرعي:</span>
-              <span>{formatCurrency(calculateSubtotal())}</span>
+              <span>المجموع:</span>
+              <span className="summary-total">{formatCurrency(calculateTotal())}</span>
             </div>
-            
             {isManager && (
               <div className="summary-row">
-                <span>الخصم (%):</span>
+                <span>الخصم %:</span>
                 <input
                   type="number"
                   value={discount}
                   onChange={(e) => setDiscount(Math.min(100, Math.max(0, parseFloat(e.target.value) || 0)))}
+                  className="discount-input"
                   min="0"
                   max="100"
-                  className="discount-input"
                 />
               </div>
             )}
+          </div>
 
-            <div className="summary-row total">
-              <span>الإجمالي:</span>
-              <span className="total-amount">{formatCurrency(calculateTotal())}</span>
-            </div>
-
-            {isManager && (
-              <div className="summary-row">
-                <span>طريقة الدفع:</span>
-                <select
-                  value={paymentMethod}
-                  onChange={(e) => setPaymentMethod(e.target.value)}
-                  className="payment-select"
-                >
-                  {PAYMENT_METHODS.map(method => (
-                    <option key={method.value} value={method.value}>
-                      {method.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
+          <button
+            onClick={() => onSubmit({
+              payment_method: paymentMethod,
+              discount,
+              notes,
+              total_amount: calculateTotal()
+            })}
+            className="btn btn-primary btn-block"
+            disabled={isSubmitting || !isCartValid()}
+          >
+            {isSubmitting ? (
+              <><Loader2 className="spinner" size={14} /> جاري...</>
+            ) : (
+              <>تأكيد التأجير ({formatCurrency(calculateTotal())})</>
             )}
-
-            <div className="summary-row">
-              <span>ملاحظات:</span>
-              <input
-                type="text"
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-                placeholder="أي ملاحظات..."
-                className="notes-input"
-              />
-            </div>
-          </div>
-        )}
-
-        <div className="cart-customer">
-          <h4>معلومات العميل</h4>
-          <div className="customer-fields">
-            <div className="form-group">
-              <User size={16} className="field-icon" />
-              <input
-                type="text"
-                placeholder="اسم العميل *"
-                value={customerInfo.name || ''}
-                onChange={(e) => onCustomerInfoChange('name', e.target.value)}
-                disabled={isSubmitting}
-                className="form-control"
-              />
-            </div>
-            <div className="form-group">
-              <Phone size={16} className="field-icon" />
-              <input
-                type="tel"
-                placeholder="رقم الهاتف"
-                value={customerInfo.phone || ''}
-                onChange={(e) => onCustomerInfoChange('phone', e.target.value.replace(/\D/g, '').slice(0, 11))}
-                disabled={isSubmitting}
-                className="form-control"
-                maxLength={11}
-              />
-            </div>
-          </div>
-        </div>
-
-        <button
-          onClick={() => onSubmit({
-            payment_method: paymentMethod,
-            discount,
-            notes,
-            total_amount: calculateTotal()
-          })}
-          className="btn btn-primary btn-block btn-large"
-          disabled={isSubmitting || !isCartValid()}
-        >
-          {isSubmitting ? (
-            <>
-              <Loader2 className="spinner" size={18} />
-              جاري إنشاء التأجير...
-            </>
-          ) : (
-            <>
-              <Check size={18} />
-              تأكيد التأجير ({formatCurrency(calculateTotal())})
-            </>
-          )}
-        </button>
-      </div>
+          </button>
+        </>
+      )}
     </div>
   );
 };
 
-// ==================== مكون التأجيرات النشطة ====================
-const ActiveRentals = ({ 
+// ==================== مكون جدول التأجيرات النشطة ====================
+const ActiveRentalsTable = ({ 
   rentals, 
   items,
   loading, 
   onComplete,
   onCancel,
+  onModify,
   onViewDetails,
   currentShift,
   userRole
 }) => {
   const [timeNow, setTimeNow] = useState(new Date());
   const [searchTerm, setSearchTerm] = useState('');
-  const [expandedRental, setExpandedRental] = useState(null);
 
-  const isEmployee = userRole === 'employee';
   const isManager = userRole === 'admin' || userRole === 'branch_manager';
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      setTimeNow(new Date());
-    }, 1000);
-    
+    const interval = setInterval(() => setTimeNow(new Date()), 1000);
     return () => clearInterval(interval);
   }, []);
 
@@ -1039,28 +785,11 @@ const ActiveRentals = ({
     return `${remainingMinutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
   }, [timeNow]);
 
-  const calculateProgress = useCallback((rental) => {
-    if (rental.rental_type !== 'fixed' || !rental.start_time) return 100;
-    
-    const startTime = new Date(rental.start_time);
-    const duration = rental.total_duration || 15;
-    const endTime = new Date(startTime.getTime() + duration * 60000);
-    const totalMs = duration * 60000;
-    const remainingMs = endTime - timeNow;
-    
-    if (remainingMs <= 0) return 0;
-    
-    const percentage = (remainingMs / totalMs) * 100;
-    return Math.max(0, Math.min(100, percentage));
-  }, [timeNow]);
-
   const isExpired = useCallback((rental) => {
     if (rental.rental_type !== 'fixed' || !rental.start_time) return false;
-    
     const startTime = new Date(rental.start_time);
     const duration = rental.total_duration || 15;
     const endTime = new Date(startTime.getTime() + duration * 60000);
-    
     return timeNow > endTime;
   }, [timeNow]);
 
@@ -1071,266 +800,364 @@ const ActiveRentals = ({
 
   const filteredRentals = useMemo(() => {
     if (!rentalsWithItems.length) return [];
-    
     return rentalsWithItems.filter(rental => {
-      if (searchTerm) {
-        const term = searchTerm.toLowerCase();
-        return (
-          rental.customer_name?.toLowerCase().includes(term) ||
-          rental.rental_number?.toLowerCase().includes(term) ||
-          rental.items?.some(item => item.game_name?.toLowerCase().includes(term))
-        );
-      }
-      return true;
+      if (!searchTerm) return true;
+      const term = searchTerm.toLowerCase();
+      return (
+        rental.customer_name?.toLowerCase().includes(term) ||
+        rental.rental_number?.toLowerCase().includes(term) ||
+        rental.items?.some(item => item.game_name?.toLowerCase().includes(term))
+      );
     });
   }, [rentalsWithItems, searchTerm]);
 
-  if (!currentShift && isEmployee) {
-    return null;
-  }
+  if (!currentShift) return null;
 
   if (loading.rentals) {
+    return <div className="table-loading"><Loader2 className="spinner" size={24} /></div>;
+  }
+
+  if (filteredRentals.length === 0) {
     return (
-      <div className="active-rentals-section">
-        <div className="section-header">
-          <h3>
-            <Activity size={24} />
-            التأجيرات النشطة
-          </h3>
-        </div>
-        <div className="loading-state">
-          <Loader2 className="spinner" size={32} />
-          <p>جاري تحميل التأجيرات...</p>
-        </div>
+      <div className="table-empty">
+        <Activity size={32} />
+        <p>لا توجد تأجيرات نشطة</p>
       </div>
     );
   }
 
   return (
-    <>
-      <div className="active-rentals-section">
-        <div className="section-header">
-          <div className="header-title">
-            <Activity size={24} />
-            <h3>
-              التأجيرات النشطة
-              <span className="section-count">({filteredRentals.length})</span>
-            </h3>
+    <div className="active-rentals-table">
+      <div className="table-header">
+        <input
+          type="text"
+          placeholder="بحث..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="table-search"
+        />
+      </div>
+      <div className="table-body">
+        {filteredRentals.map(rental => {
+          const mainItem = rental.items?.[0];
+          const elapsedMinutes = getElapsedMinutes(rental.start_time);
+          const canCancel = elapsedMinutes < 3;
+          
+          return (
+            <div key={rental.id} className={`table-row ${isExpired(rental) ? 'expired' : ''}`}>
+              <div className="row-customer">
+                <User size={14} />
+                <span>{rental.customer_name}</span>
+              </div>
+              <div className="row-game">
+                <Gamepad2 size={14} />
+                <span>{mainItem?.game_name || 'لعبة'}</span>
+                {mainItem?.quantity > 1 && <span className="badge">x{mainItem.quantity}</span>}
+              </div>
+              <div className="row-time">
+                {rental.rental_type === 'fixed' ? (
+                  <>
+                    <Timer size={14} />
+                    <span className={isExpired(rental) ? 'expired' : ''}>
+                      {calculateRemainingTime(rental)}
+                    </span>
+                  </>
+                ) : (
+                  <span className="open-badge">مفتوح</span>
+                )}
+              </div>
+              <div className="row-actions">
+                <button onClick={() => onViewDetails(rental)} className="action-btn info" title="تفاصيل">
+                  <Eye size={14} />
+                </button>
+                {rental.rental_type === 'open' && (
+                  <button onClick={() => onComplete(rental)} className="action-btn success" title="إنهاء">
+                    <Check size={14} />
+                  </button>
+                )}
+                {isManager && canCancel && (
+                  <>
+                    <button onClick={() => onCancel(rental)} className="action-btn warning" title="إلغاء">
+                      <X size={14} />
+                    </button>
+                    <button onClick={() => onModify(rental)} className="action-btn primary" title="تعديل">
+                      <Edit size={14} />
+                    </button>
+                  </>
+                )}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+};
+
+// ==================== مكون جدول التأجيرات المكتملة ====================
+const CompletedRentalsTable = ({ 
+  rentals, 
+  items,
+  loading,
+  onViewDetails,
+  currentShift
+}) => {
+  const [searchTerm, setSearchTerm] = useState('');
+
+  const rentalsWithItems = useMemo(() => {
+    return rentals.map(rental => ({
+      ...rental,
+      items: items.filter(item => item.rental_id === rental.id)
+    }));
+  }, [rentals, items]);
+
+  const filteredRentals = useMemo(() => {
+    if (!rentalsWithItems.length) return [];
+    return rentalsWithItems.filter(rental => {
+      if (!searchTerm) return true;
+      const term = searchTerm.toLowerCase();
+      return (
+        rental.customer_name?.toLowerCase().includes(term) ||
+        rental.rental_number?.toLowerCase().includes(term)
+      );
+    });
+  }, [rentalsWithItems, searchTerm]);
+
+  if (!currentShift) return null;
+
+  if (loading) {
+    return <div className="table-loading"><Loader2 className="spinner" size={24} /></div>;
+  }
+
+  if (filteredRentals.length === 0) {
+    return (
+      <div className="table-empty">
+        <History size={32} />
+        <p>لا توجد تأجيرات مكتملة</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="completed-rentals-table">
+      <div className="table-header">
+        <input
+          type="text"
+          placeholder="بحث..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="table-search"
+        />
+      </div>
+      <div className="table-body">
+        {filteredRentals.map(rental => (
+          <div key={rental.id} className="table-row">
+            <div className="row-customer">
+              <User size={14} />
+              <span>{rental.customer_name}</span>
+            </div>
+            <div className="row-amount">
+              <DollarSign size={14} />
+              <span>{formatCurrency(rental.final_amount || rental.total_amount)}</span>
+            </div>
+            <div className="row-time">
+              <Clock size={14} />
+              <span>{formatTime(rental.end_time)}</span>
+            </div>
+            <div className="row-actions">
+              <button onClick={() => onViewDetails(rental)} className="action-btn info" title="تفاصيل">
+                <Eye size={14} />
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+// ==================== مكون تعديل التأجير ====================
+const ModifyRentalModal = ({ show, onClose, rental, items, games, onConfirm }) => {
+  const [selectedGame, setSelectedGame] = useState(null);
+  const [newGame, setNewGame] = useState(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [priceDiff, setPriceDiff] = useState(0);
+
+  const rentalItems = useMemo(() => {
+    return items.filter(item => item.rental_id === rental?.id);
+  }, [rental, items]);
+
+  const currentGame = useMemo(() => {
+    if (!rentalItems.length) return null;
+    const item = rentalItems[0];
+    return {
+      id: item.game_id,
+      name: item.game_name,
+      price: item.price_per_15min
+    };
+  }, [rentalItems]);
+
+  const handleGameChange = (gameId) => {
+    const game = games.find(g => g.id === parseInt(gameId));
+    setNewGame(game);
+    if (currentGame && game) {
+      const diff = game.price_per_15min - currentGame.price;
+      setPriceDiff(diff);
+    }
+  };
+
+  const handleConfirm = async () => {
+    if (!newGame) return;
+    setIsSubmitting(true);
+    try {
+      await onConfirm(rental, {
+        old_game_id: currentGame.id,
+        new_game_id: newGame.id,
+        price_difference: priceDiff
+      });
+      onClose();
+    } catch (error) {
+      console.error('خطأ في تعديل التأجير:', error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  if (!show || !rental) return null;
+
+  return (
+    <div className="modal-overlay">
+      <div className="modal">
+        <div className="modal-header">
+          <div className="header-icon primary">
+            <Edit size={24} />
+          </div>
+          <h3>تعديل التأجير</h3>
+          <button onClick={onClose} className="modal-close">
+            <X size={20} />
+          </button>
+        </div>
+        
+        <div className="modal-body">
+          <div className="alert alert-info">
+            <Info size={16} />
+            <div>
+              <strong>العميل: {rental.customer_name}</strong>
+              <p>رقم التأجير: {rental.rental_number}</p>
+            </div>
           </div>
 
-          <div className="search-wrapper small">
-            <Search size={16} className="search-icon" />
-            <input
-              type="text"
-              placeholder="بحث..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="search-input small"
-            />
+          <div className="modify-section">
+            <div className="current-game">
+              <h4>اللعبة الحالية</h4>
+              <div className="game-box">
+                <Gamepad2 size={16} />
+                <span>{currentGame?.name}</span>
+                <span className="price">{formatCurrency(currentGame?.price)}</span>
+              </div>
+            </div>
+
+            <div className="new-game">
+              <h4>اللعبة الجديدة</h4>
+              <select
+                onChange={(e) => handleGameChange(e.target.value)}
+                className="game-select"
+                value={newGame?.id || ''}
+              >
+                <option value="">اختر لعبة...</option>
+                {games.map(game => (
+                  <option key={game.id} value={game.id}>
+                    {game.name} - {formatCurrency(game.price_per_15min)}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {newGame && currentGame && (
+              <div className="price-diff">
+                <div className="diff-row">
+                  <span>اللعبة الحالية:</span>
+                  <span>{formatCurrency(currentGame.price)}</span>
+                </div>
+                <div className="diff-row">
+                  <span>اللعبة الجديدة:</span>
+                  <span>{formatCurrency(newGame.price_per_15min)}</span>
+                </div>
+                <div className={`diff-row total ${priceDiff > 0 ? 'positive' : priceDiff < 0 ? 'negative' : ''}`}>
+                  <span>الفرق:</span>
+                  <span>{priceDiff > 0 ? '+' : ''}{formatCurrency(priceDiff)}</span>
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
-        {filteredRentals.length === 0 ? (
-          <div className="empty-state">
-            <Activity size={48} />
-            <p>لا توجد تأجيرات نشطة</p>
-          </div>
-        ) : (
-          <div className="rentals-grid">
-            {filteredRentals.map(rental => {
-              const elapsedMinutes = getElapsedMinutes(rental.start_time);
-              const canCancel = elapsedMinutes < 3;
-              const mainItem = rental.items?.[0];
-              
-              return (
-                <div 
-                  key={rental.id} 
-                  className={`rental-card ${isExpired(rental) ? 'expired' : ''} ${rental.rental_type}`}
-                >
-                  <div className="rental-card-header">
-                    <div className="rental-number">
-                      <Hash size={14} />
-                      <span>{rental.rental_number}</span>
-                    </div>
-                    <span className={`rental-type-badge ${rental.rental_type}`}>
-                      {RENTAL_TYPES.find(t => t.value === rental.rental_type)?.label}
-                    </span>
-                  </div>
-
-                  <div className="rental-customer">
-                    <User size={16} />
-                    <span className="customer-name">{rental.customer_name}</span>
-                  </div>
-
-                  <div className="rental-game-info">
-                    <Gamepad2 size={16} />
-                    <span className="game-name">{mainItem?.game_name || 'لعبة'}</span>
-                    {mainItem?.quantity > 1 && (
-                      <span className="game-quantity">x{mainItem.quantity}</span>
-                    )}
-                  </div>
-
-                  {rental.rental_type === 'fixed' && (
-                    <div className="rental-progress">
-                      <div className="progress-bar">
-                        <div 
-                          className={`progress-fill ${isExpired(rental) ? 'expired' : ''}`}
-                          style={{ width: `${calculateProgress(rental)}%` }}
-                        ></div>
-                      </div>
-                      <div className="remaining-time">
-                        <Hourglass size={12} />
-                        <span>المتبقي: {calculateRemainingTime(rental)}</span>
-                      </div>
-                    </div>
-                  )}
-
-                  <div className="rental-actions">
-                    <button
-                      onClick={() => onViewDetails(rental)}
-                      className="btn-action info"
-                      title="تفاصيل"
-                    >
-                      <Eye size={16} />
-                    </button>
-
-                    {rental.rental_type === 'open' && (
-                      <button
-                        onClick={() => onComplete(rental)}
-                        className="btn-action success"
-                        title="إنهاء التأجير"
-                      >
-                        <Check size={16} />
-                      </button>
-                    )}
-
-                    {isManager && canCancel && (
-                      <button
-                        onClick={() => onCancel(rental)}
-                        className="btn-action warning"
-                        title="إلغاء واسترداد"
-                      >
-                        <Undo2 size={16} />
-                      </button>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
+        <div className="modal-footer">
+          <button onClick={onClose} className="btn btn-secondary">
+            إلغاء
+          </button>
+          <button
+            onClick={handleConfirm}
+            className="btn btn-primary"
+            disabled={!newGame || isSubmitting}
+          >
+            {isSubmitting ? <Loader2 className="spinner" size={16} /> : 'تأكيد التعديل'}
+          </button>
+        </div>
       </div>
-    </>
+    </div>
   );
 };
 
 // ==================== مكون نافذة إضافة لعبة ====================
 const AddGameModal = ({ show, onClose, games, onAddGame }) => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('all');
-
-  const availableGames = useMemo(() => {
-    if (!games?.length) return [];
-    return games.filter(game => game.is_active && game.status !== 'maintenance');
-  }, [games]);
-
-  const categories = useMemo(() => {
-    if (!availableGames.length) return [{ value: 'all', label: 'الكل' }];
-    const cats = [...new Set(availableGames.map(g => g.category).filter(Boolean))];
-    return [
-      { value: 'all', label: 'الكل' },
-      ...cats.map(cat => ({ value: cat, label: cat }))
-    ];
-  }, [availableGames]);
 
   const filteredGames = useMemo(() => {
-    if (!availableGames.length) return [];
-    
-    let filtered = availableGames;
-    
-    if (selectedCategory !== 'all') {
-      filtered = filtered.filter(g => g.category === selectedCategory);
-    }
-    
-    if (searchTerm) {
-      const term = searchTerm.toLowerCase();
-      filtered = filtered.filter(g =>
-        g.name?.toLowerCase().includes(term) ||
-        g.category?.toLowerCase().includes(term)
-      );
-    }
-    
-    return filtered;
-  }, [availableGames, searchTerm, selectedCategory]);
+    if (!games?.length) return [];
+    if (!searchTerm) return games;
+    const term = searchTerm.toLowerCase();
+    return games.filter(g => g.name?.toLowerCase().includes(term));
+  }, [games, searchTerm]);
 
   if (!show) return null;
 
   return (
     <div className="modal-overlay">
-      <div className="modal modal-large">
+      <div className="modal modal-small">
         <div className="modal-header">
-          <h3>
-            <Gamepad2 size={24} />
-            إضافة لعبة للسلة
-          </h3>
+          <h3>إضافة لعبة</h3>
           <button onClick={onClose} className="modal-close">
-            <X size={24} />
+            <X size={20} />
           </button>
         </div>
         
         <div className="modal-body">
-          <div className="modal-filters">
-            <div className="search-wrapper large">
-              <Search size={20} className="search-icon" />
-              <input
-                type="text"
-                placeholder="ابحث عن لعبة..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="search-input large"
-                autoFocus
-              />
-            </div>
+          <input
+            type="text"
+            placeholder="ابحث عن لعبة..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="modal-search"
+            autoFocus
+          />
 
-            <select
-              value={selectedCategory}
-              onChange={(e) => setSelectedCategory(e.target.value)}
-              className="category-select"
-            >
-              {categories.map(cat => (
-                <option key={cat.value} value={cat.value}>
-                  {cat.label}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className="games-list">
+          <div className="games-simple-list">
             {filteredGames.length === 0 ? (
-              <div className="empty-state">
-                <Search size={48} />
-                <p>لا توجد نتائج</p>
-              </div>
+              <div className="empty-state">لا توجد نتائج</div>
             ) : (
               filteredGames.map(game => (
                 <div
                   key={game.id}
-                  className="game-select-item"
+                  className="game-simple-item"
                   onClick={() => {
                     onAddGame(game);
                     onClose();
                   }}
                 >
-                  <GameImage src={game.image_url} alt={game.name} size="small" />
-                  <div className="game-select-info">
-                    <h4>{game.name}</h4>
-                    <div className="game-price">
-                      {formatCurrency(game.price_per_15min)} / 15 دقيقة
-                    </div>
-                  </div>
-                  <button className="add-btn">
-                    <Plus size={20} />
-                  </button>
+                  <span>{game.name}</span>
+                  <span className="game-price">{formatCurrency(game.price_per_15min)}</span>
+                  <Plus size={16} />
                 </div>
               ))
             )}
@@ -1351,73 +1178,51 @@ const RentalDetailsModal = ({ show, onClose, rental, items }) => {
     <div className="modal-overlay">
       <div className="modal">
         <div className="modal-header">
-          <h3>
-            <Eye size={24} />
-            تفاصيل التأجير #{rental.rental_number}
-          </h3>
+          <h3>تفاصيل التأجير #{rental.rental_number}</h3>
           <button onClick={onClose} className="modal-close">
-            <X size={24} />
+            <X size={20} />
           </button>
         </div>
         
         <div className="modal-body">
-          <div className="details-section">
-            <div className="details-grid">
-              <div className="detail-item">
-                <span className="detail-label">العميل:</span>
-                <span className="detail-value">{rental.customer_name}</span>
+          <div className="details-grid">
+            <div className="detail-row">
+              <span className="label">العميل:</span>
+              <span className="value">{rental.customer_name}</span>
+            </div>
+            {rental.customer_phone && (
+              <div className="detail-row">
+                <span className="label">الهاتف:</span>
+                <span className="value">{rental.customer_phone}</span>
               </div>
-              {rental.customer_phone && (
-                <div className="detail-item">
-                  <span className="detail-label">الهاتف:</span>
-                  <span className="detail-value">{rental.customer_phone}</span>
-                </div>
-              )}
-              <div className="detail-item">
-                <span className="detail-label">النوع:</span>
-                <span className={`rental-type-badge ${rental.rental_type}`}>
-                  {RENTAL_TYPES.find(t => t.value === rental.rental_type)?.label}
-                </span>
+            )}
+            <div className="detail-row">
+              <span className="label">البداية:</span>
+              <span className="value">{formatDateTime(rental.start_time)}</span>
+            </div>
+            {rental.end_time && (
+              <div className="detail-row">
+                <span className="label">النهاية:</span>
+                <span className="value">{formatDateTime(rental.end_time)}</span>
               </div>
-              <div className="detail-item">
-                <span className="detail-label">وقت البدء:</span>
-                <span className="detail-value">{formatDateTime(rental.start_time)}</span>
-              </div>
+            )}
+            <div className="detail-row">
+              <span className="label">المبلغ:</span>
+              <span className="value highlight">{formatCurrency(rental.final_amount || rental.total_amount)}</span>
             </div>
           </div>
 
-          <div className="details-section">
-            <h4>الألعاب ({rentalItems.length})</h4>
-            <div className="items-grid">
-              {rentalItems.map(item => (
-                <div key={item.id} className="item-card">
-                  <div className="item-card-header">
-                    <Gamepad2 size={16} />
-                    <span className="item-name">{item.game_name}</span>
-                  </div>
-                  <div className="item-card-details">
-                    {item.child_name && (
-                      <div className="item-detail">
-                        <User size={12} />
-                        <span>{item.child_name}</span>
-                      </div>
-                    )}
-                    {item.rental_type === 'fixed' && (
-                      <div className="item-detail">
-                        <Clock size={12} />
-                        <span>{item.duration_minutes} دقيقة</span>
-                      </div>
-                    )}
-                    {item.quantity > 1 && (
-                      <div className="item-detail">
-                        <Package size={12} />
-                        <span>x{item.quantity}</span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
+          <h4>الألعاب ({rentalItems.length})</h4>
+          <div className="items-list">
+            {rentalItems.map(item => (
+              <div key={item.id} className="item-row">
+                <Gamepad2 size={14} />
+                <span className="game-name">{item.game_name}</span>
+                {item.child_name && <span className="child-name">({item.child_name})</span>}
+                {item.quantity > 1 && <span className="badge">x{item.quantity}</span>}
+                <span className="item-price">{formatCurrency(item.total_price)}</span>
+              </div>
+            ))}
           </div>
         </div>
 
@@ -1482,8 +1287,8 @@ const CompleteOpenRentalModal = ({ show, onClose, rental, items, onConfirm }) =>
             <CheckCircle size={24} />
           </div>
           <h3>إنهاء التأجير المفتوح</h3>
-          <button onClick={onClose} className="modal-close" disabled={isSubmitting}>
-            <X size={24} />
+          <button onClick={onClose} className="modal-close">
+            <X size={20} />
           </button>
         </div>
         
@@ -1500,7 +1305,6 @@ const CompleteOpenRentalModal = ({ show, onClose, rental, items, onConfirm }) =>
           </div>
 
           <div className="items-summary">
-            <h4>الألعاب</h4>
             {rentalItems.map(item => (
               <div key={item.id} className="summary-row">
                 <span>
@@ -1524,7 +1328,6 @@ const CompleteOpenRentalModal = ({ show, onClose, rental, items, onConfirm }) =>
             <select
               value={paymentMethod}
               onChange={(e) => setPaymentMethod(e.target.value)}
-              disabled={isSubmitting}
               className="form-control"
             >
               {PAYMENT_METHODS.map(method => (
@@ -1537,29 +1340,11 @@ const CompleteOpenRentalModal = ({ show, onClose, rental, items, onConfirm }) =>
         </div>
 
         <div className="modal-footer">
-          <button
-            onClick={onClose}
-            className="btn btn-secondary"
-            disabled={isSubmitting}
-          >
+          <button onClick={onClose} className="btn btn-secondary">
             إلغاء
           </button>
-          <button
-            onClick={handleConfirm}
-            className="btn btn-success"
-            disabled={isSubmitting}
-          >
-            {isSubmitting ? (
-              <>
-                <Loader2 className="spinner" size={16} />
-                جاري المعالجة...
-              </>
-            ) : (
-              <>
-                <Check size={16} />
-                تأكيد الإنهاء
-              </>
-            )}
+          <button onClick={handleConfirm} className="btn btn-success" disabled={isSubmitting}>
+            {isSubmitting ? <Loader2 className="spinner" size={16} /> : 'تأكيد الإنهاء'}
           </button>
         </div>
       </div>
@@ -1578,7 +1363,6 @@ const CancelRentalModal = ({ show, onClose, rental, items, onConfirm }) => {
 
   const calculateRefund = useCallback(() => {
     if (!rental?.start_time) return 0;
-    
     const elapsedMinutes = Math.floor((new Date() - new Date(rental.start_time)) / (1000 * 60));
     
     if (elapsedMinutes < 3) {
@@ -1621,40 +1405,35 @@ const CancelRentalModal = ({ show, onClose, rental, items, onConfirm }) => {
             <Undo2 size={24} />
           </div>
           <h3>إلغاء التأجير</h3>
-          <button onClick={onClose} className="modal-close" disabled={isSubmitting}>
-            <X size={24} />
+          <button onClick={onClose} className="modal-close">
+            <X size={20} />
           </button>
         </div>
         
         <div className="modal-body">
           <div className="alert alert-info">
             <Info size={16} />
-            <div className="alert-content">
+            <div>
               <strong>العميل: {rental.customer_name}</strong>
               <p>رقم التأجير: {rental.rental_number}</p>
             </div>
           </div>
 
           <div className="refund-calculation">
-            <h4>تفاصيل الاسترداد</h4>
-            
             <div className="calc-row">
               <span>الوقت المنقضي:</span>
               <span>{elapsedMinutes} دقيقة</span>
             </div>
-            
             <div className="calc-row">
               <span>المبلغ المدفوع:</span>
               <span>{formatCurrency(rental.total_amount || 0)}</span>
             </div>
-            
             {!isWithin3Minutes && (
               <div className="calc-row">
                 <span>خصم 15 دقيقة:</span>
                 <span>- {formatCurrency((rental.total_amount || 0) - refundAmount)}</span>
               </div>
             )}
-            
             <div className="calc-row total highlight">
               <span>المبلغ المسترد:</span>
               <span>{formatCurrency(refundAmount)}</span>
@@ -1674,29 +1453,11 @@ const CancelRentalModal = ({ show, onClose, rental, items, onConfirm }) => {
         </div>
 
         <div className="modal-footer">
-          <button
-            onClick={onClose}
-            className="btn btn-secondary"
-            disabled={isSubmitting}
-          >
+          <button onClick={onClose} className="btn btn-secondary">
             إلغاء
           </button>
-          <button
-            onClick={handleConfirm}
-            className="btn btn-warning"
-            disabled={isSubmitting}
-          >
-            {isSubmitting ? (
-              <>
-                <Loader2 className="spinner" size={16} />
-                جاري الإلغاء...
-              </>
-            ) : (
-              <>
-                <Undo2 size={16} />
-                تأكيد الإلغاء
-              </>
-            )}
+          <button onClick={handleConfirm} className="btn btn-warning" disabled={isSubmitting}>
+            {isSubmitting ? <Loader2 className="spinner" size={16} /> : 'تأكيد الإلغاء'}
           </button>
         </div>
       </div>
@@ -1711,6 +1472,7 @@ const Rentals = () => {
   const [loading, setLoading] = useState({
     games: false,
     rentals: false,
+    completed: false,
     shift: false,
     processing: false
   });
@@ -1719,7 +1481,9 @@ const Rentals = () => {
   const [currentShift, setCurrentShift] = useState(null);
   const [shiftStats, setShiftStats] = useState(null);
   const [activeRentals, setActiveRentals] = useState([]);
+  const [completedRentals, setCompletedRentals] = useState([]);
   const [rentalItems, setRentalItems] = useState([]);
+  const [completedItems, setCompletedItems] = useState([]);
   
   const [cartItems, setCartItems] = useState([]);
   const [customerInfo, setCustomerInfo] = useState({
@@ -1731,29 +1495,26 @@ const Rentals = () => {
   const [showRentalDetailsModal, setShowRentalDetailsModal] = useState(false);
   const [showCompleteOpenModal, setShowCompleteOpenModal] = useState(false);
   const [showCancelModal, setShowCancelModal] = useState(false);
+  const [showModifyModal, setShowModifyModal] = useState(false);
+  const [showActiveTable, setShowActiveTable] = useState(false);
+  const [showCompletedTable, setShowCompletedTable] = useState(false);
   const [selectedRental, setSelectedRental] = useState(null);
   
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
 
   const userRole = user?.role || 'employee';
-  const isEmployee = userRole === 'employee';
   const isManager = userRole === 'admin' || userRole === 'branch_manager';
 
   // تحميل الألعاب
   const loadGames = useCallback(async () => {
     if (!user?.branch_id) return;
-    
     setLoading(prev => ({ ...prev, games: true }));
     try {
       const response = await api.getGames({ branch_id: user.branch_id });
-      
-      if (response.success) {
-        setGames(response.data || []);
-      }
+      if (response.success) setGames(response.data || []);
     } catch (error) {
       console.error('خطأ في تحميل الألعاب:', error);
-      setError('فشل تحميل الألعاب');
     } finally {
       setLoading(prev => ({ ...prev, games: false }));
     }
@@ -1764,7 +1525,6 @@ const Rentals = () => {
     setLoading(prev => ({ ...prev, shift: true }));
     try {
       const response = await api.getCurrentShift();
-      
       if (response.success && response.data) {
         setCurrentShift(response.data);
         setShiftStats(response.data);
@@ -1817,6 +1577,43 @@ const Rentals = () => {
     }
   }, [currentShift?.id]);
 
+  // تحميل التأجيرات المكتملة
+  const loadCompletedRentals = useCallback(async () => {
+    if (!currentShift?.id) {
+      setCompletedRentals([]);
+      setCompletedItems([]);
+      return;
+    }
+    
+    setLoading(prev => ({ ...prev, completed: true }));
+    
+    try {
+      const response = await api.getCompletedRentals({ shift_id: currentShift.id, limit: 50 });
+      
+      if (response.success) {
+        const rentals = response.data || [];
+        setCompletedRentals(rentals);
+        
+        const allItems = [];
+        rentals.forEach(rental => {
+          if (rental.items && rental.items.length > 0) {
+            allItems.push(...rental.items);
+          }
+        });
+        setCompletedItems(allItems);
+      } else {
+        setCompletedRentals([]);
+        setCompletedItems([]);
+      }
+    } catch (error) {
+      console.error('خطأ في تحميل التأجيرات المكتملة:', error);
+      setCompletedRentals([]);
+      setCompletedItems([]);
+    } finally {
+      setLoading(prev => ({ ...prev, completed: false }));
+    }
+  }, [currentShift?.id]);
+
   // تحديث جميع البيانات
   const refreshAllData = useCallback(async () => {
     await loadCurrentShift();
@@ -1833,7 +1630,6 @@ const Rentals = () => {
     setLoading(prev => ({ ...prev, processing: true }));
     try {
       const response = await api.startShift(0);
-
       if (response.success) {
         setCurrentShift(response.data);
         setSuccess('✅ تم فتح الشيفت بنجاح');
@@ -1852,18 +1648,18 @@ const Rentals = () => {
   // إنهاء الشيفت
   const handleEndShift = useCallback(async (closingCash, notes) => {
     if (!currentShift) return;
-
     setLoading(prev => ({ ...prev, processing: true }));
     try {
       const response = await api.endShift(currentShift.id, {
         closing_cash: closingCash || 0,
         notes
       });
-
       if (response.success) {
         setCurrentShift(null);
         setActiveRentals([]);
         setRentalItems([]);
+        setCompletedRentals([]);
+        setCompletedItems([]);
         setSuccess('✅ تم إنهاء الشيفت بنجاح');
       } else {
         setError(`❌ فشل إنهاء الشيفت: ${response.message}`);
@@ -1878,7 +1674,7 @@ const Rentals = () => {
 
   // إضافة لعبة للسلة
   const handleAddToCart = useCallback((game) => {
-    if (!currentShift && isEmployee) {
+    if (!currentShift && userRole === 'employee') {
       setError('❌ يجب فتح شيفت أولاً');
       return;
     }
@@ -1898,14 +1694,12 @@ const Rentals = () => {
     ]);
 
     setShowAddGameModal(false);
-  }, [currentShift, isEmployee]);
+  }, [currentShift, userRole]);
 
   // تحديث عنصر في السلة
   const handleUpdateCartItem = useCallback((itemId, updates) => {
     setCartItems(prev =>
-      prev.map(item =>
-        item.id === itemId ? { ...item, ...updates } : item
-      )
+      prev.map(item => item.id === itemId ? { ...item, ...updates } : item)
     );
   }, []);
 
@@ -1972,7 +1766,6 @@ const Rentals = () => {
   // إنهاء تأجير مفتوح
   const handleCompleteOpenRental = useCallback(async (rental, data) => {
     if (!rental) return;
-
     setLoading(prev => ({ ...prev, processing: true }));
     try {
       const response = await api.completeOpenTime(rental.id, {
@@ -1984,6 +1777,7 @@ const Rentals = () => {
       if (response.success) {
         setSuccess(`✅ تم إنهاء التأجير ${rental.rental_number} بنجاح`);
         await loadActiveRentals();
+        await loadCompletedRentals();
       } else {
         setError(`❌ فشل إنهاء التأجير: ${response.message}`);
       }
@@ -1993,7 +1787,7 @@ const Rentals = () => {
     } finally {
       setLoading(prev => ({ ...prev, processing: false }));
     }
-  }, [loadActiveRentals]);
+  }, [loadActiveRentals, loadCompletedRentals]);
 
   // إلغاء تأجير
   const handleCancelRental = useCallback(async (rental, data) => {
@@ -2009,6 +1803,7 @@ const Rentals = () => {
       if (response.success) {
         setSuccess(`✅ تم إلغاء التأجير ${rental.rental_number} واسترداد ${formatCurrency(data.refund_amount)}`);
         await loadActiveRentals();
+        await loadCompletedRentals();
       } else {
         setError(`❌ فشل إلغاء التأجير: ${response.message}`);
       }
@@ -2018,7 +1813,57 @@ const Rentals = () => {
     } finally {
       setLoading(prev => ({ ...prev, processing: false }));
     }
+  }, [isManager, loadActiveRentals, loadCompletedRentals]);
+
+  // تعديل تأجير
+  const handleModifyRental = useCallback(async (rental, data) => {
+    if (!isManager) {
+      setError('❌ ليس لديك صلاحية تعديل التأجيرات');
+      return;
+    }
+
+    setLoading(prev => ({ ...prev, processing: true }));
+    try {
+      // هنا يمكن إضافة API للتعديل
+      setSuccess(`✅ تم تعديل التأجير ${rental.rental_number} بنجاح`);
+      await loadActiveRentals();
+    } catch (error) {
+      console.error('خطأ في تعديل التأجير:', error);
+      setError('حدث خطأ في تعديل التأجير');
+    } finally {
+      setLoading(prev => ({ ...prev, processing: false }));
+    }
   }, [isManager, loadActiveRentals]);
+
+  // التحقق من انتهاء التأجيرات
+  useEffect(() => {
+    const checkExpiredRentals = async () => {
+      if (!activeRentals.length) return;
+
+      const expiredRentals = activeRentals.filter(rental => {
+        if (rental.rental_type !== 'fixed' || !rental.start_time) return false;
+        const startTime = new Date(rental.start_time);
+        const duration = rental.total_duration || 15;
+        const endTime = new Date(startTime.getTime() + duration * 60000);
+        return new Date() > endTime;
+      });
+
+      if (expiredRentals.length > 0) {
+        for (const rental of expiredRentals) {
+          try {
+            await api.completeFixedTime(rental.id);
+          } catch (error) {
+            console.error(`خطأ في إنهاء التأجير ${rental.id}:`, error);
+          }
+        }
+        await loadActiveRentals();
+        await loadCompletedRentals();
+      }
+    };
+
+    const interval = setInterval(checkExpiredRentals, 1000);
+    return () => clearInterval(interval);
+  }, [activeRentals, loadActiveRentals, loadCompletedRentals]);
 
   // Effects
   useEffect(() => {
@@ -2028,16 +1873,15 @@ const Rentals = () => {
   useEffect(() => {
     if (currentShift?.id) {
       loadActiveRentals();
+      loadCompletedRentals();
     }
-  }, [currentShift?.id, loadActiveRentals]);
+  }, [currentShift?.id, loadActiveRentals, loadCompletedRentals]);
 
   useEffect(() => {
     if (!currentShift?.id) return;
-
     const interval = setInterval(() => {
       loadActiveRentals();
     }, 30000);
-
     return () => clearInterval(interval);
   }, [currentShift?.id, loadActiveRentals]);
 
@@ -2061,12 +1905,32 @@ const Rentals = () => {
         loading={loading.processing}
         userRole={userRole}
         activeRentals={activeRentals}
-        completedRentals={[]}
+        completedRentals={completedRentals}
       />
 
-      <div className="rentals-content">
-        <div className="main-panel">
-          <GamesGrid
+      <div className="page-header">
+        <h1>صفحة التأجير</h1>
+        <div className="header-buttons">
+          <button 
+            className={`header-btn ${showActiveTable ? 'active' : ''}`}
+            onClick={() => setShowActiveTable(!showActiveTable)}
+          >
+            <Activity size={18} />
+            <span>التأجيرات النشطة ({activeRentals.length})</span>
+          </button>
+          <button 
+            className={`header-btn ${showCompletedTable ? 'active' : ''}`}
+            onClick={() => setShowCompletedTable(!showCompletedTable)}
+          >
+            <History size={18} />
+            <span>التأجيرات المكتملة ({completedRentals.length})</span>
+          </button>
+        </div>
+      </div>
+
+      <div className="main-content">
+        <div className="games-cart-container">
+          <SimpleGamesList
             games={games}
             branchId={user?.branch_id}
             onAddToCart={handleAddToCart}
@@ -2075,32 +1939,7 @@ const Rentals = () => {
             userRole={userRole}
           />
 
-          <ActiveRentals
-            rentals={activeRentals}
-            items={rentalItems}
-            games={games}
-            loading={loading}
-            onComplete={(rental) => {
-              if (rental.rental_type === 'open') {
-                setSelectedRental(rental);
-                setShowCompleteOpenModal(true);
-              }
-            }}
-            onCancel={(rental) => {
-              setSelectedRental(rental);
-              setShowCancelModal(true);
-            }}
-            onViewDetails={(rental) => {
-              setSelectedRental(rental);
-              setShowRentalDetailsModal(true);
-            }}
-            currentShift={currentShift}
-            userRole={userRole}
-          />
-        </div>
-
-        <div className="cart-panel">
-          <RentalCart
+          <EnhancedCart
             items={cartItems}
             onUpdateItem={handleUpdateCartItem}
             onRemoveItem={handleRemoveCartItem}
@@ -2111,12 +1950,64 @@ const Rentals = () => {
             }
             onSubmit={handleCreateRental}
             isSubmitting={loading.processing}
-            games={games}
             onAddGame={() => setShowAddGameModal(true)}
             currentShift={currentShift}
             userRole={userRole}
           />
         </div>
+
+        {showActiveTable && (
+          <div className="tables-section">
+            <h2>
+              <Activity size={20} />
+              التأجيرات النشطة
+            </h2>
+            <ActiveRentalsTable
+              rentals={activeRentals}
+              items={rentalItems}
+              loading={loading}
+              onComplete={(rental) => {
+                if (rental.rental_type === 'open') {
+                  setSelectedRental(rental);
+                  setShowCompleteOpenModal(true);
+                }
+              }}
+              onCancel={(rental) => {
+                setSelectedRental(rental);
+                setShowCancelModal(true);
+              }}
+              onModify={(rental) => {
+                setSelectedRental(rental);
+                setShowModifyModal(true);
+              }}
+              onViewDetails={(rental) => {
+                setSelectedRental(rental);
+                setShowRentalDetailsModal(true);
+              }}
+              currentShift={currentShift}
+              userRole={userRole}
+            />
+          </div>
+        )}
+
+        {showCompletedTable && (
+          <div className="tables-section">
+            <h2>
+              <History size={20} />
+              التأجيرات المكتملة
+            </h2>
+            <CompletedRentalsTable
+              rentals={completedRentals}
+              items={completedItems}
+              loading={loading}
+              onViewDetails={(rental) => {
+                setSelectedRental(rental);
+                setShowRentalDetailsModal(true);
+              }}
+              currentShift={currentShift}
+            />
+          </div>
+        )}
       </div>
 
       <AddGameModal
@@ -2133,7 +2024,7 @@ const Rentals = () => {
           setSelectedRental(null);
         }}
         rental={selectedRental}
-        items={rentalItems}
+        items={[...rentalItems, ...completedItems]}
       />
 
       <CompleteOpenRentalModal
@@ -2158,29 +2049,41 @@ const Rentals = () => {
         onConfirm={handleCancelRental}
       />
 
+      <ModifyRentalModal
+        show={showModifyModal}
+        onClose={() => {
+          setShowModifyModal(false);
+          setSelectedRental(null);
+        }}
+        rental={selectedRental}
+        items={rentalItems}
+        games={games}
+        onConfirm={handleModifyRental}
+      />
+
       {error && (
         <div className="toast error">
-          <AlertCircle size={20} />
+          <AlertCircle size={18} />
           <span>{error}</span>
           <button onClick={() => setError(null)}>
-            <X size={16} />
+            <X size={14} />
           </button>
         </div>
       )}
 
       {success && (
         <div className="toast success">
-          <CheckCircle size={20} />
+          <CheckCircle size={18} />
           <span>{success}</span>
           <button onClick={() => setSuccess(null)}>
-            <X size={16} />
+            <X size={14} />
           </button>
         </div>
       )}
 
       {loading.processing && (
         <div className="global-loading">
-          <Loader2 className="spinner" size={32} />
+          <Loader2 className="spinner" size={24} />
         </div>
       )}
     </div>

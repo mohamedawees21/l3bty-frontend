@@ -1,234 +1,116 @@
-/* ==================== Rentals.css ==================== */
-/* تصميم احترافي وسلس لنظام إدارة التأجير */
+/* src/pages/employee/Rentals.css */
 
-/* ===== المتغيرات الأساسية ===== */
+/* ==================== المتغيرات العامة ==================== */
 :root {
-  /* الألوان الرئيسية */
-  --primary-color: #4361ee;
-  --primary-dark: #3a56d4;
-  --primary-light: #6c8cff;
-  --secondary-color: #06d6a0;
-  --success-color: #10b981;
-  --warning-color: #f59e0b;
+  --primary-color: #2563eb;
+  --primary-dark: #1d4ed8;
+  --secondary-color: #10b981;
   --danger-color: #ef4444;
+  --warning-color: #f59e0b;
   --info-color: #3b82f6;
-  --purple-color: #8b5cf6;
-  
-  /* الألوان المحايدة */
   --dark-color: #1f2937;
-  --gray-800: #2d3748;
-  --gray-700: #4a5568;
-  --gray-600: #718096;
-  --gray-500: #a0aec0;
-  --gray-400: #cbd5e0;
-  --gray-300: #e2e8f0;
-  --gray-200: #edf2f7;
-  --gray-100: #f7fafc;
-  --white: #ffffff;
-  
-  /* ألوان الحالة */
-  --open-color: #f59e0b;
-  --fixed-color: #4361ee;
-  --expired-color: #ef4444;
-  --available-color: #10b981;
-  --maintenance-color: #f97316;
-  
-  /* الظلال */
-  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.05);
-  --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.1);
-  --shadow-lg: 0 8px 16px rgba(0, 0, 0, 0.15);
-  --shadow-xl: 0 12px 24px rgba(0, 0, 0, 0.2);
-  --shadow-glow: 0 0 15px rgba(67, 97, 238, 0.5);
-  
-  /* الحواف */
-  --radius-sm: 6px;
-  --radius-md: 10px;
-  --radius-lg: 16px;
-  --radius-xl: 24px;
-  --radius-full: 9999px;
-  
-  /* الانتقالات */
-  --transition-fast: 0.15s ease;
-  --transition-normal: 0.25s ease;
-  --transition-slow: 0.35s ease;
-  
-  /* التباعد */
-  --space-xxs: 4px;
-  --space-xs: 8px;
-  --space-sm: 12px;
-  --space-md: 16px;
-  --space-lg: 20px;
-  --space-xl: 24px;
-  --space-2xl: 32px;
-  --space-3xl: 40px;
+  --light-color: #f3f4f6;
+  --border-color: #e5e7eb;
+  --text-primary: #111827;
+  --text-secondary: #6b7280;
+  --bg-primary: #ffffff;
+  --bg-secondary: #f9fafb;
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  --radius-sm: 0.375rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
 }
 
-/* ===== التنسيقات العامة ===== */
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-
+/* ==================== الصفحة الرئيسية ==================== */
 .rentals-page {
   min-height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  font-family: 'Cairo', sans-serif;
-  direction: rtl;
-  position: relative;
-  overflow-x: hidden;
+  background: var(--bg-secondary);
+  padding: 1rem;
 }
 
-/* الخلفية المتحركة */
-.rentals-page::before {
-  content: '';
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: 
-    radial-gradient(circle at 20% 50%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
-    radial-gradient(circle at 80% 80%, rgba(255, 255, 255, 0.1) 0%, transparent 50%);
-  pointer-events: none;
-  z-index: 0;
-}
-
-/* ===== شريط حالة الشيفت ===== */
+/* ==================== شريط حالة الشيفت ==================== */
 .shift-status-bar {
-  background: var(--white);
-  backdrop-filter: blur(10px);
+  background: var(--bg-primary);
   border-radius: var(--radius-lg);
-  margin: var(--space-md) var(--space-xl);
-  padding: var(--space-md) var(--space-xl);
+  padding: 1rem;
+  margin-bottom: 1rem;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  box-shadow: var(--shadow-lg);
-  position: relative;
-  z-index: 10;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  animation: slideDown 0.5s ease;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-color);
 }
 
 .shift-status-bar.open {
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-  color: var(--white);
+  border-right: 4px solid var(--secondary-color);
 }
 
 .shift-status-bar.closed {
-  background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
-  color: var(--white);
-}
-
-.shift-status-bar.loading {
-  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-  justify-content: center;
+  border-right: 4px solid var(--danger-color);
 }
 
 .shift-status-info {
   display: flex;
   align-items: center;
-  gap: var(--space-md);
+  gap: 1rem;
 }
 
 .status-icon {
   width: 40px;
   height: 40px;
-  border-radius: var(--radius-full);
-  background: rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  animation: pulse 2s infinite;
+  background: var(--bg-secondary);
 }
 
 .status-icon.pulse {
   animation: pulse 2s infinite;
 }
 
-.status-text {
-  display: flex;
-  flex-direction: column;
-}
-
-.status-title {
-  font-size: 1.1rem;
-  font-weight: 700;
-}
-
-.status-subtitle {
-  font-size: 0.85rem;
-  opacity: 0.9;
+@keyframes pulse {
+  0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+  70% { box-shadow: 0 0 0 10px rgba(16, 185, 129, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
 }
 
 .shift-details {
   display: flex;
   flex-direction: column;
-  gap: var(--space-xxs);
+  gap: 0.25rem;
 }
 
 .shift-number-badge {
   display: flex;
   align-items: center;
-  gap: var(--space-xxs);
-  background: rgba(255, 255, 255, 0.2);
-  padding: var(--space-xxs) var(--space-sm);
-  border-radius: var(--radius-full);
-  font-size: 0.85rem;
+  gap: 0.25rem;
+  background: var(--primary-color);
+  color: white;
+  padding: 0.25rem 0.5rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.75rem;
 }
 
 .shift-time {
   display: flex;
   align-items: center;
-  gap: var(--space-xxs);
-  font-size: 0.85rem;
-  opacity: 0.9;
+  gap: 0.25rem;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
 }
 
 .shift-stats {
   display: flex;
-  align-items: center;
-  gap: var(--space-xl);
+  gap: 1.5rem;
 }
 
 .shift-stat {
   display: flex;
   align-items: center;
-  gap: var(--space-sm);
-  cursor: pointer;
-  padding: var(--space-xs) var(--space-sm);
-  border-radius: var(--radius-md);
-  transition: var(--transition-normal);
-}
-
-.shift-stat:hover {
-  background: rgba(255, 255, 255, 0.15);
-  transform: translateY(-2px);
-}
-
-.stat-icon {
-  width: 32px;
-  height: 32px;
-  border-radius: var(--radius-full);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.stat-icon.revenue {
-  background: rgba(255, 215, 0, 0.2);
-  color: #ffd700;
-}
-
-.stat-icon.active {
-  background: rgba(16, 185, 129, 0.2);
-  color: #10b981;
-}
-
-.stat-icon.completed {
-  background: rgba(59, 130, 246, 0.2);
-  color: #3b82f6;
+  gap: 0.5rem;
 }
 
 .shift-stat-content {
@@ -238,586 +120,379 @@
 
 .shift-stat-label {
   font-size: 0.75rem;
-  opacity: 0.9;
+  color: var(--text-secondary);
 }
 
 .shift-stat-value {
-  font-size: 1.25rem;
-  font-weight: 700;
+  font-weight: 600;
+  color: var(--text-primary);
 }
+
+.stat-icon.revenue { color: var(--secondary-color); }
+.stat-icon.active { color: var(--primary-color); }
+.stat-icon.completed { color: var(--info-color); }
 
 .shift-actions {
   display: flex;
-  align-items: center;
-  gap: var(--space-sm);
+  gap: 0.5rem;
 }
 
-.loading-animation {
-  display: flex;
-  align-items: center;
-  gap: var(--space-md);
-}
-
-/* ===== المحتوى الرئيسي ===== */
-.rentals-content {
-  display: grid;
-  grid-template-columns: 1fr 380px;
-  gap: var(--space-xl);
-  padding: var(--space-xl);
-  position: relative;
-  z-index: 1;
-}
-
-.main-panel {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-xl);
-}
-
-.cart-panel {
-  position: sticky;
-  top: var(--space-xl);
-  height: fit-content;
-  max-height: calc(100vh - 200px);
-  overflow-y: auto;
-}
-
-/* ===== قسم الألعاب ===== */
-.games-section {
-  background: var(--white);
-  border-radius: var(--radius-xl);
-  padding: var(--space-xl);
-  box-shadow: var(--shadow-xl);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  animation: fadeIn 0.5s ease;
-}
-
-.games-section.disabled {
-  opacity: 0.7;
-  pointer-events: none;
-}
-
-.games-header {
+/* ==================== رأس الصفحة ==================== */
+.page-header {
+  background: var(--bg-primary);
+  border-radius: var(--radius-lg);
+  padding: 1rem;
+  margin-bottom: 1rem;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: var(--space-xl);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-color);
 }
 
-.header-title {
+.page-header h1 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.header-buttons {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.header-btn {
   display: flex;
   align-items: center;
-  gap: var(--space-sm);
-}
-
-.header-title h3 {
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: var(--dark-color);
-  display: flex;
-  align-items: center;
-  gap: var(--space-xs);
-}
-
-.games-count {
-  background: var(--primary-color);
-  color: var(--white);
-  padding: var(--space-xxs) var(--space-sm);
-  border-radius: var(--radius-full);
-  font-size: 0.9rem;
-}
-
-.header-actions {
-  display: flex;
-  align-items: center;
-  gap: var(--space-sm);
-}
-
-.view-toggle {
-  display: flex;
-  align-items: center;
-  gap: var(--space-xxs);
-  background: var(--gray-200);
-  padding: var(--space-xxs);
-  border-radius: var(--radius-full);
-}
-
-.btn-icon {
-  width: 36px;
-  height: 36px;
-  border-radius: var(--radius-full);
-  border: none;
-  background: transparent;
-  color: var(--gray-600);
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border: 1px solid var(--border-color);
+  background: var(--bg-primary);
+  border-radius: var(--radius-md);
+  font-size: 0.875rem;
+  color: var(--text-secondary);
   cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: var(--transition-normal);
+  transition: all 0.2s;
 }
 
-.btn-icon:hover {
-  background: var(--gray-300);
-  color: var(--dark-color);
-}
-
-.btn-icon.active {
-  background: var(--primary-color);
-  color: var(--white);
-}
-
-.btn-icon.danger:hover {
-  background: var(--danger-color);
-  color: var(--white);
-}
-
-/* فلاتر الألعاب */
-.games-filters {
-  display: flex;
-  align-items: center;
-  gap: var(--space-md);
-  margin-bottom: var(--space-xl);
-}
-
-.search-wrapper {
-  flex: 1;
-  position: relative;
-}
-
-.search-icon {
-  position: absolute;
-  right: var(--space-md);
-  top: 50%;
-  transform: translateY(-50%);
-  color: var(--gray-500);
-}
-
-.search-input {
-  width: 100%;
-  padding: var(--space-md) var(--space-md) var(--space-md) var(--space-2xl);
-  border: 2px solid var(--gray-300);
-  border-radius: var(--radius-full);
-  font-size: 0.95rem;
-  transition: var(--transition-normal);
-  font-family: 'Cairo', sans-serif;
-}
-
-.search-input:focus {
-  outline: none;
-  border-color: var(--primary-color);
-  box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.2);
-}
-
-.search-input.small {
-  padding: var(--space-xs) var(--space-xs) var(--space-xs) var(--space-xl);
-  font-size: 0.85rem;
-}
-
-.clear-search {
-  position: absolute;
-  left: var(--space-md);
-  top: 50%;
-  transform: translateY(-50%);
-  background: none;
-  border: none;
-  color: var(--gray-500);
-  cursor: pointer;
-  padding: var(--space-xxs);
-  border-radius: var(--radius-full);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.clear-search:hover {
-  background: var(--gray-200);
-  color: var(--danger-color);
-}
-
-.filter-select {
-  padding: var(--space-md) var(--space-xl);
-  border: 2px solid var(--gray-300);
-  border-radius: var(--radius-full);
-  font-size: 0.95rem;
-  color: var(--dark-color);
-  background: var(--white);
-  cursor: pointer;
-  transition: var(--transition-normal);
-  font-family: 'Cairo', sans-serif;
-  min-width: 150px;
-}
-
-.filter-select:focus {
-  outline: none;
+.header-btn:hover {
+  background: var(--bg-secondary);
   border-color: var(--primary-color);
 }
 
-/* شبكة الألعاب */
-.games-grid {
+.header-btn.active {
+  background: var(--primary-color);
+  color: white;
+  border-color: var(--primary-color);
+}
+
+/* ==================== المحتوى الرئيسي ==================== */
+.main-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.games-cart-container {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: var(--space-lg);
+  grid-template-columns: 1fr 350px;
+  gap: 1rem;
 }
 
-.game-card {
-  background: var(--white);
+/* ==================== قائمة الألعاب المبسطة ==================== */
+.simple-games-section {
+  background: var(--bg-primary);
   border-radius: var(--radius-lg);
-  overflow: hidden;
-  box-shadow: var(--shadow-md);
-  cursor: pointer;
-  transition: var(--transition-normal);
-  border: 2px solid transparent;
-  position: relative;
+  padding: 1rem;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-color);
 }
 
-.game-card:hover {
-  transform: translateY(-5px) scale(1.02);
-  box-shadow: var(--shadow-xl);
-  border-color: var(--primary-color);
-}
-
-.game-card.unavailable {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.game-card-image {
-  position: relative;
-  height: 150px;
-  overflow: hidden;
-}
-
-.game-image-container {
-  width: 100%;
-  height: 100%;
-  position: relative;
-  background: var(--gray-200);
-}
-
-.game-image {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  transition: var(--transition-normal);
-}
-
-.game-image.visible {
-  opacity: 1;
-}
-
-.game-image.hidden {
-  opacity: 0;
-}
-
-.image-placeholder {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
+.simple-games-header {
   display: flex;
   align-items: center;
-  justify-content: center;
-  color: var(--gray-500);
+  justify-content: space-between;
+  margin-bottom: 1rem;
 }
 
-.game-status-badge {
-  position: absolute;
-  top: var(--space-sm);
-  right: var(--space-sm);
-  background: rgba(0, 0, 0, 0.7);
-  color: var(--white);
-  padding: var(--space-xxs) var(--space-sm);
-  border-radius: var(--radius-full);
-  font-size: 0.75rem;
-  display: flex;
-  align-items: center;
-  gap: var(--space-xxs);
-  backdrop-filter: blur(5px);
-}
-
-.game-card-content {
-  padding: var(--space-md);
-}
-
-.game-title {
+.simple-games-header h3 {
   font-size: 1rem;
   font-weight: 600;
-  color: var(--dark-color);
-  margin-bottom: var(--space-xs);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  color: var(--text-primary);
 }
 
-.game-price {
-  display: flex;
-  align-items: center;
-  gap: var(--space-xxs);
-  color: var(--primary-color);
-  font-weight: 600;
-  margin-bottom: var(--space-md);
+.simple-search {
+  position: relative;
+  width: 200px;
 }
 
-.price-value {
-  font-size: 1.1rem;
-}
-
-.price-unit {
-  font-size: 0.8rem;
-  color: var(--gray-600);
-}
-
-.add-to-cart-btn {
+.simple-search input {
   width: 100%;
-  padding: var(--space-sm);
-  background: var(--primary-color);
-  color: var(--white);
-  border: none;
+  padding: 0.5rem 0.5rem 0.5rem 2rem;
+  border: 1px solid var(--border-color);
   border-radius: var(--radius-md);
-  font-size: 0.9rem;
-  font-weight: 600;
+  font-size: 0.875rem;
+  outline: none;
+  transition: all 0.2s;
+}
+
+.simple-search input:focus {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
+}
+
+.simple-search .search-icon {
+  position: absolute;
+  left: 0.5rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-secondary);
+}
+
+.simple-games-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.simple-game-card {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
   cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-xs);
-  transition: var(--transition-normal);
-  opacity: 0;
-  transform: translateY(10px);
+  transition: all 0.2s;
 }
 
-.game-card:hover .add-to-cart-btn {
-  opacity: 1;
-  transform: translateY(0);
+.simple-game-card:hover {
+  border-color: var(--primary-color);
+  background: var(--bg-secondary);
 }
 
-.add-to-cart-btn:hover:not(:disabled) {
-  background: var(--primary-dark);
-  transform: scale(1.05);
-}
-
-.add-to-cart-btn:disabled {
-  background: var(--gray-500);
-  cursor: not-allowed;
-}
-
-/* قائمة الألعاب */
-.games-list {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-md);
-}
-
-/* حالات التحميل والفارغة */
-.games-loading,
-.games-empty,
-.games-disabled-message {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: var(--space-3xl);
-  color: var(--gray-600);
-  text-align: center;
-}
-
-.games-loading .spinner,
-.loading-state .spinner,
-.global-loading .spinner {
-  animation: spin 1s linear infinite;
-  margin-bottom: var(--space-md);
-}
-
-@keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-}
-
-/* ===== سلة التأجير ===== */
-.cart {
-  background: var(--white);
-  border-radius: var(--radius-xl);
+.simple-game-image {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-sm);
   overflow: hidden;
-  box-shadow: var(--shadow-xl);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  animation: slideInLeft 0.5s ease;
+}
+
+.simple-game-info {
+  flex: 1;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.simple-game-name {
+  font-size: 0.875rem;
+  color: var(--text-primary);
+}
+
+.simple-game-price {
+  font-size: 0.75rem;
+  color: var(--secondary-color);
+  font-weight: 600;
+}
+
+.simple-add-btn {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--primary-color);
+  color: white;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.simple-add-btn:hover {
+  background: var(--primary-dark);
+  transform: scale(1.1);
+}
+
+.simple-games-section.disabled {
+  opacity: 0.6;
+}
+
+.simple-games-disabled {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  gap: 0.5rem;
+  color: var(--text-secondary);
+}
+
+.simple-games-empty {
+  text-align: center;
+  padding: 2rem;
+  color: var(--text-secondary);
+}
+
+/* ==================== السلة المحسنة ==================== */
+.enhanced-cart {
+  background: var(--bg-primary);
+  border-radius: var(--radius-lg);
+  padding: 1rem;
+  box-shadow: var(--shadow-lg);
+  border: 1px solid var(--border-color);
+  height: fit-content;
+}
+
+.enhanced-cart.disabled {
+  opacity: 0.6;
 }
 
 .cart-header {
-  background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
-  color: var(--white);
-  padding: var(--space-lg);
   display: flex;
   align-items: center;
   justify-content: space-between;
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--border-color);
 }
 
-.header-title {
+.cart-title {
   display: flex;
   align-items: center;
-  gap: var(--space-sm);
+  gap: 0.5rem;
+}
+
+.cart-title h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary);
 }
 
 .cart-count {
-  background: rgba(255, 255, 255, 0.2);
-  padding: var(--space-xxs) var(--space-xs);
-  border-radius: var(--radius-full);
-  font-size: 0.85rem;
-  margin-right: var(--space-xs);
+  background: var(--primary-color);
+  color: white;
+  padding: 0.125rem 0.375rem;
+  border-radius: 1rem;
+  font-size: 0.75rem;
 }
 
-.cart-empty {
-  background: var(--white);
-  border-radius: var(--radius-xl);
-  padding: var(--space-3xl);
-  text-align: center;
-  color: var(--gray-600);
+.cart-clear {
+  background: none;
+  border: none;
+  color: var(--danger-color);
+  cursor: pointer;
+  padding: 0.25rem;
+  border-radius: var(--radius-sm);
+  transition: all 0.2s;
+}
+
+.cart-clear:hover {
+  background: rgba(239, 68, 68, 0.1);
+}
+
+.cart-empty-state {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: var(--space-lg);
-  box-shadow: var(--shadow-xl);
+  gap: 1rem;
+  padding: 2rem 1rem;
+  color: var(--text-secondary);
 }
 
-.cart-empty h3 {
-  font-size: 1.25rem;
-  color: var(--dark-color);
+.cart-disabled {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 2rem 1rem;
+  color: var(--text-secondary);
 }
 
-.cart-items {
+.cart-items-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
   max-height: 400px;
   overflow-y: auto;
-  padding: var(--space-md);
+  margin-bottom: 1rem;
 }
 
-.cart-item {
-  background: var(--gray-100);
-  border-radius: var(--radius-lg);
-  padding: var(--space-md);
-  margin-bottom: var(--space-md);
-  border: 2px solid transparent;
-  transition: var(--transition-normal);
-  animation: slideIn 0.3s ease;
-}
-
-.cart-item:hover {
-  border-color: var(--primary-color);
-  box-shadow: var(--shadow-md);
+.cart-item-simple {
+  padding: 0.75rem;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background: var(--bg-secondary);
 }
 
 .cart-item-header {
   display: flex;
-  align-items: center;
   justify-content: space-between;
-  margin-bottom: var(--space-sm);
-}
-
-.item-info {
-  display: flex;
   align-items: center;
-  gap: var(--space-xs);
+  margin-bottom: 0.5rem;
 }
 
 .item-name {
-  font-weight: 600;
-  color: var(--dark-color);
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text-primary);
 }
 
-.btn-remove {
-  width: 24px;
-  height: 24px;
-  border-radius: var(--radius-full);
+.item-remove {
+  background: none;
   border: none;
-  background: var(--danger-color);
-  color: var(--white);
+  color: var(--danger-color);
   cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: var(--transition-normal);
-}
-
-.btn-remove:hover:not(:disabled) {
-  transform: scale(1.1);
-  background: #dc2626;
-}
-
-.btn-remove:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.cart-item-details {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-sm);
-}
-
-.detail-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: var(--space-sm);
-}
-
-.detail-field {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-xxs);
-}
-
-.detail-field label {
-  font-size: 0.8rem;
-  color: var(--gray-600);
-  display: flex;
-  align-items: center;
-  gap: var(--space-xxs);
-}
-
-.detail-field.full-width {
-  grid-column: 1 / -1;
-}
-
-.select-small,
-.input-small {
-  padding: var(--space-xs);
-  border: 1px solid var(--gray-400);
+  padding: 0.25rem;
   border-radius: var(--radius-sm);
-  font-size: 0.85rem;
-  font-family: 'Cairo', sans-serif;
-  transition: var(--transition-normal);
+  transition: all 0.2s;
 }
 
-.select-small:focus,
-.input-small:focus {
+.item-remove:hover {
+  background: rgba(239, 68, 68, 0.1);
+}
+
+.cart-item-controls {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.control-select {
+  flex: 1;
+  padding: 0.375rem;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  font-size: 0.75rem;
   outline: none;
-  border-color: var(--primary-color);
-  box-shadow: 0 0 0 2px rgba(67, 97, 238, 0.2);
+  background: white;
 }
 
 .quantity-control {
   display: flex;
   align-items: center;
-  gap: var(--space-xs);
+  gap: 0.375rem;
 }
 
 .quantity-btn {
-  width: 24px;
-  height: 24px;
-  border-radius: var(--radius-full);
-  border: none;
-  background: var(--primary-color);
-  color: var(--white);
-  cursor: pointer;
+  width: 20px;
+  height: 20px;
+  border: 1px solid var(--border-color);
+  background: white;
+  border-radius: var(--radius-sm);
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: var(--transition-normal);
+  cursor: pointer;
+  transition: all 0.2s;
 }
 
 .quantity-btn:hover:not(:disabled) {
-  background: var(--primary-dark);
-  transform: scale(1.1);
+  background: var(--bg-secondary);
+  border-color: var(--primary-color);
 }
 
 .quantity-btn:disabled {
@@ -825,693 +500,406 @@
   cursor: not-allowed;
 }
 
-.quantity-value {
-  font-weight: 600;
-  min-width: 24px;
-  text-align: center;
-}
-
 .cart-item-total {
   display: flex;
-  align-items: center;
   justify-content: space-between;
-  margin-top: var(--space-sm);
-  padding-top: var(--space-sm);
-  border-top: 1px dashed var(--gray-400);
+  align-items: center;
+  font-size: 0.75rem;
+  padding-top: 0.5rem;
+  border-top: 1px dashed var(--border-color);
+}
+
+.item-price {
+  color: var(--secondary-color);
   font-weight: 600;
 }
 
-.amount {
-  color: var(--primary-color);
-  font-size: 1.1rem;
+.cart-customer-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
 }
 
-.cart-footer {
-  padding: var(--space-lg);
-  border-top: 2px solid var(--gray-300);
-  background: var(--gray-100);
+.customer-input {
+  padding: 0.5rem;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  font-size: 0.875rem;
+  outline: none;
+  transition: all 0.2s;
+}
+
+.customer-input:focus {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
 }
 
 .cart-summary {
-  background: var(--white);
-  border-radius: var(--radius-lg);
-  padding: var(--space-md);
-  margin: var(--space-md) 0;
-  animation: fadeIn 0.3s ease;
+  margin-bottom: 1rem;
+  padding: 0.75rem;
+  background: var(--bg-secondary);
+  border-radius: var(--radius-md);
 }
 
 .summary-row {
   display: flex;
-  align-items: center;
   justify-content: space-between;
-  padding: var(--space-xs) 0;
+  align-items: center;
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  margin-bottom: 0.5rem;
 }
 
-.summary-row.total {
-  font-weight: 700;
-  font-size: 1.1rem;
-  border-top: 2px solid var(--gray-300);
-  margin-top: var(--space-xs);
-  padding-top: var(--space-md);
+.summary-total {
+  font-weight: 600;
+  color: var(--secondary-color);
 }
 
-.total-amount {
-  color: var(--primary-color);
-  font-size: 1.25rem;
-}
-
-.discount-input,
-.payment-select,
-.notes-input {
-  width: 120px;
-  padding: var(--space-xs);
-  border: 1px solid var(--gray-400);
+.discount-input {
+  width: 60px;
+  padding: 0.25rem;
+  border: 1px solid var(--border-color);
   border-radius: var(--radius-sm);
-  font-family: 'Cairo', sans-serif;
-}
-
-.cart-customer {
-  margin: var(--space-md) 0;
-}
-
-.cart-customer h4 {
-  margin-bottom: var(--space-sm);
-  color: var(--dark-color);
-}
-
-.customer-fields {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-sm);
-}
-
-.form-group {
-  position: relative;
-}
-
-.field-icon {
-  position: absolute;
-  right: var(--space-md);
-  top: 50%;
-  transform: translateY(-50%);
-  color: var(--gray-500);
-  pointer-events: none;
-}
-
-.form-control {
-  width: 100%;
-  padding: var(--space-md) var(--space-md) var(--space-md) var(--space-2xl);
-  border: 2px solid var(--gray-300);
-  border-radius: var(--radius-lg);
-  font-size: 0.95rem;
-  transition: var(--transition-normal);
-  font-family: 'Cairo', sans-serif;
-}
-
-.form-control:focus {
-  outline: none;
-  border-color: var(--primary-color);
-  box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.2);
-}
-
-.form-control:disabled {
-  background: var(--gray-200);
-  cursor: not-allowed;
-}
-
-/* ===== التأجيرات النشطة ===== */
-.active-rentals-section {
-  background: var(--white);
-  border-radius: var(--radius-xl);
-  padding: var(--space-xl);
-  box-shadow: var(--shadow-xl);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  animation: fadeIn 0.5s ease 0.2s both;
-}
-
-.section-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: var(--space-xl);
-}
-
-.header-title {
-  display: flex;
-  align-items: center;
-  gap: var(--space-sm);
-}
-
-.section-count {
-  background: var(--primary-color);
-  color: var(--white);
-  padding: var(--space-xxs) var(--space-sm);
-  border-radius: var(--radius-full);
-  font-size: 0.9rem;
-  margin-right: var(--space-xs);
-}
-
-.rentals-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: var(--space-lg);
-}
-
-.rental-card {
-  background: linear-gradient(135deg, #ffffff, var(--gray-100));
-  border-radius: var(--radius-lg);
-  padding: var(--space-lg);
-  box-shadow: var(--shadow-md);
-  border: 2px solid transparent;
-  transition: var(--transition-normal);
-  position: relative;
-  overflow: hidden;
-}
-
-.rental-card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  right: 0;
-  width: 4px;
-  height: 100%;
-  background: var(--primary-color);
-  border-radius: var(--radius-full);
-}
-
-.rental-card.fixed::before {
-  background: var(--fixed-color);
-}
-
-.rental-card.open::before {
-  background: var(--open-color);
-}
-
-.rental-card.expired::before {
-  background: var(--expired-color);
-}
-
-.rental-card.expired {
-  border-color: var(--expired-color);
-  opacity: 0.8;
-}
-
-.rental-card:hover {
-  transform: translateY(-3px);
-  box-shadow: var(--shadow-lg);
-}
-
-.rental-card-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: var(--space-md);
-}
-
-.rental-number {
-  display: flex;
-  align-items: center;
-  gap: var(--space-xxs);
-  background: var(--gray-200);
-  padding: var(--space-xxs) var(--space-sm);
-  border-radius: var(--radius-full);
-  font-size: 0.85rem;
-}
-
-.rental-type-badge {
-  padding: var(--space-xxs) var(--space-sm);
-  border-radius: var(--radius-full);
-  font-size: 0.8rem;
-  font-weight: 600;
-}
-
-.rental-type-badge.fixed {
-  background: var(--fixed-color);
-  color: var(--white);
-}
-
-.rental-type-badge.open {
-  background: var(--open-color);
-  color: var(--white);
-}
-
-.rental-customer {
-  display: flex;
-  align-items: center;
-  gap: var(--space-sm);
-  margin-bottom: var(--space-sm);
-  font-weight: 600;
-}
-
-.customer-name {
-  color: var(--dark-color);
-}
-
-.rental-game-info {
-  display: flex;
-  align-items: center;
-  gap: var(--space-sm);
-  background: var(--gray-200);
-  padding: var(--space-sm);
-  border-radius: var(--radius-md);
-  margin-bottom: var(--space-md);
-}
-
-.game-name {
-  flex: 1;
-  font-weight: 500;
-}
-
-.game-quantity {
-  background: var(--primary-color);
-  color: var(--white);
-  padding: 2px 6px;
-  border-radius: var(--radius-full);
-  font-size: 0.75rem;
-}
-
-.rental-progress {
-  margin: var(--space-md) 0;
-}
-
-.progress-bar {
-  height: 6px;
-  background: var(--gray-300);
-  border-radius: var(--radius-full);
-  overflow: hidden;
-  margin-bottom: var(--space-xs);
-}
-
-.progress-fill {
-  height: 100%;
-  background: linear-gradient(90deg, var(--secondary-color), var(--primary-color));
-  border-radius: var(--radius-full);
-  transition: width 0.3s ease;
-}
-
-.progress-fill.expired {
-  background: var(--expired-color);
-}
-
-.remaining-time {
-  display: flex;
-  align-items: center;
-  gap: var(--space-xxs);
-  font-size: 0.85rem;
-  color: var(--gray-600);
-}
-
-.rental-actions {
-  display: flex;
-  align-items: center;
-  gap: var(--space-xs);
-  margin-top: var(--space-md);
-}
-
-.btn-action {
-  width: 32px;
-  height: 32px;
-  border-radius: var(--radius-full);
-  border: none;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: var(--transition-normal);
-}
-
-.btn-action.info {
-  background: var(--info-color);
-  color: var(--white);
-}
-
-.btn-action.success {
-  background: var(--success-color);
-  color: var(--white);
-}
-
-.btn-action.warning {
-  background: var(--warning-color);
-  color: var(--white);
-}
-
-.btn-action:hover {
-  transform: scale(1.1);
-}
-
-.empty-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: var(--space-3xl);
-  color: var(--gray-600);
   text-align: center;
 }
 
-/* ===== النوافذ المنبثقة ===== */
+/* ==================== الجداول ==================== */
+.tables-section {
+  background: var(--bg-primary);
+  border-radius: var(--radius-lg);
+  padding: 1rem;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-color);
+}
+
+.tables-section h2 {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.table-header {
+  margin-bottom: 1rem;
+}
+
+.table-search {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  font-size: 0.875rem;
+  outline: none;
+  transition: all 0.2s;
+}
+
+.table-search:focus {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
+}
+
+.table-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.table-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  transition: all 0.2s;
+}
+
+.table-row:hover {
+  border-color: var(--primary-color);
+  background: white;
+}
+
+.table-row.expired {
+  background: rgba(239, 68, 68, 0.05);
+  border-color: var(--danger-color);
+}
+
+.row-customer {
+  flex: 2;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.row-game {
+  flex: 2;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.row-time {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+}
+
+.row-amount {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--secondary-color);
+}
+
+.row-actions {
+  flex: 1;
+  display: flex;
+  gap: 0.25rem;
+  justify-content: flex-end;
+}
+
+.action-btn {
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  color: white;
+}
+
+.action-btn.info {
+  background: var(--info-color);
+}
+
+.action-btn.success {
+  background: var(--secondary-color);
+}
+
+.action-btn.warning {
+  background: var(--warning-color);
+}
+
+.action-btn.primary {
+  background: var(--primary-color);
+}
+
+.action-btn:hover {
+  transform: scale(1.05);
+  filter: brightness(1.1);
+}
+
+.badge {
+  background: var(--primary-color);
+  color: white;
+  padding: 0.125rem 0.375rem;
+  border-radius: 1rem;
+  font-size: 0.625rem;
+}
+
+.open-badge {
+  background: var(--warning-color);
+  color: white;
+  padding: 0.25rem 0.5rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.75rem;
+}
+
+.expired {
+  color: var(--danger-color) !important;
+  font-weight: 600;
+}
+
+.table-loading,
+.table-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  padding: 2rem;
+  color: var(--text-secondary);
+}
+
+.spinner {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* ==================== النوافذ المنبثقة ==================== */
 .modal-overlay {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.7);
-  backdrop-filter: blur(8px);
+  background: rgba(0, 0, 0, 0.5);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 1000;
-  animation: fadeIn 0.3s ease;
+  padding: 1rem;
 }
 
 .modal {
-  background: var(--white);
-  border-radius: var(--radius-xl);
-  width: 90%;
-  max-width: 600px;
+  background: white;
+  border-radius: var(--radius-lg);
+  width: 100%;
+  max-width: 500px;
   max-height: 90vh;
   overflow-y: auto;
-  box-shadow: var(--shadow-xl);
-  animation: slideUp 0.4s ease;
+  box-shadow: var(--shadow-lg);
 }
 
-.modal.modal-large {
-  max-width: 800px;
+.modal-small {
+  max-width: 400px;
 }
 
-.modal.modal-end-shift {
-  max-width: 500px;
+.modal-large {
+  max-width: 600px;
 }
 
 .modal-header {
-  padding: var(--space-xl);
-  border-bottom: 2px solid var(--gray-300);
-  display: flex;
-  align-items: center;
-  gap: var(--space-md);
-  position: sticky;
-  top: 0;
-  background: var(--white);
-  z-index: 1;
-}
-
-.modal-header .header-icon {
-  width: 48px;
-  height: 48px;
-  border-radius: var(--radius-full);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.header-icon.warning {
-  background: rgba(245, 158, 11, 0.1);
-  color: var(--warning-color);
-}
-
-.header-icon.success {
-  background: rgba(16, 185, 129, 0.1);
-  color: var(--success-color);
-}
-
-.modal-header h3 {
-  flex: 1;
-  font-size: 1.5rem;
-  color: var(--dark-color);
-}
-
-.modal-close {
-  width: 40px;
-  height: 40px;
-  border-radius: var(--radius-full);
-  border: none;
-  background: var(--gray-200);
-  color: var(--gray-600);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: var(--transition-normal);
-}
-
-.modal-close:hover:not(:disabled) {
-  background: var(--danger-color);
-  color: var(--white);
-  transform: rotate(90deg);
-}
-
-.modal-close:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.modal-body {
-  padding: var(--space-xl);
-}
-
-.modal-footer {
-  padding: var(--space-xl);
-  border-top: 2px solid var(--gray-300);
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: var(--space-md);
-  position: sticky;
-  bottom: 0;
-  background: var(--white);
-}
-
-/* مودال إضافة لعبة */
-.modal-filters {
-  display: flex;
-  align-items: center;
-  gap: var(--space-md);
-  margin-bottom: var(--space-xl);
-}
-
-.search-wrapper.large {
-  flex: 1;
-}
-
-.search-input.large {
-  padding: var(--space-lg) var(--space-lg) var(--space-lg) var(--space-3xl);
-  font-size: 1rem;
-}
-
-.category-select {
-  padding: var(--space-lg) var(--space-xl);
-  border: 2px solid var(--gray-300);
-  border-radius: var(--radius-lg);
-  font-size: 1rem;
-  font-family: 'Cairo', sans-serif;
-  min-width: 150px;
-}
-
-.games-list {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: var(--space-md);
-  max-height: 500px;
-  overflow-y: auto;
-}
-
-.game-select-item {
-  background: var(--gray-100);
-  border-radius: var(--radius-lg);
-  overflow: hidden;
-  cursor: pointer;
-  transition: var(--transition-normal);
-  border: 2px solid transparent;
-}
-
-.game-select-item:hover {
-  transform: translateY(-3px);
-  box-shadow: var(--shadow-lg);
-  border-color: var(--primary-color);
-}
-
-.game-select-item .game-image-container {
-  height: 120px;
-}
-
-.game-select-info {
-  padding: var(--space-md);
-  text-align: center;
-}
-
-.game-select-info h4 {
-  font-size: 0.95rem;
-  margin-bottom: var(--space-xs);
-}
-
-.game-price {
-  font-size: 0.9rem;
-  color: var(--primary-color);
-  font-weight: 600;
-}
-
-.add-btn {
-  width: 100%;
-  padding: var(--space-sm);
-  background: var(--primary-color);
-  color: var(--white);
-  border: none;
-  border-radius: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-xs);
-  transition: var(--transition-normal);
-}
-
-.game-select-item:hover .add-btn {
-  background: var(--primary-dark);
-}
-
-/* تفاصيل التأجير */
-.details-section {
-  margin-bottom: var(--space-xl);
-}
-
-.details-section h4 {
-  margin-bottom: var(--space-md);
-  color: var(--dark-color);
-}
-
-.details-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: var(--space-md);
-}
-
-.detail-item {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-xxs);
-}
-
-.detail-label {
-  font-size: 0.8rem;
-  color: var(--gray-600);
-}
-
-.detail-value {
-  font-weight: 600;
-  color: var(--dark-color);
-}
-
-.items-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-  gap: var(--space-sm);
-}
-
-.item-card {
-  background: var(--gray-100);
-  border-radius: var(--radius-md);
-  padding: var(--space-sm);
-  border: 1px solid var(--gray-300);
-}
-
-.item-card-header {
-  display: flex;
-  align-items: center;
-  gap: var(--space-xs);
-  margin-bottom: var(--space-xs);
-}
-
-.item-name {
-  font-weight: 600;
-  font-size: 0.9rem;
-}
-
-.item-card-details {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-xs);
-}
-
-.item-detail {
-  display: flex;
-  align-items: center;
-  gap: 2px;
-  background: var(--gray-200);
-  padding: 2px 6px;
-  border-radius: var(--radius-full);
-  font-size: 0.7rem;
-}
-
-/* مودال الإنهاء والإلغاء */
-.summary-card {
-  background: var(--gray-100);
-  border-radius: var(--radius-lg);
-  padding: var(--space-lg);
-  margin-bottom: var(--space-lg);
-}
-
-.items-summary {
-  margin: var(--space-lg) 0;
-}
-
-.items-summary h4 {
-  margin-bottom: var(--space-md);
-}
-
-.total-section {
-  background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
-  border-radius: var(--radius-lg);
-  padding: var(--space-lg);
-  color: var(--white);
-  margin: var(--space-lg) 0;
-}
-
-.total-section .summary-row {
-  color: var(--white);
-}
-
-.refund-calculation {
-  background: var(--gray-100);
-  border-radius: var(--radius-lg);
-  padding: var(--space-lg);
-  margin: var(--space-lg) 0;
-}
-
-.calc-row {
+  padding: 1rem;
+  border-bottom: 1px solid var(--border-color);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: var(--space-xs) 0;
+  position: sticky;
+  top: 0;
+  background: white;
+  z-index: 1;
 }
 
-.calc-row.highlight {
-  font-weight: 700;
-  color: var(--primary-color);
-  font-size: 1.1rem;
-  border-top: 2px dashed var(--gray-400);
-  margin-top: var(--space-xs);
-  padding-top: var(--space-md);
+.modal-header h3 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.header-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.header-icon.success { background: rgba(16, 185, 129, 0.1); color: var(--secondary-color); }
+.header-icon.warning { background: rgba(245, 158, 11, 0.1); color: var(--warning-color); }
+.header-icon.primary { background: rgba(37, 99, 235, 0.1); color: var(--primary-color); }
+
+.modal-close {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: var(--radius-sm);
+  transition: all 0.2s;
+}
+
+.modal-close:hover {
+  background: var(--bg-secondary);
+  color: var(--danger-color);
+}
+
+.modal-body {
+  padding: 1rem;
+}
+
+.modal-footer {
+  padding: 1rem;
+  border-top: 1px solid var(--border-color);
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
+}
+
+/* أنماط النماذج */
+.form-group {
+  margin-bottom: 1rem;
+}
+
+.form-group label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  color: var(--text-primary);
+  margin-bottom: 0.5rem;
+}
+
+.form-control {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  font-size: 0.875rem;
+  outline: none;
+  transition: all 0.2s;
+}
+
+.form-control:focus {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
+}
+
+textarea.form-control {
+  resize: vertical;
+  min-height: 80px;
 }
 
 .alert {
   display: flex;
-  align-items: flex-start;
-  gap: var(--space-sm);
-  padding: var(--space-md);
-  border-radius: var(--radius-lg);
-  margin-bottom: var(--space-lg);
-}
-
-.alert-warning {
-  background: rgba(245, 158, 11, 0.1);
-  border: 1px solid var(--warning-color);
-  color: #92400e;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  border-radius: var(--radius-md);
+  margin-bottom: 1rem;
 }
 
 .alert-info {
   background: rgba(59, 130, 246, 0.1);
   border: 1px solid var(--info-color);
-  color: #1e40af;
+  color: var(--info-color);
+}
+
+.alert-warning {
+  background: rgba(245, 158, 11, 0.1);
+  border: 1px solid var(--warning-color);
+  color: var(--warning-color);
 }
 
 .alert-content {
@@ -1520,29 +908,270 @@
 
 .alert-content strong {
   display: block;
-  margin-bottom: var(--space-xxs);
+  margin-bottom: 0.25rem;
 }
 
-.confirmation-text {
-  font-size: 1.1rem;
-  text-align: center;
-  margin-bottom: var(--space-lg);
+.alert-content p {
+  font-size: 0.875rem;
+  opacity: 0.9;
 }
 
-/* ===== الأزرار ===== */
-.btn {
-  padding: var(--space-sm) var(--space-lg);
-  border: none;
-  border-radius: var(--radius-lg);
-  font-size: 0.95rem;
-  font-weight: 600;
+/* أنماط قائمة الألعاب في النافذة */
+.modal-search {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  margin-bottom: 1rem;
+  font-size: 0.875rem;
+}
+
+.games-simple-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.game-simple-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
   cursor: pointer;
+  transition: all 0.2s;
+}
+
+.game-simple-item:hover {
+  border-color: var(--primary-color);
+  background: var(--bg-secondary);
+}
+
+.game-price {
+  color: var(--secondary-color);
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+/* أنماط تفاصيل التأجير */
+.details-grid {
+  display: grid;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.detail-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem;
+  background: var(--bg-secondary);
+  border-radius: var(--radius-md);
+}
+
+.detail-row .label {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+}
+
+.detail-row .value {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.detail-row .value.highlight {
+  color: var(--secondary-color);
+  font-weight: 600;
+}
+
+.items-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.item-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  background: var(--bg-secondary);
+  border-radius: var(--radius-md);
+}
+
+.item-row .game-name {
+  flex: 1;
+  font-size: 0.875rem;
+  color: var(--text-primary);
+}
+
+.item-row .child-name {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  background: white;
+  padding: 0.125rem 0.375rem;
+  border-radius: 1rem;
+}
+
+.item-row .item-price {
+  color: var(--secondary-color);
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+/* أنماط حساب الاسترداد */
+.refund-calculation {
+  background: var(--bg-secondary);
+  border-radius: var(--radius-md);
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+
+.refund-calculation h4 {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 0.75rem;
+}
+
+.calc-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 0;
+  border-bottom: 1px dashed var(--border-color);
+  font-size: 0.875rem;
+}
+
+.calc-row.total {
+  border-bottom: none;
+  margin-top: 0.5rem;
+  padding-top: 0.5rem;
+  border-top: 2px solid var(--border-color);
+  font-weight: 600;
+}
+
+.calc-row.highlight {
+  color: var(--secondary-color);
+}
+
+/* أنماط تعديل التأجير */
+.modify-section {
+  margin-top: 1rem;
+}
+
+.current-game,
+.new-game {
+  margin-bottom: 1rem;
+}
+
+.current-game h4,
+.new-game h4 {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 0.5rem;
+}
+
+.game-box {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  background: var(--bg-secondary);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-color);
+}
+
+.game-box .price {
+  margin-left: auto;
+  color: var(--secondary-color);
+  font-weight: 500;
+}
+
+.game-select {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  font-size: 0.875rem;
+}
+
+.price-diff {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: var(--bg-secondary);
+  border-radius: var(--radius-md);
+}
+
+.diff-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.5rem 0;
+  font-size: 0.875rem;
+}
+
+.diff-row.total {
+  font-weight: 600;
+  border-top: 1px solid var(--border-color);
+  margin-top: 0.5rem;
+  padding-top: 0.5rem;
+}
+
+.diff-row.positive { color: var(--secondary-color); }
+.diff-row.negative { color: var(--danger-color); }
+
+/* أنماط إنهاء التأجير المفتوح */
+.summary-card {
+  background: var(--bg-secondary);
+  border-radius: var(--radius-md);
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+
+.items-summary {
+  margin-bottom: 1rem;
+}
+
+.items-summary h4 {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 0.5rem;
+}
+
+.total-section {
+  margin-bottom: 1rem;
+  padding: 1rem;
+  background: var(--bg-secondary);
+  border-radius: var(--radius-md);
+}
+
+.total-amount {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--secondary-color);
+}
+
+/* ==================== الأزرار ==================== */
+.btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: var(--space-xs);
-  transition: var(--transition-normal);
-  font-family: 'Cairo', sans-serif;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
 }
 
 .btn:disabled {
@@ -1550,14 +1179,55 @@
   cursor: not-allowed;
 }
 
-.btn-sm {
-  padding: var(--space-xs) var(--space-md);
-  font-size: 0.85rem;
+.btn-primary {
+  background: var(--primary-color);
+  color: white;
 }
 
-.btn-lg {
-  padding: var(--space-lg) var(--space-xl);
-  font-size: 1.1rem;
+.btn-primary:hover:not(:disabled) {
+  background: var(--primary-dark);
+}
+
+.btn-success {
+  background: var(--secondary-color);
+  color: white;
+}
+
+.btn-success:hover:not(:disabled) {
+  filter: brightness(0.9);
+}
+
+.btn-warning {
+  background: var(--warning-color);
+  color: white;
+}
+
+.btn-warning:hover:not(:disabled) {
+  filter: brightness(0.9);
+}
+
+.btn-danger {
+  background: var(--danger-color);
+  color: white;
+}
+
+.btn-danger:hover:not(:disabled) {
+  filter: brightness(0.9);
+}
+
+.btn-secondary {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background: var(--border-color);
+}
+
+.btn-sm {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.75rem;
 }
 
 .btn-block {
@@ -1565,116 +1235,60 @@
 }
 
 .btn-glow {
-  position: relative;
-  overflow: hidden;
+  box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+  animation: pulse 2s infinite;
 }
 
-.btn-glow::after {
-  content: '';
-  position: absolute;
-  top: -50%;
-  left: -50%;
-  width: 200%;
-  height: 200%;
-  background: radial-gradient(circle, rgba(255,255,255,0.3) 0%, transparent 70%);
-  opacity: 0;
-  transition: var(--transition-normal);
-}
-
-.btn-glow:hover::after {
-  opacity: 1;
-}
-
-.btn-primary {
-  background: var(--primary-color);
-  color: var(--white);
-}
-
-.btn-primary:hover:not(:disabled) {
-  background: var(--primary-dark);
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-glow);
-}
-
-.btn-success {
-  background: var(--success-color);
-  color: var(--white);
-}
-
-.btn-success:hover:not(:disabled) {
-  background: #0d9488;
-  transform: translateY(-2px);
-}
-
-.btn-warning {
-  background: var(--warning-color);
-  color: var(--white);
-}
-
-.btn-warning:hover:not(:disabled) {
-  background: #d97706;
-  transform: translateY(-2px);
-}
-
-.btn-secondary {
-  background: var(--gray-500);
-  color: var(--white);
-}
-
-.btn-secondary:hover:not(:disabled) {
-  background: var(--gray-600);
-}
-
-.btn-outline {
-  background: transparent;
-  border: 2px solid var(--primary-color);
-  color: var(--primary-color);
-}
-
-.btn-outline:hover:not(:disabled) {
-  background: var(--primary-color);
-  color: var(--white);
-}
-
-/* ===== الإشعارات ===== */
+/* ==================== الإشعارات ==================== */
 .toast {
   position: fixed;
-  bottom: var(--space-xl);
-  right: var(--space-xl);
-  padding: var(--space-md) var(--space-lg);
-  border-radius: var(--radius-lg);
+  bottom: 1rem;
+  right: 1rem;
   display: flex;
   align-items: center;
-  gap: var(--space-sm);
-  box-shadow: var(--shadow-xl);
-  animation: slideInRight 0.3s ease;
-  z-index: 2000;
-  min-width: 300px;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  background: white;
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  border-right: 4px solid;
+  z-index: 1100;
+  max-width: 400px;
+  animation: slideIn 0.3s ease;
 }
 
 .toast.error {
-  background: linear-gradient(135deg, #ef4444, #dc2626);
-  color: var(--white);
+  border-right-color: var(--danger-color);
 }
 
 .toast.success {
-  background: linear-gradient(135deg, #10b981, #059669);
-  color: var(--white);
+  border-right-color: var(--secondary-color);
 }
 
 .toast button {
   background: none;
   border: none;
-  color: var(--white);
+  color: var(--text-secondary);
   cursor: pointer;
-  margin-right: auto;
-  opacity: 0.8;
-  transition: var(--transition-normal);
+  padding: 0.25rem;
+  border-radius: var(--radius-sm);
+  transition: all 0.2s;
 }
 
 .toast button:hover {
-  opacity: 1;
-  transform: scale(1.1);
+  background: var(--bg-secondary);
+  color: var(--danger-color);
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
 }
 
 .global-loading {
@@ -1684,674 +1298,89 @@
   right: 0;
   bottom: 0;
   background: rgba(255, 255, 255, 0.8);
-  backdrop-filter: blur(5px);
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 3000;
-  animation: fadeIn 0.2s ease;
+  z-index: 1200;
+  backdrop-filter: blur(4px);
 }
 
-.global-loading .spinner {
-  color: var(--primary-color);
-}
+/* ==================== تحسينات للأجهزة المحمولة ==================== */
+@media (max-width: 768px) {
+  .rentals-page {
+    padding: 0.5rem;
+  }
 
-/* ===== الرسوم المتحركة ===== */
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-@keyframes slideDown {
-  from {
-    opacity: 0;
-    transform: translateY(-30px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes slideUp {
-  from {
-    opacity: 0;
-    transform: translateY(30px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes slideIn {
-  from {
-    opacity: 0;
-    transform: translateX(-20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
-
-@keyframes slideInLeft {
-  from {
-    opacity: 0;
-    transform: translateX(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
-
-@keyframes slideInRight {
-  from {
-    opacity: 0;
-    transform: translateX(-20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
-
-@keyframes pulse {
-  0% {
-    transform: scale(1);
-    box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.7);
-  }
-  50% {
-    transform: scale(1.05);
-    box-shadow: 0 0 0 10px rgba(255, 255, 255, 0);
-  }
-  100% {
-    transform: scale(1);
-    box-shadow: 0 0 0 0 rgba(255, 255, 255, 0);
-  }
-}
-
-@keyframes spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-/* ===== التجاوب مع الشاشات المختلفة ===== */
-@media (max-width: 1400px) {
-  .rentals-content {
-    grid-template-columns: 1fr 350px;
-  }
-  
-  .games-grid {
-    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-  }
-}
-
-@media (max-width: 1200px) {
-  .rentals-content {
-    grid-template-columns: 1fr 320px;
-  }
-  
-  .shift-stats {
-    gap: var(--space-lg);
-  }
-}
-
-@media (max-width: 992px) {
-  .rentals-content {
-    grid-template-columns: 1fr;
-  }
-  
-  .cart-panel {
-    position: static;
-    max-height: none;
-  }
-  
   .shift-status-bar {
     flex-direction: column;
-    gap: var(--space-md);
-    text-align: center;
+    gap: 1rem;
+    align-items: flex-start;
   }
-  
+
   .shift-stats {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .shift-actions {
+    width: 100%;
+  }
+
+  .shift-actions button {
+    flex: 1;
+  }
+
+  .games-cart-container {
+    grid-template-columns: 1fr;
+  }
+
+  .header-buttons {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .header-btn {
     width: 100%;
     justify-content: center;
   }
-  
-  .games-filters {
-    flex-direction: column;
-  }
-  
-  .filter-select {
-    width: 100%;
-  }
-}
 
-@media (max-width: 768px) {
-  .rentals-page {
-    padding: var(--space-sm);
+  .table-row {
+    flex-wrap: wrap;
   }
-  
-  .shift-status-bar {
-    margin: var(--space-sm);
+
+  .row-customer,
+  .row-game {
+    flex: 100%;
   }
-  
-  .rentals-content {
-    padding: var(--space-sm);
+
+  .row-time,
+  .row-amount,
+  .row-actions {
+    flex: 1;
   }
-  
-  .games-grid {
-    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-  }
-  
-  .modal {
-    width: 95%;
-  }
-  
-  .modal-filters {
-    flex-direction: column;
-  }
-  
-  .category-select {
-    width: 100%;
-  }
-  
-  .games-list {
-    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-  }
-  
+
   .toast {
-    left: var(--space-md);
-    right: var(--space-md);
-    min-width: auto;
+    left: 1rem;
+    right: 1rem;
+    max-width: none;
   }
 }
 
-@media (max-width: 480px) {
-  .shift-stats {
-    flex-direction: column;
-    align-items: stretch;
+/* ==================== تحسينات للطباعة ==================== */
+@media print {
+  .shift-status-bar,
+  .simple-games-section,
+  .enhanced-cart,
+  .header-buttons,
+  .row-actions,
+  .btn,
+  .toast,
+  .global-loading {
+    display: none !important;
   }
-  
-  .shift-stat {
-    width: 100%;
+
+  .tables-section {
+    box-shadow: none;
+    border: 1px solid #000;
   }
-  
-  .games-grid {
-    grid-template-columns: 1fr;
-  }
-  
-  .detail-row {
-    grid-template-columns: 1fr;
-  }
-  
-  .modal-header h3 {
-    font-size: 1.2rem;
-  }
-  
-  .modal-footer {
-    flex-direction: column;
-  }
-  
-  .modal-footer .btn {
-    width: 100%;
-  }
-}
-
-/* ===== تحسينات إضافية ===== */
-/* شريط التمرير المخصص */
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-
-::-webkit-scrollbar-track {
-  background: var(--gray-200);
-  border-radius: var(--radius-full);
-}
-
-::-webkit-scrollbar-thumb {
-  background: var(--primary-color);
-  border-radius: var(--radius-full);
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: var(--primary-dark);
-}
-
-/* تأثيرات التركيز */
-*:focus-visible {
-  outline: 3px solid var(--primary-color);
-  outline-offset: 2px;
-}
-
-/* منع تحديد النص */
-.no-select {
-  user-select: none;
-}
-
-/* تلميحات الأدوات */
-[title] {
-  position: relative;
-  cursor: help;
-}
-
-[title]:hover::after {
-  content: attr(title);
-  position: absolute;
-  bottom: 100%;
-  left: 50%;
-  transform: translateX(-50%);
-  padding: var(--space-xs) var(--space-sm);
-  background: var(--dark-color);
-  color: var(--white);
-  font-size: 0.75rem;
-  border-radius: var(--radius-sm);
-  white-space: nowrap;
-  z-index: 10;
-  pointer-events: none;
-  animation: fadeIn 0.2s ease;
-}
-
-/* تأثيرات التحميل السلس */
-.loading-skeleton {
-  background: linear-gradient(
-    90deg,
-    var(--gray-200) 25%,
-    var(--gray-300) 50%,
-    var(--gray-200) 75%
-  );
-  background-size: 200% 100%;
-  animation: loading 1.5s infinite;
-}
-
-@keyframes loading {
-  from {
-    background-position: 200% 0;
-  }
-  to {
-    background-position: -200% 0;
-  }
-}
-
-
-/* src/pages/employee/Rentals.css */
-
-/* ==================== صور الألعاب ==================== */
-.game-image-container {
-  position: relative;
-  width: 100%;
-  height: 140px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border-radius: 12px 12px 0 0;
-  overflow: hidden;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.game-image-container.small {
-  height: 60px;
-  width: 60px;
-  border-radius: 8px;
-}
-
-.game-image-container.large {
-  height: 200px;
-}
-
-.game-image-container.loading {
-  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
-  background-size: 200% 100%;
-  animation: loading 1.5s infinite;
-}
-
-@keyframes loading {
-  0% { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
-}
-
-.image-placeholder {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #666;
-  opacity: 0.5;
-}
-
-.game-image {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  transition: opacity 0.3s ease;
-}
-
-.game-image.hidden {
-  opacity: 0;
-  position: absolute;
-}
-
-.game-image.visible {
-  opacity: 1;
-}
-
-.image-error {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  color: #999;
-  font-size: 12px;
-  text-align: center;
-  padding: 10px;
-}
-
-/* تنسيقات بطاقة اللعبة */
-.game-card {
-  background: white;
-  border-radius: 12px;
-  overflow: hidden;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  transition: all 0.3s ease;
-  cursor: pointer;
-  border: 2px solid transparent;
-}
-
-.game-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 8px 16px rgba(102, 126, 234, 0.3);
-  border-color: #667eea;
-}
-
-.game-card.unavailable {
-  opacity: 0.7;
-  cursor: not-allowed;
-  filter: grayscale(0.5);
-}
-
-.game-card.unavailable:hover {
-  transform: none;
-  border-color: #ff4757;
-}
-
-.game-card-image {
-  position: relative;
-  height: 140px;
-  overflow: hidden;
-}
-
-.game-status-badge {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  background: rgba(0, 0, 0, 0.7);
-  color: white;
-  padding: 4px 8px;
-  border-radius: 20px;
-  font-size: 12px;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  backdrop-filter: blur(4px);
-  z-index: 2;
-}
-
-.game-status-badge.unavailable {
-  background: rgba(255, 71, 87, 0.9);
-}
-
-.game-card-content {
-  padding: 12px;
-}
-
-.game-title {
-  margin: 0 0 8px 0;
-  font-size: 16px;
-  font-weight: 600;
-  color: #333;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.game-price {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  color: #667eea;
-  font-weight: 500;
-  margin-bottom: 8px;
-}
-
-.price-value {
-  font-size: 18px;
-  font-weight: 700;
-}
-
-.price-unit {
-  font-size: 12px;
-  color: #999;
-  font-weight: normal;
-}
-
-.add-to-cart-btn {
-  width: 100%;
-  padding: 8px;
-  background: #667eea;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  font-size: 14px;
-  font-weight: 500;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  opacity: 0.8;
-}
-
-.game-card:hover .add-to-cart-btn {
-  opacity: 1;
-}
-
-.add-to-cart-btn:hover:not(:disabled) {
-  background: #5a67d8;
-  transform: scale(1.02);
-}
-
-.add-to-cart-btn:disabled {
-  background: #ccc;
-  cursor: not-allowed;
-  opacity: 0.5;
-}
-
-/* تنسيقات شبكة الألعاب */
-.games-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-  gap: 16px;
-  padding: 16px;
-}
-
-.games-list {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  padding: 16px;
-}
-
-/* تنسيقات اختيار اللعبة في المودال */
-.game-select-item {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  padding: 12px;
-  border: 1px solid #eee;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.game-select-item:hover {
-  background: #f8f9fa;
-  border-color: #667eea;
-}
-
-.game-select-info {
-  flex: 1;
-}
-
-.game-select-info h4 {
-  margin: 0 0 4px 0;
-  font-size: 16px;
-  color: #333;
-}
-
-.game-price {
-  font-size: 14px;
-  color: #667eea;
-  font-weight: 500;
-}
-
-.add-btn {
-  background: #667eea;
-  color: white;
-  border: none;
-  border-radius: 50%;
-  width: 36px;
-  height: 36px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.add-btn:hover {
-  background: #5a67d8;
-  transform: scale(1.1);
-}
-
-/* تنسيقات الصور في التأجيرات النشطة */
-.rental-game-info {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 12px;
-  background: #f8f9fa;
-  border-radius: 6px;
-  margin: 8px 0;
-}
-
-.rental-game-image {
-  width: 30px;
-  height: 30px;
-  border-radius: 4px;
-  object-fit: cover;
-}
-
-/* تحسينات إضافية للصور */
-.game-image-container {
-  position: relative;
-  width: 100%;
-  height: 140px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border-radius: 12px 12px 0 0;
-  overflow: hidden;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.game-image-container.small {
-  height: 60px;
-  width: 60px;
-  border-radius: 8px;
-}
-
-.game-image-container.large {
-  height: 200px;
-}
-
-.game-image-container.loading {
-  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
-  background-size: 200% 100%;
-  animation: loading 1.5s infinite;
-}
-
-@keyframes loading {
-  0% { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
-}
-
-.image-placeholder {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #666;
-  opacity: 0.5;
-}
-
-.game-image {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  transition: opacity 0.3s ease;
-}
-
-.game-image.hidden {
-  opacity: 0;
-  position: absolute;
-}
-
-.game-image.visible {
-  opacity: 1;
-}
-
-.image-error {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  color: #999;
-  font-size: 12px;
-  text-align: center;
-  padding: 10px;
-  background: #f5f5f5;
-  width: 100%;
-  height: 100%;
-}
-
-/* تحسينات لبطاقة اللعبة */
-.game-card {
-  background: white;
-  border-radius: 12px;
-  overflow: hidden;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  transition: all 0.3s ease;
-  cursor: pointer;
-  border: 2px solid transparent;
-}
-
-.game-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 8px 16px rgba(102, 126, 234, 0.3);
-  border-color: #667eea;
-}
-
-.game-card-image {
-  position: relative;
-  height: 140px;
-  overflow: hidden;
 }
