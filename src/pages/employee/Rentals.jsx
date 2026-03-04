@@ -103,73 +103,127 @@ const calculateDuration = (startTime, endTime = new Date()) => {
 // src/pages/employee/Rentals.jsx
 // فقط المكون المعدل للصور - باقي الكود كما هو
 
-// ==================== مكون الصور مع الملفات المحلية ====================
+// src/pages/employee/Rentals.jsx
+// ==================== مكون الصور المعدل بالكامل ====================
+
 const GameImage = ({ src, alt, className, size = 'medium' }) => {
   const [imageError, setImageError] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
-  const [imageSrc, setImageSrc] = useState('');
-  
-  // تعيين الصورة المناسبة بناءً على اسم اللعبة
-  useEffect(() => {
-    // إذا كان هناك رابط صورة من API
-    if (src) {
-      // تحقق مما إذا كان الرابط كاملاً (يبدأ بـ http) أو مسار محلي
-      if (src.startsWith('http')) {
-        setImageSrc(src);
-      } else {
-        // إذا كان مجرد اسم ملف، أضف المسار الكامل
-        setImageSrc(`https://l3btybackend.vercel.app/images/${src}`);
-      }
-      return;
-    }
-    
-    // إذا لم يكن هناك رابط، استخدم الخريطة المحلية
-    const getLocalImage = (gameName) => {
-      if (!gameName) return '/images/playstation.jpg';
-      
-      const imageMap = {
-        'Car': '/images/Car.jpg',
-        'Driftcar': '/images/Driftcar.jpg',
-        'harley': '/images/harley.jpg',
-        'Hoverboard': '/images/Hoverboard.jpg',
-        'I3bty': '/images/I3bty.png',
-        'Motor': '/images/Motor.jpg',
-        'motorcycle': '/images/motorcycle.jpg',
-        'Ninebot': '/images/Ninebot.jpg',
-        'pingpong': '/images/pingpong.jpg',
-        'playstation': '/images/playstation.jpg',
-        'Scooter': '/images/Scooter.jpg',
-        'Segway': '/images/Segway.jpg',
-        'Simulator': '/images/Simulator.jpg',
-        'Skate': '/images/Skate.jpg',
-        'Trampoline': '/images/Trampoline.jpg',
-        'VR': '/images/VR.jpg',
-        'waterslide': '/images/waterslide.jpg',
-        'wheel': '/images/wheel.jpg',
-      };
+  const [currentSrc, setCurrentSrc] = useState('');
 
+  // قائمة الصور المتاحة مع مساراتها الصحيحة
+  const imageMap = {
+    // الأسماء العربية
+    'سيارة': '/images/Car.jpg',
+    'سيارات': '/images/Car.jpg',
+    'كار': '/images/Car.jpg',
+    'درفت': '/images/Driftcar.jpg',
+    'دريفت': '/images/Driftcar.jpg',
+    'درفت كار': '/images/Driftcar.jpg',
+    'هارلي': '/images/harley.jpg',
+    'هارلي ديفيدسون': '/images/harley.jpg',
+    'هوفر بورد': '/images/Hoverboard.jpg',
+    'هوفر': '/images/Hoverboard.jpg',
+    'hoverboard': '/images/Hoverboard.jpg',
+    'لعبتي': '/images/I3bty.png',
+    'لعبتى': '/images/I3bty.png',
+    'l3bty': '/images/I3bty.png',
+    'موتور': '/images/Motor.jpg',
+    'موتوسيكل': '/images/motorcycle.jpg',
+    'motorcycle': '/images/motorcycle.jpg',
+    'نينبوت': '/images/Ninebot.jpg',
+    'ninebot': '/images/Ninebot.jpg',
+    'بينج بونج': '/images/pingpong.jpg',
+    'بينغ بونغ': '/images/pingpong.jpg',
+    'تنس طاولة': '/images/pingpong.jpg',
+    'pingpong': '/images/pingpong.jpg',
+    'بلايستيشن': '/images/playstation.jpg',
+    'playstation': '/images/playstation.jpg',
+    'ps': '/images/playstation.jpg',
+    'ps4': '/images/playstation.jpg',
+    'ps5': '/images/playstation.jpg',
+    'سكوتر': '/images/Scooter.jpg',
+    'scooter': '/images/Scooter.jpg',
+    'سيغوي': '/images/Segway.jpg',
+    'segway': '/images/Segway.jpg',
+    'سيميوليتور': '/images/Simulator.jpg',
+    'محاكي': '/images/Simulator.jpg',
+    'simulator': '/images/Simulator.jpg',
+    'سكيت': '/images/Skate.jpg',
+    'skate': '/images/Skate.jpg',
+    'ترامبولين': '/images/Trampoline.jpg',
+    'trampoline': '/images/Trampoline.jpg',
+    'vr': '/images/VR.jpg',
+    'واقع افتراضي': '/images/VR.jpg',
+    'ووتر سلايد': '/images/waterslide.jpg',
+    'waterslide': '/images/waterslide.jpg',
+    'زحليقة': '/images/waterslide.jpg',
+    'عجلة': '/images/wheel.jpg',
+    'wheel': '/images/wheel.jpg',
+    'دراجة': '/images/wheel.jpg'
+  };
+
+  // الحصول على مسار الصورة المناسب
+  const getImagePath = useCallback((gameName, imageUrl) => {
+    // 1. إذا كان هناك رابط صورة صحيح من API
+    if (imageUrl) {
+      // إذا كان الرابط كامل (يبدأ بـ http)
+      if (imageUrl.startsWith('http')) {
+        return imageUrl;
+      }
+      // إذا كان مجرد اسم ملف
+      if (imageUrl.includes('.')) {
+        return `https://l3btybackend.vercel.app/images/${imageUrl}`;
+      }
+    }
+
+    // 2. إذا كان اسم اللعبة موجود، ابحث في الخريطة
+    if (gameName) {
       const gameNameLower = gameName.toLowerCase();
       
-      // ابحث عن تطابق في الخريطة
+      // ابحث عن تطابق تام أولاً
       for (const [key, value] of Object.entries(imageMap)) {
-        if (gameNameLower.includes(key.toLowerCase())) {
-          return value;
+        if (gameNameLower === key.toLowerCase()) {
+          return `https://l3btybackend.vercel.app${value}`;
         }
       }
       
-      // إذا لم يتم العثور على تطابق
-      return '/images/playstation.jpg';
-    };
+      // ثم ابحث عن تطابق جزئي
+      for (const [key, value] of Object.entries(imageMap)) {
+        if (gameNameLower.includes(key.toLowerCase())) {
+          return `https://l3btybackend.vercel.app${value}`;
+        }
+      }
+    }
 
-    setImageSrc(getLocalImage(alt));
-  }, [src, alt]);
+    // 3. الصورة الافتراضية
+    return 'https://l3btybackend.vercel.app/images/playstation.jpg';
+  }, []);
 
-  // معالج خطأ تحميل الصورة
-  const handleError = () => {
-    console.log('❌ فشل تحميل الصورة:', imageSrc);
-    setImageError(true);
-    // استخدم الصورة الافتراضية
-    setImageSrc('/images/playstation.jpg');
+  // تحديث مصدر الصورة عند تغير البيانات
+  useEffect(() => {
+    const path = getImagePath(alt, src);
+    setCurrentSrc(path);
+    console.log('🖼️ تحميل صورة:', { 
+      gameName: alt, 
+      originalSrc: src, 
+      finalPath: path 
+    });
+  }, [src, alt, getImagePath]);
+
+  // محاولة تحميل صورة بديلة عند الخطأ
+  const handleImageError = () => {
+    console.log('❌ فشل تحميل الصورة:', currentSrc);
+    
+    // جرب الصورة الافتراضية
+    if (!currentSrc.includes('playstation.jpg')) {
+      const defaultPath = 'https://l3btybackend.vercel.app/images/playstation.jpg';
+      console.log('🔄 محاولة الصورة الافتراضية:', defaultPath);
+      setCurrentSrc(defaultPath);
+      setImageError(false);
+    } else {
+      setImageError(true);
+    }
   };
 
   return (
@@ -179,22 +233,24 @@ const GameImage = ({ src, alt, className, size = 'medium' }) => {
           <ImageIcon size={size === 'large' ? 48 : 24} />
         </div>
       )}
+      
       {imageError ? (
         <div className="image-error">
           <ImageIcon size={size === 'large' ? 32 : 16} />
-          <span>لا توجد صورة</span>
+          <span>{alt || 'لا توجد صورة'}</span>
         </div>
       ) : (
         <img
-          src={imageSrc}
+          key={currentSrc} // مهم لإعادة التحميل عند تغير المصدر
+          src={currentSrc}
           alt={alt || 'صورة اللعبة'}
           className={`game-image ${imageLoaded ? 'visible' : 'hidden'}`}
           onLoad={() => {
-            console.log('✅ تم تحميل الصورة:', imageSrc);
+            console.log('✅ تم تحميل الصورة بنجاح:', currentSrc);
             setImageLoaded(true);
             setImageError(false);
           }}
-          onError={handleError}
+          onError={handleImageError}
           loading="lazy"
         />
       )}
