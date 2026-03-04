@@ -219,9 +219,7 @@ const getImagePath = useCallback((gameName, imageUrl) => {
             setImageLoaded(true);
             setImageError(false);
           }}
-onError={(e) => {
-  e.target.src = "/images/playstation.jpg";
-}}          loading="lazy"
+          loading="lazy"
         />
       )}
     </div>
