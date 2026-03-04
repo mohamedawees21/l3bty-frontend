@@ -219,7 +219,6 @@ const getImagePath = useCallback((gameName, imageUrl) => {
             setImageLoaded(true);
             setImageError(false);
           }}
-          loading="lazy"
         />
       )}
     </div>
