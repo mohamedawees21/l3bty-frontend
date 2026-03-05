@@ -255,7 +255,6 @@ body {
 .header-user {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   gap: 12px;
 }
 
@@ -263,30 +262,35 @@ body {
   display: flex;
   align-items: center;
   gap: 8px;
-}
-
-.user-info span {
-  font-size: 20px;
+  color: white;
 }
 
 .user-info strong {
-  display: block;
   font-size: 14px;
+  color: #ffffff;
 }
 
 .user-info small {
   font-size: 12px;
-  color: #777;
+  color: rgba(255,255,255,0.7);
 }
 
 .btn-logout {
-  padding: 8px 14px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255,255,255,0.15);
   border: none;
-  border-radius: 8px;
-  background: #ff4d4f;
+  padding: 8px 14px;
+  border-radius: 10px;
   color: white;
   cursor: pointer;
   font-size: 13px;
+  transition: 0.2s;
+}
+
+.btn-logout:hover {
+  background: rgba(255,255,255,0.25);
 }
 
 /* بطاقة المستخدم - تصميم جديد احترافي */
@@ -965,4 +969,78 @@ body {
   100% {
     box-shadow: 0 0 0 0 rgba(59, 130, 246, 0);
   }
+}
+
+
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 20px;
+  height: 60px;
+  background: linear-gradient(90deg, #4f46e5, #7c3aed);
+  color: white;
+}
+
+/* الجزء اليسار */
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.header-logo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.header-logo img {
+  height: 32px;
+}
+
+.header-logo h1 {
+  font-size: 18px;
+  color: white;
+}
+
+/* معلومات المستخدم */
+.header-user {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: white;
+}
+
+.user-info strong {
+  display: block;
+  font-size: 14px;
+}
+
+.user-info small {
+  font-size: 12px;
+  opacity: 0.8;
+}
+
+/* زر الخروج */
+.btn-logout {
+  background: rgba(255,255,255,0.15);
+  border: none;
+  padding: 7px 14px;
+  border-radius: 8px;
+  color: white;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.btn-logout:hover {
+  background: rgba(255,255,255,0.25);
 }
