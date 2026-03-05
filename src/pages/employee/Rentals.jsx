@@ -86,10 +86,14 @@ const formatTime = (dateString) => {
 
 const calculateDuration = (startTime, endTime = new Date()) => {
   if (!startTime) return 0;
-  const start = new Date(startTime);
-  const end = new Date(endTime);
-  if (isNaN(start.getTime()) || isNaN(end.getTime())) return 0;
-  return Math.max(0, Math.round((end - start) / (1000 * 60)));
+  try {
+    const start = new Date(startTime);
+    const end = new Date(endTime);
+    if (isNaN(start.getTime()) || isNaN(end.getTime())) return 0;
+    return Math.max(0, Math.round((end - start) / (1000 * 60)));
+  } catch {
+    return 0;
+  }
 };
 
 // ==================== مكون صورة اللعبة ====================
@@ -449,7 +453,7 @@ const GamesDropdown = ({
       const matchesSearch = !searchTerm || 
         game.name?.toLowerCase().includes(searchTerm.toLowerCase());
       
-      // فلتر التصنيف (يمكن تعديله حسب بياناتك الفعلية)
+      // فلتر التصنيف
       const matchesCategory = selectedCategory === 'all' || 
         game.category?.toLowerCase() === selectedCategory.toLowerCase() ||
         game.type?.toLowerCase() === selectedCategory.toLowerCase();
@@ -987,10 +991,12 @@ const ActiveRentalsTable = ({
   onModify,
   onViewDetails,
   currentShift,
-  userRole
+  userRole,
+  onRefresh
 }) => {
   const [timeNow, setTimeNow] = useState(new Date());
   const [searchTerm, setSearchTerm] = useState('');
+  const [expandedRentals, setExpandedRentals] = useState({});
 
   const isManager = userRole === 'admin' || userRole === 'branch_manager';
 
@@ -999,11 +1005,24 @@ const ActiveRentalsTable = ({
     return () => clearInterval(interval);
   }, []);
 
+  // تجميع العناصر لكل تأجير
   const rentalsWithItems = useMemo(() => {
     if (!rentals || !items) return [];
+    
+    // إنشاء خريطة للعناصر حسب rental_id
+    const itemsMap = {};
+    items.forEach(item => {
+      if (item && item.rental_id) {
+        if (!itemsMap[item.rental_id]) {
+          itemsMap[item.rental_id] = [];
+        }
+        itemsMap[item.rental_id].push(item);
+      }
+    });
+
     return rentals.map(rental => ({
       ...rental,
-      items: items.filter(item => item && item.rental_id === rental.id)
+      items: itemsMap[rental.id] || []
     }));
   }, [rentals, items]);
 
@@ -1056,10 +1075,18 @@ const ActiveRentalsTable = ({
       return (
         (rental.customer_name && rental.customer_name.toLowerCase().includes(term)) ||
         (rental.rental_number && rental.rental_number.toLowerCase().includes(term)) ||
-        (rental.items && rental.items.some(item => item.game_name && item.game_name.toLowerCase().includes(term)))
+        (rental.items && rental.items.some(item => item.game_name && item.game_name.toLowerCase().includes(term))) ||
+        (rental.game_name && rental.game_name.toLowerCase().includes(term))
       );
     });
   }, [rentalsWithItems, searchTerm]);
+
+  const toggleExpand = (rentalId) => {
+    setExpandedRentals(prev => ({
+      ...prev,
+      [rentalId]: !prev[rentalId]
+    }));
+  };
 
   if (!currentShift) return null;
 
@@ -1072,6 +1099,9 @@ const ActiveRentalsTable = ({
       <div className="table-empty">
         <Activity size={32} />
         <p>لا توجد تأجيرات نشطة</p>
+        <button onClick={onRefresh} className="btn btn-primary btn-sm">
+          <RefreshCw size={14} /> تحديث
+        </button>
       </div>
     );
   }
@@ -1079,62 +1109,132 @@ const ActiveRentalsTable = ({
   return (
     <div className="active-rentals-table">
       <div className="table-header">
-        <input
-          type="text"
-          placeholder="بحث..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="table-search"
-        />
+        <div className="search-container">
+          <input
+            type="text"
+            placeholder="بحث بالعميل أو رقم التأجير أو اللعبة..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="table-search"
+          />
+          <button onClick={onRefresh} className="refresh-btn" title="تحديث">
+            <RefreshCw size={16} />
+          </button>
+        </div>
       </div>
       <div className="table-body">
         {filteredRentals.map(rental => {
           const mainItem = rental.items && rental.items[0];
           const elapsedMinutes = getElapsedMinutes(rental.start_time);
           const canCancel = elapsedMinutes < 3;
+          const hasMultipleItems = rental.items && rental.items.length > 1;
+          const isExpanded = expandedRentals[rental.id];
           
           return (
-            <div key={rental.id} className={`table-row ${isExpired(rental) ? 'expired' : ''}`}>
-              <div className="row-customer">
-                <User size={14} />
-                <span>{rental.customer_name || 'بدون اسم'}</span>
-              </div>
-              <div className="row-game">
-                <Gamepad2 size={14} />
-                <span>{mainItem?.game_name || 'لعبة'}</span>
-                {mainItem?.quantity > 1 && <span className="badge">x{mainItem.quantity}</span>}
-              </div>
-              <div className="row-time">
-                {rental.rental_type === 'fixed' ? (
-                  <>
-                    <Timer size={14} />
-                    <span className={isExpired(rental) ? 'expired' : ''}>
-                      {calculateRemainingTime(rental)}
-                    </span>
-                  </>
-                ) : (
-                  <span className="open-badge">مفتوح</span>
-                )}
-              </div>
-              <div className="row-actions">
-                <button onClick={() => onViewDetails(rental)} className="action-btn info" title="تفاصيل">
-                  <Eye size={14} />
-                </button>
-                {rental.rental_type === 'open' && (
-                  <button onClick={() => onComplete(rental)} className="action-btn success" title="إنهاء">
-                    <Check size={14} />
+            <div key={rental.id} className={`rental-group ${isExpired(rental) ? 'expired' : ''}`}>
+              {/* رأس التأجير */}
+              <div className="rental-header">
+                <div className="rental-info">
+                  <div className="rental-badge">
+                    <Hash size={12} />
+                    <span>#{rental.rental_number || rental.id}</span>
+                  </div>
+                  <div className="rental-customer">
+                    <User size={14} />
+                    <span>{rental.customer_name || 'بدون اسم'}</span>
+                  </div>
+                </div>
+                
+                <div className="rental-time">
+                  {rental.rental_type === 'fixed' ? (
+                    <>
+                      <Timer size={14} />
+                      <span className={isExpired(rental) ? 'expired' : ''}>
+                        {calculateRemainingTime(rental)}
+                      </span>
+                    </>
+                  ) : (
+                    <span className="open-badge">مفتوح</span>
+                  )}
+                </div>
+
+                <div className="rental-actions">
+                  {hasMultipleItems && (
+                    <button 
+                      onClick={() => toggleExpand(rental.id)} 
+                      className="action-btn expand"
+                      title={isExpanded ? 'إخفاء التفاصيل' : 'عرض التفاصيل'}
+                    >
+                      {isExpanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                    </button>
+                  )}
+                  <button onClick={() => onViewDetails(rental)} className="action-btn info" title="تفاصيل">
+                    <Eye size={14} />
                   </button>
-                )}
-                {isManager && canCancel && (
-                  <>
-                    <button onClick={() => onCancel(rental)} className="action-btn warning" title="إلغاء">
-                      <X size={14} />
+                  {rental.rental_type === 'open' && (
+                    <button onClick={() => onComplete(rental)} className="action-btn success" title="إنهاء">
+                      <Check size={14} />
                     </button>
-                    <button onClick={() => onModify(rental)} className="action-btn primary" title="تعديل">
-                      <Edit size={14} />
-                    </button>
-                  </>
-                )}
+                  )}
+                  {isManager && canCancel && (
+                    <>
+                      <button onClick={() => onCancel(rental)} className="action-btn warning" title="إلغاء">
+                        <X size={14} />
+                      </button>
+                      <button onClick={() => onModify(rental)} className="action-btn primary" title="تعديل">
+                        <Edit size={14} />
+                      </button>
+                    </>
+                  )}
+                </div>
+              </div>
+
+              {/* العناصر الرئيسية (أول لعبة) */}
+              <div className="rental-items">
+                {rental.items && rental.items.slice(0, 1).map(item => (
+                  <div key={item.id} className="rental-item">
+                    <div className="item-game">
+                      <Gamepad2 size={14} />
+                      <span className="game-name">{item.game_name}</span>
+                      {item.child_name && <span className="child-name">({item.child_name})</span>}
+                    </div>
+                    <div className="item-details">
+                      {item.quantity > 1 && <span className="badge">x{item.quantity}</span>}
+                      <span className="item-price">{formatCurrency(item.total_price || 0)}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* العناصر الإضافية (عند التوسيع) */}
+              {isExpanded && rental.items && rental.items.length > 1 && (
+                <div className="rental-items-expanded">
+                  {rental.items.slice(1).map(item => (
+                    <div key={item.id} className="rental-item secondary">
+                      <div className="item-game">
+                        <Gamepad2 size={12} />
+                        <span className="game-name">{item.game_name}</span>
+                        {item.child_name && <span className="child-name">({item.child_name})</span>}
+                      </div>
+                      <div className="item-details">
+                        {item.quantity > 1 && <span className="badge">x{item.quantity}</span>}
+                        <span className="item-price">{formatCurrency(item.total_price || 0)}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* ملخص التأجير */}
+              <div className="rental-summary">
+                <div className="summary-item">
+                  <DollarSign size={12} />
+                  <span>الإجمالي: {formatCurrency(rental.total_amount || 0)}</span>
+                </div>
+                <div className="summary-item">
+                  <Clock size={12} />
+                  <span>البداية: {formatTime(rental.start_time)}</span>
+                </div>
               </div>
             </div>
           );
@@ -1150,17 +1250,31 @@ const CompletedRentalsTable = ({
   items,
   loading,
   onViewDetails,
-  currentShift
+  currentShift,
+  onRefresh
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [page, setPage] = useState(1);
+  const [expandedRentals, setExpandedRentals] = useState({});
   const itemsPerPage = 10;
 
+  // تجميع العناصر لكل تأجير
   const rentalsWithItems = useMemo(() => {
     if (!rentals || !items) return [];
+    
+    const itemsMap = {};
+    items.forEach(item => {
+      if (item && item.rental_id) {
+        if (!itemsMap[item.rental_id]) {
+          itemsMap[item.rental_id] = [];
+        }
+        itemsMap[item.rental_id].push(item);
+      }
+    });
+
     return rentals.map(rental => ({
       ...rental,
-      items: items.filter(item => item && item.rental_id === rental.id)
+      items: itemsMap[rental.id] || []
     }));
   }, [rentals, items]);
 
@@ -1171,7 +1285,8 @@ const CompletedRentalsTable = ({
       const term = searchTerm.toLowerCase();
       return (
         (rental.customer_name && rental.customer_name.toLowerCase().includes(term)) ||
-        (rental.rental_number && rental.rental_number.toLowerCase().includes(term))
+        (rental.rental_number && rental.rental_number.toLowerCase().includes(term)) ||
+        (rental.items && rental.items.some(item => item.game_name && item.game_name.toLowerCase().includes(term)))
       );
     });
   }, [rentalsWithItems, searchTerm]);
@@ -1182,6 +1297,13 @@ const CompletedRentalsTable = ({
   }, [filteredRentals, page]);
 
   const totalPages = Math.ceil(filteredRentals.length / itemsPerPage);
+
+  const toggleExpand = (rentalId) => {
+    setExpandedRentals(prev => ({
+      ...prev,
+      [rentalId]: !prev[rentalId]
+    }));
+  };
 
   if (!currentShift) return null;
 
@@ -1194,6 +1316,9 @@ const CompletedRentalsTable = ({
       <div className="table-empty">
         <History size={32} />
         <p>لا توجد تأجيرات مكتملة</p>
+        <button onClick={onRefresh} className="btn btn-primary btn-sm">
+          <RefreshCw size={14} /> تحديث
+        </button>
       </div>
     );
   }
@@ -1201,39 +1326,109 @@ const CompletedRentalsTable = ({
   return (
     <div className="completed-rentals-table">
       <div className="table-header">
-        <input
-          type="text"
-          placeholder="بحث..."
-          value={searchTerm}
-          onChange={(e) => {
-            setSearchTerm(e.target.value);
-            setPage(1);
-          }}
-          className="table-search"
-        />
+        <div className="search-container">
+          <input
+            type="text"
+            placeholder="بحث بالعميل أو رقم التأجير أو اللعبة..."
+            value={searchTerm}
+            onChange={(e) => {
+              setSearchTerm(e.target.value);
+              setPage(1);
+            }}
+            className="table-search"
+          />
+          <button onClick={onRefresh} className="refresh-btn" title="تحديث">
+            <RefreshCw size={16} />
+          </button>
+        </div>
       </div>
       <div className="table-body">
-        {paginatedRentals.map(rental => (
-          <div key={rental.id} className="table-row">
-            <div className="row-customer">
-              <User size={14} />
-              <span>{rental.customer_name || 'بدون اسم'}</span>
+        {paginatedRentals.map(rental => {
+          const hasMultipleItems = rental.items && rental.items.length > 1;
+          const isExpanded = expandedRentals[rental.id];
+          
+          return (
+            <div key={rental.id} className="rental-group completed">
+              {/* رأس التأجير */}
+              <div className="rental-header">
+                <div className="rental-info">
+                  <div className="rental-badge">
+                    <Hash size={12} />
+                    <span>#{rental.rental_number || rental.id}</span>
+                  </div>
+                  <div className="rental-customer">
+                    <User size={14} />
+                    <span>{rental.customer_name || 'بدون اسم'}</span>
+                  </div>
+                </div>
+                
+                <div className="rental-amount">
+                  <DollarSign size={14} />
+                  <span>{formatCurrency(rental.final_amount || rental.total_amount || 0)}</span>
+                </div>
+
+                <div className="rental-actions">
+                  {hasMultipleItems && (
+                    <button 
+                      onClick={() => toggleExpand(rental.id)} 
+                      className="action-btn expand"
+                      title={isExpanded ? 'إخفاء التفاصيل' : 'عرض التفاصيل'}
+                    >
+                      {isExpanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                    </button>
+                  )}
+                  <button onClick={() => onViewDetails(rental)} className="action-btn info" title="تفاصيل">
+                    <Eye size={14} />
+                  </button>
+                </div>
+              </div>
+
+              {/* العناصر الرئيسية (أول لعبة) */}
+              <div className="rental-items">
+                {rental.items && rental.items.slice(0, 1).map(item => (
+                  <div key={item.id} className="rental-item">
+                    <div className="item-game">
+                      <Gamepad2 size={14} />
+                      <span className="game-name">{item.game_name}</span>
+                    </div>
+                    <div className="item-details">
+                      {item.quantity > 1 && <span className="badge">x{item.quantity}</span>}
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* العناصر الإضافية (عند التوسيع) */}
+              {isExpanded && rental.items && rental.items.length > 1 && (
+                <div className="rental-items-expanded">
+                  {rental.items.slice(1).map(item => (
+                    <div key={item.id} className="rental-item secondary">
+                      <div className="item-game">
+                        <Gamepad2 size={12} />
+                        <span className="game-name">{item.game_name}</span>
+                      </div>
+                      <div className="item-details">
+                        {item.quantity > 1 && <span className="badge">x{item.quantity}</span>}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* معلومات الوقت */}
+              <div className="rental-time-info">
+                <Clock size={12} />
+                <span>البداية: {formatTime(rental.start_time)}</span>
+                {rental.end_time && (
+                  <>
+                    <span> - </span>
+                    <span>النهاية: {formatTime(rental.end_time)}</span>
+                  </>
+                )}
+              </div>
             </div>
-            <div className="row-amount">
-              <DollarSign size={14} />
-              <span>{formatCurrency(rental.final_amount || rental.total_amount || 0)}</span>
-            </div>
-            <div className="row-time">
-              <Clock size={14} />
-              <span>{rental.end_time ? formatTime(rental.end_time) : '--:--'}</span>
-            </div>
-            <div className="row-actions">
-              <button onClick={() => onViewDetails(rental)} className="action-btn info" title="تفاصيل">
-                <Eye size={14} />
-              </button>
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
       
       {totalPages > 1 && (
@@ -1708,7 +1903,7 @@ const CancelRentalModal = ({ show, onClose, rental, items, onConfirm }) => {
   );
 };
 
-// ==================== المكون الرئيسي مع API وهمي للتجربة ====================
+// ==================== المكون الرئيسي مع التخزين في قاعدة البيانات ====================
 const Rentals = () => {
   const { user } = useAuth();
   
@@ -1745,6 +1940,7 @@ const Rentals = () => {
   
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   const userRole = user?.role || 'employee';
   const isManager = userRole === 'admin' || userRole === 'branch_manager';
@@ -1754,28 +1950,20 @@ const Rentals = () => {
     if (!user?.branch_id) return;
     setLoading(prev => ({ ...prev, games: true }));
     try {
-      // استخدم API الحقيقي أو بيانات وهمية للتجربة
+      console.log('جاري تحميل الألعاب للفرع:', user.branch_id);
       const response = await api.getGames({ branch_id: user.branch_id });
+      console.log('استجابة الألعاب:', response);
+      
       if (response && response.success) {
         setGames(response.data || []);
       } else {
-        // بيانات وهمية للتجربة إذا فشل API
-        setGames([
-          { id: 1, name: 'بلايستيشن 5', price_per_15min: 50, branch_id: user.branch_id, is_active: true, category: 'playstation' },
-          { id: 2, name: 'بلايستيشن 4', price_per_15min: 40, branch_id: user.branch_id, is_active: true, category: 'playstation' },
-          { id: 3, name: 'VR', price_per_15min: 60, branch_id: user.branch_id, is_active: true, category: 'vr' },
-          { id: 4, name: 'سكوتر', price_per_15min: 30, branch_id: user.branch_id, is_active: true, category: 'scooter' },
-          { id: 5, name: 'دراجة', price_per_15min: 25, branch_id: user.branch_id, is_active: true, category: 'bike' },
-          { id: 6, name: 'تنس طاولة', price_per_15min: 35, branch_id: user.branch_id, is_active: true, category: 'table' },
-        ]);
+        setGames([]);
+        setError('فشل تحميل الألعاب');
       }
     } catch (error) {
       console.error('خطأ في تحميل الألعاب:', error);
-      // بيانات وهمية في حالة الخطأ
-      setGames([
-        { id: 1, name: 'بلايستيشن 5', price_per_15min: 50, branch_id: user?.branch_id, is_active: true },
-        { id: 2, name: 'بلايستيشن 4', price_per_15min: 40, branch_id: user?.branch_id, is_active: true },
-      ]);
+      setGames([]);
+      setError('حدث خطأ في تحميل الألعاب');
     } finally {
       setLoading(prev => ({ ...prev, games: false }));
     }
@@ -1785,28 +1973,21 @@ const Rentals = () => {
   const loadCurrentShift = useCallback(async () => {
     setLoading(prev => ({ ...prev, shift: true }));
     try {
+      console.log('جاري تحميل الشيفت الحالي');
       const response = await api.getCurrentShift();
+      console.log('استجابة الشيفت:', response);
+      
       if (response && response.success && response.data) {
         setCurrentShift(response.data);
         setShiftStats(response.data);
       } else {
-        // للاختبار: إنشاء شيفت وهمي
-        setCurrentShift({
-          id: 1,
-          shift_number: '12345',
-          start_time: new Date().toISOString(),
-          status: 'open'
-        });
+        setCurrentShift(null);
+        setShiftStats(null);
       }
     } catch (error) {
       console.error('خطأ في تحميل الشيفت:', error);
-      // للاختبار: إنشاء شيفت وهمي
-      setCurrentShift({
-        id: 1,
-        shift_number: '12345',
-        start_time: new Date().toISOString(),
-        status: 'open'
-      });
+      setCurrentShift(null);
+      setShiftStats(null);
     } finally {
       setLoading(prev => ({ ...prev, shift: false }));
     }
@@ -1823,7 +2004,9 @@ const Rentals = () => {
     setLoading(prev => ({ ...prev, rentals: true }));
     
     try {
+      console.log('جاري تحميل التأجيرات النشطة للشيفت:', currentShift.id);
       const response = await api.getActiveRentals(currentShift.id);
+      console.log('استجابة التأجيرات النشطة:', response);
       
       if (response && response.success) {
         const rentals = response.data || [];
@@ -1839,12 +2022,11 @@ const Rentals = () => {
         }
         setRentalItems(allItems);
       } else {
-        // بيانات وهمية للتجربة
         setActiveRentals([]);
         setRentalItems([]);
       }
     } catch (error) {
-      console.error('خطأ في تحميل التأجيرات:', error);
+      console.error('خطأ في تحميل التأجيرات النشطة:', error);
       setActiveRentals([]);
       setRentalItems([]);
     } finally {
@@ -1852,7 +2034,7 @@ const Rentals = () => {
     }
   }, [currentShift?.id]);
 
-  // تحميل التأجيرات المكتملة - تم إصلاحها
+  // تحميل التأجيرات المكتملة
   const loadCompletedRentals = useCallback(async () => {
     if (!currentShift?.id) {
       setCompletedRentals([]);
@@ -1864,8 +2046,7 @@ const Rentals = () => {
     
     try {
       console.log('جاري تحميل التأجيرات المكتملة للشيفت:', currentShift.id);
-      const response = await api.getCompletedRentals({ shift_id: currentShift.id, limit: 50 });
-      
+      const response = await api.getCompletedRentals({ shift_id: currentShift.id, limit: 100 });
       console.log('استجابة التأجيرات المكتملة:', response);
       
       if (response && response.success) {
@@ -1881,14 +2062,7 @@ const Rentals = () => {
           });
         }
         setCompletedItems(allItems);
-        
-        if (rentals.length > 0) {
-          console.log(`تم تحميل ${rentals.length} تأجير مكتمل`);
-        } else {
-          console.log('لا توجد تأجيرات مكتملة');
-        }
       } else {
-        console.log('فشل تحميل التأجيرات المكتملة أو لا توجد بيانات');
         setCompletedRentals([]);
         setCompletedItems([]);
       }
@@ -1907,13 +2081,35 @@ const Rentals = () => {
     await loadGames();
   }, [loadCurrentShift, loadGames]);
 
-  // بعد تحميل الشيفت، حمل التأجيرات
+  // تحديث التأجيرات
+  const refreshRentals = useCallback(() => {
+    if (currentShift?.id) {
+      loadActiveRentals();
+      loadCompletedRentals();
+    }
+  }, [currentShift?.id, loadActiveRentals, loadCompletedRentals]);
+
+  // تحميل البيانات عند تغيير الشيفت أو عند التحديث اليدوي
   useEffect(() => {
     if (currentShift?.id) {
       loadActiveRentals();
-      loadCompletedRentals(); // تم التأكد من استدعاء هذه الدالة
+      loadCompletedRentals();
     }
-  }, [currentShift?.id, loadActiveRentals, loadCompletedRentals]);
+  }, [currentShift?.id, refreshTrigger, loadActiveRentals, loadCompletedRentals]);
+
+  // تحميل أولي
+  useEffect(() => {
+    refreshAllData();
+  }, [refreshAllData]);
+
+  // تحديث دوري للتأجيرات النشطة (كل 30 ثانية)
+  useEffect(() => {
+    if (!currentShift?.id) return;
+    const interval = setInterval(() => {
+      loadActiveRentals();
+    }, 30000);
+    return () => clearInterval(interval);
+  }, [currentShift?.id, loadActiveRentals]);
 
   // بدء الشيفت
   const handleStartShift = useCallback(async () => {
@@ -1924,31 +2120,20 @@ const Rentals = () => {
 
     setLoading(prev => ({ ...prev, processing: true }));
     try {
+      console.log('بدء شيفت جديد للفرع:', user.branch_id);
       const response = await api.startShift(0);
+      console.log('استجابة بدء الشيفت:', response);
+      
       if (response && response.success) {
         setCurrentShift(response.data);
         setSuccess('✅ تم فتح الشيفت بنجاح');
         await refreshAllData();
       } else {
-        // للاختبار: إنشاء شيفت وهمي
-        setCurrentShift({
-          id: Date.now(),
-          shift_number: Math.floor(Math.random() * 10000).toString(),
-          start_time: new Date().toISOString(),
-          status: 'open'
-        });
-        setSuccess('✅ تم فتح الشيفت بنجاح (وضع الاختبار)');
+        setError('❌ فشل فتح الشيفت: ' + (response?.message || 'خطأ غير معروف'));
       }
     } catch (error) {
       console.error('خطأ في فتح الشيفت:', error);
-      // للاختبار: إنشاء شيفت وهمي
-      setCurrentShift({
-        id: Date.now(),
-        shift_number: Math.floor(Math.random() * 10000).toString(),
-        start_time: new Date().toISOString(),
-        status: 'open'
-      });
-      setSuccess('✅ تم فتح الشيفت بنجاح (وضع الاختبار)');
+      setError('حدث خطأ في فتح الشيفت');
     } finally {
       setLoading(prev => ({ ...prev, processing: false }));
     }
@@ -1959,10 +2144,13 @@ const Rentals = () => {
     if (!currentShift) return;
     setLoading(prev => ({ ...prev, processing: true }));
     try {
+      console.log('إنهاء الشيفت:', currentShift.id);
       const response = await api.endShift(currentShift.id, {
         closing_cash: closingCash || 0,
         notes
       });
+      console.log('استجابة إنهاء الشيفت:', response);
+      
       if (response && response.success) {
         setCurrentShift(null);
         setActiveRentals([]);
@@ -1971,29 +2159,17 @@ const Rentals = () => {
         setCompletedItems([]);
         setSuccess('✅ تم إنهاء الشيفت بنجاح');
       } else {
-        // للاختبار: إنهاء الشيفت محلياً
-        setCurrentShift(null);
-        setActiveRentals([]);
-        setRentalItems([]);
-        setCompletedRentals([]);
-        setCompletedItems([]);
-        setSuccess('✅ تم إنهاء الشيفت بنجاح (وضع الاختبار)');
+        setError('❌ فشل إنهاء الشيفت: ' + (response?.message || 'خطأ غير معروف'));
       }
     } catch (error) {
       console.error('خطأ في إنهاء الشيفت:', error);
-      // للاختبار: إنهاء الشيفت محلياً
-      setCurrentShift(null);
-      setActiveRentals([]);
-      setRentalItems([]);
-      setCompletedRentals([]);
-      setCompletedItems([]);
-      setSuccess('✅ تم إنهاء الشيفت بنجاح (وضع الاختبار)');
+      setError('حدث خطأ في إنهاء الشيفت');
     } finally {
       setLoading(prev => ({ ...prev, processing: false }));
     }
   }, [currentShift]);
 
-  // إضافة لعبة للسلة - تم إصلاحها
+  // إضافة لعبة للسلة
   const handleAddToCart = useCallback((game) => {
     console.log('إضافة لعبة:', game);
     
@@ -2002,7 +2178,6 @@ const Rentals = () => {
       return;
     }
 
-    // التحقق من أن اللعبة صالحة
     if (!game || !game.id) {
       setError('❌ بيانات اللعبة غير صالحة');
       return;
@@ -2019,14 +2194,7 @@ const Rentals = () => {
       child_name: ''
     };
 
-    console.log('عنصر جديد:', newItem);
-    
-    setCartItems(prev => {
-      const updated = [...prev, newItem];
-      console.log('السلة بعد الإضافة:', updated);
-      return updated;
-    });
-
+    setCartItems(prev => [...prev, newItem]);
     setShowGamesDropdown(false);
     setSuccess(`✅ تم إضافة ${game.name || 'اللعبة'} إلى السلة`);
   }, [currentShift, userRole]);
@@ -2048,7 +2216,13 @@ const Rentals = () => {
   const handleClearCart = useCallback(() => {
     setCartItems([]);
     setCustomerInfo({ name: '', phone: '' });
-    setSuccess('✅ تم تفريغ السلة');
+  }, []);
+
+  // دالة مساعدة لحساب total للعنصر
+  const calculateItemTotal = useCallback((item) => {
+    if (item.rental_type === 'open') return 0;
+    const units = Math.ceil((item.duration_minutes || 15) / 15);
+    return (item.price_per_15min || 0) * units * (item.quantity || 1);
   }, []);
 
   // إنشاء تأجير جديد
@@ -2071,100 +2245,92 @@ const Rentals = () => {
     setLoading(prev => ({ ...prev, processing: true }));
     
     try {
-      const rentalData = {
-        shift_id: currentShift.id,
-        customer_name: customerInfo.name.trim(),
-        customer_phone: customerInfo.phone || null,
-        items: cartItems.map(item => ({
-          game_id: item.game_id,
-          child_name: item.child_name || null,
-          duration_minutes: item.rental_type === 'fixed' ? item.duration_minutes : null,
-          quantity: item.quantity,
-          rental_type: item.rental_type,
-          price_per_15min: item.price_per_15min
-        }))
-      };
+      const createdRentals = [];
+      const createdItems = [];
 
-      console.log('بيانات التأجير:', rentalData);
-      
-      // محاولة إنشاء التأجير عبر API
-      const response = await api.createRental(rentalData);
-
-      if (response && response.success) {
-        setSuccess(`✅ تم إنشاء التأجير للعميل ${customerInfo.name} بنجاح`);
-        handleClearCart();
-        await loadActiveRentals();
-        await loadCompletedRentals(); // تحديث التأجيرات المكتملة
-      } else {
-        // للاختبار: محاكاة نجاح العملية
-        setSuccess(`✅ تم إنشاء التأجير للعميل ${customerInfo.name} بنجاح (وضع الاختبار)`);
-        handleClearCart();
-        
-        // إضافة تأجير وهمي للتأجيرات النشطة
-        const newRental = {
-          id: Date.now(),
-          rental_number: `RN${Math.floor(Math.random() * 10000)}`,
-          customer_name: customerInfo.name,
-          customer_phone: customerInfo.phone,
-          start_time: new Date().toISOString(),
-          status: 'active',
-          rental_type: cartItems[0]?.rental_type || 'fixed',
-          total_duration: cartItems.reduce((sum, item) => sum + (item.duration_minutes || 15), 0),
-          total_amount: data.total_amount,
-          items: cartItems.map(item => ({
-            id: Date.now() + Math.random(),
-            rental_id: Date.now(),
+      // إنشاء تأجير منفصل لكل لعبة في السلة
+      for (const item of cartItems) {
+        const rentalData = {
+          shift_id: currentShift.id,
+          customer_name: customerInfo.name.trim(),
+          customer_phone: customerInfo.phone || null,
+          items: [{
             game_id: item.game_id,
-            game_name: item.game_name,
+            child_name: item.child_name || null,
+            duration_minutes: item.rental_type === 'fixed' ? item.duration_minutes : null,
             quantity: item.quantity,
-            price_per_15min: item.price_per_15min,
-            total_price: item.price_per_15min * Math.ceil((item.duration_minutes || 15) / 15) * item.quantity
-          }))
+            rental_type: item.rental_type,
+            price_per_15min: item.price_per_15min
+          }]
         };
+
+        console.log('إنشاء تأجير للعبة:', item.game_name, rentalData);
         
-        setActiveRentals(prev => [...prev, newRental]);
-        setRentalItems(prev => [...prev, ...newRental.items]);
+        const response = await api.createRental(rentalData);
+        console.log('استجابة إنشاء التأجير:', response);
+
+        if (response && response.success && response.data) {
+          createdRentals.push(response.data);
+          if (response.data.items) {
+            createdItems.push(...response.data.items);
+          }
+        } else {
+          throw new Error(response?.message || 'فشل إنشاء التأجير');
+        }
       }
+
+      // تحديث قوائم التأجيرات
+      if (createdRentals.length > 0) {
+        setActiveRentals(prev => [...prev, ...createdRentals]);
+        setRentalItems(prev => [...prev, ...createdItems]);
+        
+        const gameNames = createdRentals.map(r => {
+          const item = r.items && r.items[0];
+          return item ? item.game_name : 'لعبة';
+        }).join('، ');
+        
+        setSuccess(`✅ تم إنشاء ${createdRentals.length} تأجير للعميل ${customerInfo.name}: ${gameNames}`);
+        
+        // تفريغ السلة بعد النجاح
+        handleClearCart();
+        
+        // تحديث التأجيرات المكتملة
+        await loadCompletedRentals();
+      } else {
+        setError('❌ فشل إنشاء التأجيرات');
+      }
+      
     } catch (error) {
       console.error('خطأ في إنشاء التأجير:', error);
-      
-      // للاختبار: محاكاة نجاح العملية حتى لو فشل API
-      setSuccess(`✅ تم إنشاء التأجير للعميل ${customerInfo.name} بنجاح (وضع الاختبار)`);
-      handleClearCart();
+      setError('فشل إنشاء التأجير: ' + (error.message || 'خطأ غير معروف'));
     } finally {
       setLoading(prev => ({ ...prev, processing: false }));
     }
-  }, [currentShift, cartItems, customerInfo, handleClearCart, loadActiveRentals, loadCompletedRentals]);
+  }, [currentShift, cartItems, customerInfo, handleClearCart, loadCompletedRentals]);
 
   // إنهاء تأجير مفتوح
   const handleCompleteOpenRental = useCallback(async (rental, data) => {
     if (!rental) return;
     setLoading(prev => ({ ...prev, processing: true }));
     try {
+      console.log('إنهاء تأجير مفتوح:', rental.id, data);
       const response = await api.completeOpenTime(rental.id, {
         payment_method: data.payment_method,
         actual_minutes: data.actual_minutes,
         final_amount: data.final_amount
       });
+      console.log('استجابة إنهاء التأجير:', response);
 
       if (response && response.success) {
         setSuccess(`✅ تم إنهاء التأجير ${rental.rental_number} بنجاح`);
         await loadActiveRentals();
         await loadCompletedRentals();
       } else {
-        // للاختبار
-        setActiveRentals(prev => prev.filter(r => r.id !== rental.id));
-        const completedRental = { ...rental, status: 'completed', end_time: new Date().toISOString(), final_amount: data.final_amount };
-        setCompletedRentals(prev => [completedRental, ...prev]);
-        setSuccess(`✅ تم إنهاء التأجير ${rental.rental_number} بنجاح (وضع الاختبار)`);
+        setError('❌ فشل إنهاء التأجير: ' + (response?.message || 'خطأ غير معروف'));
       }
     } catch (error) {
       console.error('خطأ في إنهاء التأجير:', error);
-      // للاختبار
-      setActiveRentals(prev => prev.filter(r => r.id !== rental.id));
-      const completedRental = { ...rental, status: 'completed', end_time: new Date().toISOString(), final_amount: data.final_amount };
-      setCompletedRentals(prev => [completedRental, ...prev]);
-      setSuccess(`✅ تم إنهاء التأجير ${rental.rental_number} بنجاح (وضع الاختبار)`);
+      setError('حدث خطأ في إنهاء التأجير');
     } finally {
       setLoading(prev => ({ ...prev, processing: false }));
     }
@@ -2179,24 +2345,20 @@ const Rentals = () => {
 
     setLoading(prev => ({ ...prev, processing: true }));
     try {
+      console.log('إلغاء تأجير:', rental.id, data);
       const response = await api.cancelRental(rental.id, data.reason);
+      console.log('استجابة إلغاء التأجير:', response);
 
       if (response && response.success) {
         setSuccess(`✅ تم إلغاء التأجير ${rental.rental_number} واسترداد ${formatCurrency(data.refund_amount)}`);
         await loadActiveRentals();
         await loadCompletedRentals();
       } else {
-        // للاختبار
-        setActiveRentals(prev => prev.filter(r => r.id !== rental.id));
-        const cancelledRental = { ...rental, status: 'cancelled', end_time: new Date().toISOString(), is_refunded: true };
-        setCompletedRentals(prev => [cancelledRental, ...prev]);
-        setSuccess(`✅ تم إلغاء التأجير ${rental.rental_number} (وضع الاختبار)`);
+        setError('❌ فشل إلغاء التأجير: ' + (response?.message || 'خطأ غير معروف'));
       }
     } catch (error) {
       console.error('خطأ في إلغاء التأجير:', error);
-      // للاختبار
-      setActiveRentals(prev => prev.filter(r => r.id !== rental.id));
-      setSuccess(`✅ تم إلغاء التأجير ${rental.rental_number} (وضع الاختبار)`);
+      setError('حدث خطأ في إلغاء التأجير');
     } finally {
       setLoading(prev => ({ ...prev, processing: false }));
     }
@@ -2211,7 +2373,8 @@ const Rentals = () => {
 
     setLoading(prev => ({ ...prev, processing: true }));
     try {
-      // هنا يمكن إضافة API للتعديل
+      console.log('تعديل تأجير:', rental.id, data);
+      // هنا يمكن إضافة API للتعديل إذا كان موجوداً
       setSuccess(`✅ تم تعديل التأجير ${rental.rental_number} بنجاح`);
       await loadActiveRentals();
     } catch (error) {
@@ -2222,7 +2385,7 @@ const Rentals = () => {
     }
   }, [isManager, loadActiveRentals]);
 
-  // التحقق من انتهاء التأجيرات
+  // التحقق من انتهاء التأجيرات الثابتة تلقائياً
   useEffect(() => {
     const checkExpiredRentals = async () => {
       if (!activeRentals || !activeRentals.length) return;
@@ -2240,6 +2403,7 @@ const Rentals = () => {
       });
 
       if (expiredRentals.length > 0) {
+        console.log('تأجيرات منتهية:', expiredRentals.length);
         for (const rental of expiredRentals) {
           try {
             await api.completeFixedTime(rental.id);
@@ -2252,23 +2416,11 @@ const Rentals = () => {
       }
     };
 
-    const interval = setInterval(checkExpiredRentals, 5000); // فحص كل 5 ثواني بدلاً من كل ثانية
+    const interval = setInterval(checkExpiredRentals, 5000); // فحص كل 5 ثواني
     return () => clearInterval(interval);
   }, [activeRentals, loadActiveRentals, loadCompletedRentals]);
 
-  // Effects
-  useEffect(() => {
-    refreshAllData();
-  }, [refreshAllData]);
-
-  useEffect(() => {
-    if (!currentShift?.id) return;
-    const interval = setInterval(() => {
-      loadActiveRentals();
-    }, 30000); // تحديث كل 30 ثانية
-    return () => clearInterval(interval);
-  }, [currentShift?.id, loadActiveRentals]);
-
+  // إخفاء الإشعارات بعد 5 ثواني
   useEffect(() => {
     if (error || success) {
       const timer = setTimeout(() => {
@@ -2279,11 +2431,11 @@ const Rentals = () => {
     }
   }, [error, success]);
 
-  // دالة لتحديث التأجيرات المكتملة يدوياً (للاختبار)
-  const handleRefreshCompleted = useCallback(() => {
-    console.log('تحديث التأجيرات المكتملة يدوياً');
-    loadCompletedRentals();
-  }, [loadCompletedRentals]);
+  // دالة لتحديث البيانات يدوياً
+  const handleRefresh = useCallback(() => {
+    setRefreshTrigger(prev => prev + 1);
+    setSuccess('✅ تم تحديث البيانات');
+  }, []);
 
   return (
     <div className="rentals-page">
@@ -2313,7 +2465,6 @@ const Rentals = () => {
             onClick={() => {
               setShowCompletedTable(!showCompletedTable);
               if (!showCompletedTable) {
-                // تحديث البيانات عند فتح الجدول
                 loadCompletedRentals();
               }
             }}
@@ -2322,11 +2473,12 @@ const Rentals = () => {
             <span>التأجيرات المكتملة ({completedRentals?.length || 0})</span>
           </button>
           <button 
-            className="header-btn"
-            onClick={handleRefreshCompleted}
+            className="header-btn refresh-btn"
+            onClick={handleRefresh}
             title="تحديث"
+            disabled={loading.rentals || loading.completed}
           >
-            <RefreshCw size={18} />
+            <RefreshCw size={18} className={loading.rentals || loading.completed ? 'spinner' : ''} />
           </button>
         </div>
       </div>
@@ -2390,6 +2542,7 @@ const Rentals = () => {
               }}
               currentShift={currentShift}
               userRole={userRole}
+              onRefresh={loadActiveRentals}
             />
           </div>
         )}
@@ -2409,6 +2562,7 @@ const Rentals = () => {
                 setShowRentalDetailsModal(true);
               }}
               currentShift={currentShift}
+              onRefresh={loadCompletedRentals}
             />
           </div>
         )}
