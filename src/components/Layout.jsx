@@ -1,294 +1,195 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
-import './Layout.css';
+import React, { useState, useEffect, useRef, useMemo } from "react";
+import { Link, useNavigate, useLocation } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
+import "./Layout.css";
+
+const MOBILE_BREAKPOINT = 768;
+
+const ROLE_CONFIG = {
+  admin: { label: "المدير العام", icon: "👑" },
+  branch_manager: { label: "مدير فرع", icon: "🏢" },
+  employee: { label: "موظف", icon: "👤" },
+};
+
+const MENU_CONFIG = {
+  admin: [
+    { path: "/admin/dashboard", icon: "📊", label: "لوحة التحكم" },
+    { path: "/admin/users", icon: "👥", label: "المستخدمين" },
+    { path: "/admin/branches", icon: "🏬", label: "الفروع" },
+    { path: "/admin/games", icon: "🎮", label: "الألعاب" },
+    { path: "/admin/rentals", icon: "📋", label: "التأجيرات" },
+    { path: "/admin/revenue-analysis", icon: "💰", label: "تحليل الإيرادات" },
+    { path: "/admin/settings", icon: "⚙️", label: "الإعدادات" },
+  ],
+  employee: [{ path: "/employee/rentals", icon: "📋", label: "التأجيرات" }],
+};
 
 const Layout = ({ children }) => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [activePath, setActivePath] = useState('');
-  const [isMobile, setIsMobile] = useState(false);
-  const sidebarRef = useRef(null);
-  const menuToggleRef = useRef(null);
 
-  // تحديد حجم الشاشة بشكل دقيق
+  const sidebarRef = useRef(null);
+  const toggleRef = useRef(null);
+
+  const [isMobile, setIsMobile] = useState(
+    window.innerWidth <= MOBILE_BREAKPOINT
+  );
+  const [sidebarOpen, setSidebarOpen] = useState(
+    window.innerWidth > MOBILE_BREAKPOINT
+  );
+
+  /* ================= Responsive Logic ================= */
   useEffect(() => {
-    const checkIsMobile = () => {
-      const mobile = window.innerWidth <= 760; // تغيير من 1024 إلى 768
+    const handleResize = () => {
+      const mobile = window.innerWidth <= MOBILE_BREAKPOINT;
       setIsMobile(mobile);
-      
-      // إغلاق القائمة تلقائياً عند التبديل من كمبيوتر إلى موبايل
-      if (mobile && sidebarOpen) {
-        setSidebarOpen(false);
-      }
-      
-      // فتح القائمة تلقائياً عند التبديل من موبايل إلى كمبيوتر (إذا كانت مغلقة)
-      if (!mobile && !sidebarOpen) {
-        setSidebarOpen(true);
-      }
+      setSidebarOpen(!mobile);
     };
-    
-    // التحقق عند التحميل الأولي
-    checkIsMobile();
-    
-    // تهيئة حالة القائمة حسب نوع الجهاز
-    const isMobileOnLoad = window.innerWidth <= 768;
-    setIsMobile(isMobileOnLoad);
-    setSidebarOpen(!isMobileOnLoad); // مفتوحة على الكمبيوتر، مغلقة على الموبايل
-    
-    window.addEventListener('resize', checkIsMobile);
-    return () => window.removeEventListener('resize', checkIsMobile);
+
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // تحديث المسار النشط
+  /* ================= Close on Route Change (Mobile) ================= */
   useEffect(() => {
-    setActivePath(location.pathname);
-    
-    // إغلاق القائمة على الموبايل عند تغيير المسار
-    if (isMobile && sidebarOpen) {
-      setSidebarOpen(false);
-    }
-  }, [location.pathname, isMobile, sidebarOpen]);
+    if (isMobile) setSidebarOpen(false);
+  }, [location.pathname, isMobile]);
 
-  // إغلاق القائمة عند النقر خارجها (للموبايل فقط)
+  /* ================= Close on Outside Click ================= */
   useEffect(() => {
-    const handleClickOutside = (event) => {
+    const handleClickOutside = (e) => {
       if (
-        isMobile && 
+        isMobile &&
         sidebarOpen &&
         sidebarRef.current &&
-        !sidebarRef.current.contains(event.target) &&
-        menuToggleRef.current &&
-        !menuToggleRef.current.contains(event.target)
+        !sidebarRef.current.contains(e.target) &&
+        toggleRef.current &&
+        !toggleRef.current.contains(e.target)
       ) {
         setSidebarOpen(false);
       }
     };
 
-    if (isMobile) {
-      document.addEventListener('mousedown', handleClickOutside);
-      document.addEventListener('touchstart', handleClickOutside);
-    }
-    
+    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("touchstart", handleClickOutside);
+
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-      document.removeEventListener('touchstart', handleClickOutside);
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("touchstart", handleClickOutside);
     };
-  }, [sidebarOpen, isMobile]);
-
-  // إغلاق القائمة بالزر Escape (لكلا الجهازين)
-  useEffect(() => {
-    const handleEscape = (event) => {
-      if (event.key === 'Escape' && sidebarOpen) {
-        setSidebarOpen(false);
-      }
-    };
-
-    document.addEventListener('keydown', handleEscape);
-    return () => document.removeEventListener('keydown', handleEscape);
-  }, [sidebarOpen]);
-
-  // إدارة التمرير (إغلاق القائمة عند التمرير على الموبايل)
-  useEffect(() => {
-    const handleScroll = () => {
-      if (isMobile && sidebarOpen) {
-        setSidebarOpen(false);
-      }
-    };
-
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
   }, [isMobile, sidebarOpen]);
 
+  /* ================= Close with ESC ================= */
+  useEffect(() => {
+    const handleEsc = (e) => {
+      if (e.key === "Escape") setSidebarOpen(false);
+    };
+
+    document.addEventListener("keydown", handleEsc);
+    return () => document.removeEventListener("keydown", handleEsc);
+  }, []);
+
+  /* ================= Derived Values ================= */
+  const roleConfig = ROLE_CONFIG[user?.role] || {
+    label: "مستخدم",
+    icon: "❓",
+  };
+
+  const menuItems = useMemo(() => {
+    return MENU_CONFIG[user?.role] || MENU_CONFIG.employee;
+  }, [user?.role]);
+
+  const isActive = (path) => location.pathname.startsWith(path);
+
+  /* ================= Actions ================= */
   const handleLogout = () => {
-    if (window.confirm('هل تريد تسجيل الخروج؟')) {
+    if (window.confirm("هل تريد تسجيل الخروج؟")) {
       logout();
-      navigate('/login');
+      navigate("/login");
     }
   };
 
-  const getRoleText = (role) => {
-    switch(role) {
-      case 'admin': return 'المدير العام';
-      case 'branch_manager': return 'مدير فرع';
-      case 'employee': return 'موظف';
-      default: return role;
-    }
-  };
+  const toggleSidebar = () => setSidebarOpen((prev) => !prev);
 
-  const getRoleIcon = (role) => {
-    switch(role) {
-      case 'admin': return '👑';
-      case 'branch_manager': return '🏢';
-      case 'employee': return '👤';
-      default: return '❓';
-    }
-  };
-
-  const toggleSidebar = () => {
-    setSidebarOpen(prev => !prev);
-  };
-
-  const closeSidebar = () => {
-    if (isMobile) {
-      setSidebarOpen(false);
-    }
-  };
-
-  const openSidebar = () => {
-    if (!isMobile) {
-      setSidebarOpen(true);
-    }
-  };
-
-  const adminMenu = [
-    { path: '/admin/dashboard', icon: '📊', label: 'لوحة التحكم' },
-    { path: '/admin/users', icon: '👥', label: 'المستخدمين' },
-    { path: '/admin/branches', icon: '🏬', label: 'الفروع' },
-    { path: '/admin/games', icon: '🎮', label: 'الألعاب' },
-    { path: '/admin/rentals', icon: '📋', label: 'التأجيرات' },
-    { path: '/admin/revenue-analysis', icon: '💰', label: 'تحليل الإيرادات' },
-    { path: '/admin/settings', icon: '⚙️', label: 'الإعدادات' },
-  ];
-
-  const employeeMenu = [
-    { path: '/employee/rentals', icon: '📋', label: 'التأجيرات' },
-  ];
-
-  const menuItems = user?.role === 'admin' ? adminMenu : employeeMenu;
-
-  const isActive = (path) => {
-    if (path === activePath) return true;
-    if (path.includes('/dashboard') && activePath.includes('/dashboard')) return true;
-    if (path.includes('/rentals') && activePath.includes('/rentals')) return true;
-    return false;
-  };
-
+  /* ================= UI ================= */
   return (
     <div className="layout">
-  {/* ================= HEADER ================= */}
-  <header className="header">
-    <div className="header-left">
-      <button
-        ref={menuToggleRef}
-        className="menu-toggle"
-        onClick={toggleSidebar}
-        aria-label={sidebarOpen ? "إغلاق القائمة" : "فتح القائمة"}
-      >
-        <span className="menu-icon">
-          {sidebarOpen ? "✕" : "☰"}
-        </span>
-      </button>
-
-      <div className="header-logo" onClick={() => navigate("/")}>
-        <img src="/images/l3bty.png" alt="L3BTY Store Logo" />
-        <h1>L3BTY Store</h1>
-      </div>
-    </div>
-
-    <div className="header-user">
-      <div className="user-info">
-        <span className="user-role-icon">
-          {getRoleIcon(user?.role)}
-        </span>
-
-        <div className="user-detailss">
-          <span className="user-namee">
-            {user?.name || "مستخدم"}
-          </span>
-          <span className="user-rolee">
-            {getRoleText(user?.role)}
-          </span>
-        </div>
-      </div>
-
-      <button className="btn-logout" onClick={handleLogout}>
-        🚪 تسجيل الخروج
-      </button>
-    </div>
-  </header>
-
-  {/* Overlay للموبايل */}
-  {isMobile && sidebarOpen && (
-    <div
-      className="sidebar-overlay"
-      onClick={closeSidebar}
-    />
-  )}
-
-  {/* ================= BODY ================= */}
-  <div className="layout-body">
-    
-    {/* -------- SIDEBAR -------- */}
-    <aside
-      ref={sidebarRef}
-className={`sidebar ${sidebarOpen ? 'open' : 'closed'}`}
-    >
-      <div className="sidebar-header">
-        {isMobile && (
+      {/* ================= HEADER ================= */}
+      <header className="header">
+        <div className="header-left">
           <button
-            className="sidebar-close"
-            onClick={closeSidebar}
+            ref={toggleRef}
+            className="menu-toggle"
+            onClick={toggleSidebar}
           >
-            ✕
+            {sidebarOpen ? "✕" : "☰"}
           </button>
-        )}
 
-        <h2>القائمة الرئيسية</h2>
-      </div>
-
-      <nav className="sidebar-nav">
-        {menuItems.map((item) => (
-          <Link
-            key={item.path}
-            to={item.path}
-            onClick={closeSidebar}
-            className={`nav-link ${
-              isActive(item.path) ? "active" : ""
-            }`}
-          >
-            <span className="nav-icon">{item.icon}</span>
-            <span>{item.label}</span>
-            {isActive(item.path) && (
-              <span className="nav-indicator">→</span>
-            )}
-          </Link>
-        ))}
-      </nav>
-
-      <div className="sidebar-footer">
-        <span className="branch-name">
-          {user?.branch_name || "الفرع الرئيسي"}
-        </span>
-
-        <div className="branch-status">
-          <span className="status-dot active"></span>
-          متصل
+          <div className="header-logo" onClick={() => navigate("/")}>
+            <img src="/images/l3bty.png" alt="L3BTY Logo" />
+            <h1>L3BTY Store</h1>
+          </div>
         </div>
-      </div>
-    </aside>
 
-    {/* -------- MAIN CONTENT -------- */}
-    <main className="main-content">
-      {!sidebarOpen && !isMobile && (
-        <button
-          className="sidebar-toggle-fab"
-          onClick={openSidebar}
-        >
-          ☰
-        </button>
+        <div className="header-user">
+          <div className="user-info">
+            <span>{roleConfig.icon}</span>
+            <div>
+              <strong>{user?.name || "مستخدم"}</strong>
+              <small>{roleConfig.label}</small>
+            </div>
+          </div>
+
+          <button className="btn-logout" onClick={handleLogout}>
+            🚪 تسجيل الخروج
+          </button>
+        </div>
+      </header>
+
+      {/* Overlay Mobile */}
+      {isMobile && sidebarOpen && (
+        <div
+          className="sidebar-overlay"
+          onClick={() => setSidebarOpen(false)}
+        />
       )}
 
-      <div className="content-container">
-        {children}
+      {/* ================= BODY ================= */}
+      <div className="layout-body">
+        <aside
+          ref={sidebarRef}
+          className={`sidebar ${sidebarOpen ? "open" : "closed"}`}
+        >
+          <nav>
+            {menuItems.map((item) => (
+              <Link
+                key={item.path}
+                to={item.path}
+                className={`nav-link ${
+                  isActive(item.path) ? "active" : ""
+                }`}
+              >
+                <span>{item.icon}</span>
+                <span>{item.label}</span>
+              </Link>
+            ))}
+          </nav>
+
+          <div className="sidebar-footer">
+            <span>{user?.branch_name || "الفرع الرئيسي"}</span>
+            <div className="branch-status">
+              <span className="status-dot active" />
+              متصل
+            </div>
+          </div>
+        </aside>
+
+        <main className="main-content">
+          <div className="content-container">{children}</div>
+        </main>
       </div>
-    </main>
-
-  </div>
-</div>
-
+    </div>
   );
 };
 
