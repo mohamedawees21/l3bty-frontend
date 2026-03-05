@@ -13,7 +13,7 @@ import {
   Image as ImageIcon, Upload, Camera, Grid, List, Settings,
   Shield, UserCog, Ban, Key, Bell, Globe, Layers, RefreshCw as RefreshIcon,
   ArrowLeftRight, Undo2, RotateCcw as RotateIcon, History, Archive,
-  Table, ClipboardList
+  Table, ClipboardList, ChevronDown, ChevronUp, Maximize2, Minimize2
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../services/api';
@@ -30,6 +30,15 @@ const PAYMENT_METHODS = [
 const RENTAL_TYPES = [
   { value: 'fixed', label: '⏰ وقت ثابت', color: '#3498db' },
   { value: 'open', label: '🔓 وقت مفتوح', color: '#f39c12' }
+];
+
+const GAME_CATEGORIES = [
+  { id: 'all', label: 'الكل', icon: Grid },
+  { id: 'playstation', label: 'بلايستيشن', icon: Gamepad2 },
+  { id: 'vr', label: 'واقع افتراضي', icon: Eye },
+  { id: 'scooter', label: 'سكوتر', icon: Zap },
+  { id: 'bike', label: 'دراجات', icon: Activity },
+  { id: 'table', label: 'ألعاب طاولة', icon: Table }
 ];
 
 // ==================== دوال المساعدة العامة ====================
@@ -75,24 +84,6 @@ const formatTime = (dateString) => {
   }
 };
 
-const formatTimeAgo = (dateString) => {
-  if (!dateString) return '';
-  const start = new Date(dateString);
-  const now = new Date();
-  const minutes = Math.floor((now - start) / (1000 * 60));
-  
-  if (minutes < 1) return 'الآن';
-  if (minutes === 1) return 'منذ دقيقة';
-  if (minutes < 60) return `منذ ${minutes} دقيقة`;
-  
-  const hours = Math.floor(minutes / 60);
-  if (hours === 1) return 'منذ ساعة';
-  if (hours < 24) return `منذ ${hours} ساعة`;
-  
-  const days = Math.floor(hours / 24);
-  return `منذ ${days} يوم`;
-};
-
 const calculateDuration = (startTime, endTime = new Date()) => {
   if (!startTime) return 0;
   const start = new Date(startTime);
@@ -101,11 +92,11 @@ const calculateDuration = (startTime, endTime = new Date()) => {
   return Math.max(0, Math.round((end - start) / (1000 * 60)));
 };
 
-const GameImage = ({ src, alt, className, size = 'medium' }) => {
+// ==================== مكون صورة اللعبة ====================
+const GameImage = ({ src, alt, className, size = 'medium', onClick }) => {
   const [imageError, setImageError] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
 
-  // قائمة الصور المتاحة مع مساراتها الصحيحة
   const imageMap = {
     'سيارة': '/images/Car.jpg',
     'سيارات': '/images/Car.jpg',
@@ -180,8 +171,17 @@ const GameImage = ({ src, alt, className, size = 'medium' }) => {
 
   const currentSrc = useMemo(() => getImagePath(alt, src), [alt, src, getImagePath]);
 
+  const sizeClasses = {
+    small: 'image-small',
+    medium: 'image-medium',
+    large: 'image-large'
+  };
+
   return (
-    <div className={`game-image-container ${className} ${imageLoaded ? 'loaded' : 'loading'}`}>
+    <div 
+      className={`game-image-container ${sizeClasses[size]} ${className || ''} ${imageLoaded ? 'loaded' : 'loading'}`}
+      onClick={onClick}
+    >
       {!imageLoaded && !imageError && (
         <div className="image-placeholder">
           <ImageIcon size={size === 'large' ? 48 : 24} />
@@ -413,6 +413,213 @@ const ShiftStatusBar = ({
   );
 };
 
+// ==================== مكون قائمة الألعاب المنبثقة المحسنة ====================
+const GamesDropdown = ({ 
+  games, 
+  onSelectGame, 
+  onClose, 
+  isOpen,
+  currentShift,
+  userRole,
+  branchId
+}) => {
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('all');
+  const [viewMode, setViewMode] = useState('grid'); // 'grid' or 'list'
+  const dropdownRef = useRef(null);
+
+  // تصفية الألعاب حسب الفرع
+  const branchGames = useMemo(() => {
+    if (!games?.length || !branchId) return [];
+    return games.filter(game => 
+      game && 
+      game.branch_id === branchId && 
+      game.is_active !== false
+    );
+  }, [games, branchId]);
+
+  // تصفية الألعاب حسب البحث والتصنيف
+  const filteredGames = useMemo(() => {
+    if (!branchGames.length) return [];
+    
+    return branchGames.filter(game => {
+      // فلتر البحث
+      const matchesSearch = !searchTerm || 
+        game.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        game.category?.toLowerCase().includes(searchTerm.toLowerCase());
+      
+      // فلتر التصنيف
+      const matchesCategory = selectedCategory === 'all' || 
+        game.category === selectedCategory ||
+        game.type === selectedCategory;
+      
+      return matchesSearch && matchesCategory;
+    });
+  }, [branchGames, searchTerm, selectedCategory]);
+
+  // إغلاق القائمة عند النقر خارجها
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        onClose();
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isOpen, onClose]);
+
+  // إغلاق القائمة بالضغط على ESC
+  useEffect(() => {
+    const handleEsc = (event) => {
+      if (event.key === 'Escape') {
+        onClose();
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener('keydown', handleEsc);
+    }
+
+    return () => {
+      document.removeEventListener('keydown', handleEsc);
+    };
+  }, [isOpen, onClose]);
+
+  if (!isOpen) return null;
+
+const isEmployee = userRole === 'employee';
+
+const isManager =
+  userRole === 'manager' ||
+  userRole === 'branch_manager' ||
+  userRole === 'مشرف';
+
+const canAddGames = currentShift || isManager;
+
+  return (
+    <div className="games-dropdown-overlay">
+      <div className="games-dropdown-container" ref={dropdownRef}>
+        <div className="dropdown-header">
+          <div className="header-title">
+            <Gamepad2 size={20} />
+            <h3>اختر لعبة</h3>
+          </div>
+          <div className="header-actions">
+            <button 
+              className={`view-mode-btn ${viewMode === 'grid' ? 'active' : ''}`}
+              onClick={() => setViewMode('grid')}
+              title="عرض شبكي"
+            >
+              <Grid size={16} />
+            </button>
+            <button 
+              className={`view-mode-btn ${viewMode === 'list' ? 'active' : ''}`}
+              onClick={() => setViewMode('list')}
+              title="عرض قائمة"
+            >
+              <List size={16} />
+            </button>
+            <button className="close-btn" onClick={onClose}>
+              <X size={20} />
+            </button>
+          </div>
+        </div>
+
+        <div className="dropdown-search">
+          <Search size={16} className="search-icon" />
+          <input
+            type="text"
+            placeholder="ابحث عن لعبة..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            autoFocus
+          />
+          {searchTerm && (
+            <button className="clear-search" onClick={() => setSearchTerm('')}>
+              <X size={14} />
+            </button>
+          )}
+        </div>
+
+        <div className="dropdown-categories">
+          {GAME_CATEGORIES.map(cat => {
+            const Icon = cat.icon;
+            return (
+              <button
+                key={cat.id}
+                className={`category-btn ${selectedCategory === cat.id ? 'active' : ''}`}
+                onClick={() => setSelectedCategory(cat.id)}
+              >
+                <Icon size={14} />
+                <span>{cat.label}</span>
+              </button>
+            );
+          })}
+        </div>
+
+        {!canAddGames ? (
+          <div className="dropdown-disabled">
+            <Lock size={32} />
+            <p>يجب فتح شيفت أولاً لإضافة ألعاب</p>
+          </div>
+        ) : filteredGames.length === 0 ? (
+          <div className="dropdown-empty">
+            <Package size={32} />
+            <p>لا توجد ألعاب متاحة</p>
+            {searchTerm && (
+              <button onClick={() => setSearchTerm('')} className="btn btn-link">
+                مسح البحث
+              </button>
+            )}
+          </div>
+        ) : (
+          <div className={`dropdown-games ${viewMode}`}>
+            {filteredGames.map(game => (
+              <div
+                key={game.id}
+                className={`game-item ${viewMode}`}
+                onClick={() => {
+                  onSelectGame(game);
+                  onClose();
+                }}
+              >
+                <GameImage 
+                  src={game.image_url}
+                  alt={game.name}
+                  size={viewMode === 'grid' ? 'medium' : 'small'}
+                />
+                <div className="game-item-info">
+                  <span className="game-name">{game.name}</span>
+                  <span className="game-price">{formatCurrency(game.price_per_15min)}</span>
+                  {game.category && (
+                    <span className="game-category">{game.category}</span>
+                  )}
+                </div>
+                <button className="add-game-btn">
+                  <Plus size={16} />
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+
+        <div className="dropdown-footer">
+          <span>إجمالي الألعاب: {filteredGames.length}</span>
+          <button onClick={onClose} className="btn btn-secondary btn-sm">
+            إغلاق
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 // ==================== مكون بطاقة اللعبة المبسطة ====================
 const SimpleGameCard = ({ game, onAddToCart }) => {
   const [isHovered, setIsHovered] = useState(false);
@@ -451,9 +658,11 @@ const SimpleGamesList = ({
   onAddToCart, 
   loading,
   currentShift,
-  userRole
+  userRole,
+  onOpenDropdown
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
+  const [isExpanded, setIsExpanded] = useState(false);
 
   const isEmployee = userRole === 'employee';
 
@@ -466,15 +675,17 @@ const SimpleGamesList = ({
     );
   }, [games, branchId]);
 
-  const filteredGames = useMemo(() => {
+  const displayedGames = useMemo(() => {
     if (!branchGames.length) return [];
-    if (!searchTerm) return branchGames;
+    let filtered = branchGames;
     
-    const term = searchTerm.toLowerCase();
-    return branchGames.filter(g =>
-      g.name?.toLowerCase().includes(term)
-    );
-  }, [branchGames, searchTerm]);
+    if (searchTerm) {
+      const term = searchTerm.toLowerCase();
+      filtered = filtered.filter(g => g.name?.toLowerCase().includes(term));
+    }
+    
+    return isExpanded ? filtered : filtered.slice(0, 6);
+  }, [branchGames, searchTerm, isExpanded]);
 
   if (!currentShift && isEmployee) {
     return (
@@ -491,39 +702,44 @@ const SimpleGamesList = ({
     );
   }
 
-  if (loading.games) {
-    return (
-      <div className="simple-games-section">
-        <div className="simple-games-header">
-          <h3>الألعاب المتاحة</h3>
-          <Loader2 className="spinner" size={18} />
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="simple-games-section">
       <div className="simple-games-header">
-        <h3>الألعاب المتاحة ({filteredGames.length})</h3>
-        <div className="simple-search">
-          <Search size={14} className="search-icon" />
-          <input
-            type="text"
-            placeholder="ابحث..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
+        <div className="header-title">
+          <h3>الألعاب المتاحة</h3>
+          <span className="games-count">{branchGames.length}</span>
+        </div>
+        <div className="header-actions">
+          <div className="simple-search">
+            <Search size={14} className="search-icon" />
+            <input
+              type="text"
+              placeholder="ابحث..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+          <button 
+            className="browse-all-btn"
+            onClick={onOpenDropdown}
+            title="عرض الكل"
+          >
+            <Maximize2 size={16} />
+          </button>
         </div>
       </div>
 
       <div className="simple-games-list">
-        {filteredGames.length === 0 ? (
+        {loading.games ? (
+          <div className="simple-games-loading">
+            <Loader2 className="spinner" size={24} />
+          </div>
+        ) : displayedGames.length === 0 ? (
           <div className="simple-games-empty">
             <p>لا توجد ألعاب</p>
           </div>
         ) : (
-          filteredGames.map(game => (
+          displayedGames.map(game => (
             <SimpleGameCard
               key={game.id}
               game={game}
@@ -532,6 +748,19 @@ const SimpleGamesList = ({
           ))
         )}
       </div>
+
+      {branchGames.length > 6 && (
+        <button 
+          className="expand-toggle"
+          onClick={() => setIsExpanded(!isExpanded)}
+        >
+          {isExpanded ? (
+            <>عرض أقل <ChevronUp size={14} /></>
+          ) : (
+            <>عرض الكل ({branchGames.length}) <ChevronDown size={14} /></>
+          )}
+        </button>
+      )}
     </div>
   );
 };
@@ -1109,66 +1338,7 @@ const ModifyRentalModal = ({ show, onClose, rental, items, games, onConfirm }) =
   );
 };
 
-// ==================== مكون نافذة إضافة لعبة ====================
-const AddGameModal = ({ show, onClose, games, onAddGame }) => {
-  const [searchTerm, setSearchTerm] = useState('');
-
-  const filteredGames = useMemo(() => {
-    if (!games?.length) return [];
-    if (!searchTerm) return games;
-    const term = searchTerm.toLowerCase();
-    return games.filter(g => g.name?.toLowerCase().includes(term));
-  }, [games, searchTerm]);
-
-  if (!show) return null;
-
-  return (
-    <div className="modal-overlay">
-      <div className="modal modal-small">
-        <div className="modal-header">
-          <h3>إضافة لعبة</h3>
-          <button onClick={onClose} className="modal-close">
-            <X size={20} />
-          </button>
-        </div>
-        
-        <div className="modal-body">
-          <input
-            type="text"
-            placeholder="ابحث عن لعبة..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="modal-search"
-            autoFocus
-          />
-
-          <div className="games-simple-list">
-            {filteredGames.length === 0 ? (
-              <div className="empty-state">لا توجد نتائج</div>
-            ) : (
-              filteredGames.map(game => (
-                <div
-                  key={game.id}
-                  className="game-simple-item"
-                  onClick={() => {
-                    onAddGame(game);
-                    onClose();
-                  }}
-                >
-                  <span>{game.name}</span>
-                  <span className="game-price">{formatCurrency(game.price_per_15min)}</span>
-                  <Plus size={16} />
-                </div>
-              ))
-            )}
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-// ==================== مكون تفاصيل التأجير ====================
+// ==================== مكون نافذة تفاصيل التأجير ====================
 const RentalDetailsModal = ({ show, onClose, rental, items }) => {
   if (!show || !rental) return null;
 
@@ -1491,7 +1661,7 @@ const Rentals = () => {
     phone: ''
   });
   
-  const [showAddGameModal, setShowAddGameModal] = useState(false);
+  const [showGamesDropdown, setShowGamesDropdown] = useState(false);
   const [showRentalDetailsModal, setShowRentalDetailsModal] = useState(false);
   const [showCompleteOpenModal, setShowCompleteOpenModal] = useState(false);
   const [showCancelModal, setShowCancelModal] = useState(false);
@@ -1693,7 +1863,8 @@ const Rentals = () => {
       }
     ]);
 
-    setShowAddGameModal(false);
+    setShowGamesDropdown(false);
+    setSuccess(`✅ تم إضافة ${game.name} إلى السلة`);
   }, [currentShift, userRole]);
 
   // تحديث عنصر في السلة
@@ -1937,6 +2108,7 @@ const Rentals = () => {
             loading={loading}
             currentShift={currentShift}
             userRole={userRole}
+            onOpenDropdown={() => setShowGamesDropdown(true)}
           />
 
           <EnhancedCart
@@ -1950,7 +2122,7 @@ const Rentals = () => {
             }
             onSubmit={handleCreateRental}
             isSubmitting={loading.processing}
-            onAddGame={() => setShowAddGameModal(true)}
+            onAddGame={() => setShowGamesDropdown(true)}
             currentShift={currentShift}
             userRole={userRole}
           />
@@ -2010,11 +2182,14 @@ const Rentals = () => {
         )}
       </div>
 
-      <AddGameModal
-        show={showAddGameModal}
-        onClose={() => setShowAddGameModal(false)}
+      <GamesDropdown
         games={games}
-        onAddGame={handleAddToCart}
+        onSelectGame={handleAddToCart}
+        onClose={() => setShowGamesDropdown(false)}
+        isOpen={showGamesDropdown}
+        currentShift={currentShift}
+        userRole={userRole}
+        branchId={user?.branch_id}
       />
 
       <RentalDetailsModal
