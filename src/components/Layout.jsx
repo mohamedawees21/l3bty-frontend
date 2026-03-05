@@ -131,20 +131,19 @@ const Layout = ({ children }) => {
             <h1>L3BTY Store</h1>
           </div>
         </div>
+<div className="header-user">
+  <div className="user-info">
+    <span>{roleConfig.icon}</span>
+    <div>
+      <strong>{user?.name || "مستخدم"}</strong>
+      <small>{roleConfig.label}</small>
+    </div>
+  </div>
 
-        <div className="header-user">
-          <div className="user-info">
-            <span>{roleConfig.icon}</span>
-            <div>
-              <strong>{user?.name || "مستخدم"}</strong>
-              <small>{roleConfig.label}</small>
-            </div>
-          </div>
-
-          <button className="btn-logout" onClick={handleLogout}>
-            🚪 تسجيل الخروج
-          </button>
-        </div>
+  <button className="btn-logout" onClick={handleLogout}>
+    🚪 تسجيل الخروج
+  </button>
+</div>
       </header>
 
       {/* Overlay Mobile */}

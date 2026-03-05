@@ -252,11 +252,41 @@ body {
   background-clip: text;
 }
 
-/* ==================== منطقة المستخدم - محسّنة بشكل كبير ==================== */
 .header-user {
   display: flex;
   align-items: center;
-  gap: 20px;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.user-info span {
+  font-size: 20px;
+}
+
+.user-info strong {
+  display: block;
+  font-size: 14px;
+}
+
+.user-info small {
+  font-size: 12px;
+  color: #777;
+}
+
+.btn-logout {
+  padding: 8px 14px;
+  border: none;
+  border-radius: 8px;
+  background: #ff4d4f;
+  color: white;
+  cursor: pointer;
+  font-size: 13px;
 }
 
 /* بطاقة المستخدم - تصميم جديد احترافي */
