@@ -2130,3 +2130,14 @@ textarea.form-control {
     min-width: auto;
   }
 }
+
+
+
+
+
+
+.action-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}

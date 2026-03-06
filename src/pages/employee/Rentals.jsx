@@ -1172,38 +1172,47 @@ const ActiveRentalsTable = ({
                   )}
                 </div>
 
-                <div className="rental-actions">
-                  {hasMultipleItems && (
-                    <button 
-                      onClick={() => toggleExpand(rental.id)} 
-                      className="action-btn expand"
-                      title={isExpanded ? 'إخفاء التفاصيل' : 'عرض التفاصيل'}
-                    >
-                      {isExpanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-                    </button>
-                  )}
-                  <button onClick={() => onViewDetails(rental)} className="action-btn info" title="تفاصيل">
-                    <Eye size={14} />
-                  </button>
-                  {rental.rental_type === 'open' && (
-                    <button onClick={() => onComplete(rental)} className="action-btn success" title="إنهاء">
-                      <Check size={14} />
-                    </button>
-                  )}
-                  {/* إخفاء أزرار التعديل والإلغاء للموظف العادي */}
-                  {isManager && (
-                    <>
-                      {canCancel && (
-                        <button onClick={() => onCancel(rental)} className="action-btn warning" title="إلغاء">
-                          <X size={14} />
-                        </button>
-                      )}
-                      <button onClick={() => onModify(rental)} className="action-btn primary" title="تعديل">
-                        <Edit size={14} />
-                      </button>
-                    </>
-                  )}
-                </div>
+               <div className="rental-actions">
+  {hasMultipleItems && (
+    <button 
+      onClick={() => toggleExpand(rental.id)} 
+      className="action-btn expand"
+      title={isExpanded ? 'إخفاء التفاصيل' : 'عرض التفاصيل'}
+    >
+      {isExpanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+      <span>التفاصيل</span>
+    </button>
+  )}
+
+  <button onClick={() => onViewDetails(rental)} className="action-btn info" title="تفاصيل">
+    <Eye size={14} />
+    <span>عرض</span>
+  </button>
+
+  {rental.rental_type === 'open' && (
+    <button onClick={() => onComplete(rental)} className="action-btn success" title="إنهاء">
+      <Check size={14} />
+      <span>إنهاء</span>
+    </button>
+  )}
+
+  {isManager && (
+    <>
+      {canCancel && (
+        <button onClick={() => onCancel(rental)} className="action-btn warning" title="إلغاء">
+          <X size={14} />
+          <span>إلغاء</span>
+        </button>
+      )}
+
+      <button onClick={() => onModify(rental)} className="action-btn primary" title="تعديل">
+        <Edit size={14} />
+        <span>تعديل</span>
+      </button>
+    </>
+  )}
+</div>
+
               </div>
 
               {/* العناصر الرئيسية (أول لعبة) */}
