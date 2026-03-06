@@ -1007,6 +1007,7 @@ const ActiveRentalsTable = ({
   currentShift,
   userRole,
   onRefresh,
+  onClose,
   activeRentalsRef
 }) => {
   const [timeNow, setTimeNow] = useState(new Date());
@@ -1309,7 +1310,8 @@ const CompletedRentalsTable = ({
   loading,
   onViewDetails,
   currentShift,
-  onRefresh
+  onRefresh,
+  onClose
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [page, setPage] = useState(1);
