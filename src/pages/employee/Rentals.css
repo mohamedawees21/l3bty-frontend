@@ -2398,10 +2398,6 @@ input[type="number"]::-webkit-outer-spin-button {
   margin: 0;
 }
 
-input[type="number"] {
-  -moz-appearance: textfield;
-}
-
 /* ==================== تنسيقات الإشعارات ==================== */
 .toast {
   position: fixed;
