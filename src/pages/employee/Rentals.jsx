@@ -242,17 +242,21 @@ const ShiftStatusBar = ({
 
   const isManager = userRole === 'admin' || userRole === 'branch_manager';
 
-  const calculateRevenue = useMemo(() => {
-    let total = 0;
-    if (completedRentals && completedRentals.length > 0) {
-      completedRentals.forEach(rental => {
-        if (rental && rental.status === 'completed' && !rental.is_refunded) {
-          total += parseFloat(rental.final_amount || rental.total_amount || 0);
+const calculateRevenue = useMemo(() => {
+  let total = 0;
+  if (completedRentals && Array.isArray(completedRentals)) {
+    completedRentals
+      .filter(rental => rental && typeof rental === 'object') // إزالة القيم null
+      .forEach(rental => {
+        if (rental.status === 'completed' && !rental.is_refunded) {
+          const amount = rental.final_amount || rental.total_amount || 0;
+          total += parseFloat(amount);
         }
       });
-    }
-    return total;
-  }, [completedRentals]);
+  }
+  return total;
+}, [completedRentals]);
+
 
   if (loading) {
     return (
