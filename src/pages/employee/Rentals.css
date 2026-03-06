@@ -2132,6 +2132,1527 @@ textarea.form-control {
 }
 
 
+/* ==================== Rentals.css - نسخة مطابقة لتصميم layout ==================== */
+
+/* ==================== استيراد متغيرات النظام ==================== */
+:root {
+  /* الألوان الرئيسية - مطابقة لـ layout.css */
+  --primary-50: #eff6ff;
+  --primary-100: #dbeafe;
+  --primary-200: #bfdbfe;
+  --primary-300: #93c5fd;
+  --primary-400: #60a5fa;
+  --primary-500: #3b82f6;
+  --primary-600: #2563eb;
+  --primary-700: #1d4ed8;
+  --primary-800: #1e40af;
+  --primary-900: #1e3a8a;
+  
+  /* ألوان النجاح */
+  --success-50: #f0fdf4;
+  --success-100: #dcfce7;
+  --success-200: #bbf7d0;
+  --success-300: #86efac;
+  --success-400: #4ade80;
+  --success-500: #22c55e;
+  --success-600: #16a34a;
+  --success-700: #15803d;
+  --success-800: #166534;
+  --success-900: #14532d;
+  
+  /* ألوان التحذير */
+  --warning-50: #fffbeb;
+  --warning-100: #fef3c7;
+  --warning-200: #fde68a;
+  --warning-300: #fcd34d;
+  --warning-400: #fbbf24;
+  --warning-500: #f59e0b;
+  --warning-600: #d97706;
+  --warning-700: #b45309;
+  --warning-800: #92400e;
+  --warning-900: #78350f;
+  
+  /* ألوان الخطأ */
+  --danger-50: #fef2f2;
+  --danger-100: #fee2e2;
+  --danger-200: #fecaca;
+  --danger-300: #fca5a5;
+  --danger-400: #f87171;
+  --danger-500: #ef4444;
+  --danger-600: #dc2626;
+  --danger-700: #b91c1c;
+  --danger-800: #991b1b;
+  --danger-900: #7f1d1d;
+  
+  /* ألوان محايدة */
+  --gray-50: #f9fafb;
+  --gray-100: #f3f4f6;
+  --gray-200: #e5e7eb;
+  --gray-300: #d1d5db;
+  --gray-400: #9ca3af;
+  --gray-500: #6b7280;
+  --gray-600: #4b5563;
+  --gray-700: #374151;
+  --gray-800: #1f2937;
+  --gray-900: #111827;
+  
+  /* ألوان الخلفية والنص */
+  --bg-primary: #ffffff;
+  --bg-secondary: #f8fafc;
+  --bg-tertiary: #f1f5f9;
+  --text-primary: #0f172a;
+  --text-secondary: #334155;
+  --text-muted: #64748b;
+  --border-color: #e2e8f0;
+  
+  /* الظلال */
+  --shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+  
+  /* الحواف المستديرة */
+  --radius-xs: 0.25rem;
+  --radius-sm: 0.375rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
+  --radius-2xl: 1.5rem;
+  --radius-full: 9999px;
+  
+  /* الانتقالات - تم تقليلها لتكون أقل حركة */
+  --transition-all: all 0.1s ease-out;
+  --transition-transform: transform 0.1s ease-out;
+  
+  /* الخط */
+  --font-sans: 'Cairo', 'Tajawal', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* ==================== الصفحة الرئيسية ==================== */
+.rentals-page {
+  min-height: 100%;
+  background: linear-gradient(135deg, var(--bg-secondary) 0%, #ffffff 100%);
+  font-family: var(--font-sans);
+}
+
+/* ==================== شريط حالة الشيفت - مثبت ==================== */
+.shift-status-bar {
+  background: var(--bg-primary);
+  border-bottom: 1px solid var(--border-color);
+  padding: 16px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+  box-shadow: var(--shadow-sm);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.shift-status-bar.closed {
+  background: linear-gradient(135deg, var(--gray-50), var(--bg-primary));
+}
+
+.shift-status-bar.open {
+  background: linear-gradient(135deg, var(--primary-50), var(--bg-primary));
+  border-bottom: 1px solid var(--primary-200);
+}
+
+.shift-status-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.status-icon {
+  width: 40px;
+  height: 40px;
+  background: var(--gray-100);
+  border-radius: var(--radius-lg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--gray-600);
+}
+
+.status-icon.pulse {
+  background: var(--success-100);
+  color: var(--success-600);
+  /* تم إزالة animation pulse */
+}
+
+.shift-details {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.shift-number-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--primary-100);
+  padding: 4px 12px;
+  border-radius: var(--radius-full);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--primary-700);
+  width: fit-content;
+}
+
+.shift-time {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.shift-stats {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+.shift-stat {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.stat-icon.revenue { color: var(--success-600); }
+.stat-icon.active { color: var(--primary-600); }
+.stat-icon.completed { color: var(--warning-600); }
+
+.shift-stat-content {
+  display: flex;
+  flex-direction: column;
+}
+
+.shift-stat-label {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.shift-stat-value {
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.shift-actions {
+  display: flex;
+  gap: 8px;
+}
+
+/* ==================== رأس الصفحة - مثبت ==================== */
+.page-header {
+  padding: 20px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--border-color);
+  background: var(--bg-primary);
+  position: sticky;
+  top: 72px; /* ارتفاع شريط الحالة */
+  z-index: 90;
+  box-shadow: var(--shadow-xs);
+}
+
+.page-header h1 {
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--text-primary);
+  background: linear-gradient(135deg, var(--primary-600), var(--primary-400));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.header-buttons {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.header-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  background: var(--gray-50);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  color: var(--text-secondary);
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: var(--transition-all);
+}
+
+.header-btn:hover {
+  background: var(--primary-50);
+  border-color: var(--primary-300);
+  color: var(--primary-700);
+  /* تم إزالة transform: translateY */
+}
+
+.header-btn.active {
+  background: var(--primary-500);
+  border-color: var(--primary-600);
+  color: white;
+  box-shadow: var(--shadow-md);
+}
+
+.header-btn.refresh-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ==================== المحتوى الرئيسي ==================== */
+.main-content {
+  padding: 24px;
+}
+
+.games-cart-container {
+  display: grid;
+  grid-template-columns: 1fr 380px;
+  gap: 24px;
+  margin-bottom: 32px;
+}
+
+/* ==================== قائمة الألعاب المبسطة ==================== */
+.simple-games-section {
+  background: var(--bg-primary);
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--border-color);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+  transition: var(--transition-all);
+}
+
+.simple-games-section:hover {
+  box-shadow: var(--shadow-lg);
+  border-color: var(--primary-200);
+}
+
+.simple-games-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--gray-50);
+}
+
+.header-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.header-title h3 {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.games-count {
+  background: var(--primary-100);
+  color: var(--primary-700);
+  padding: 2px 10px;
+  border-radius: var(--radius-full);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.simple-search {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.simple-search .search-icon {
+  position: absolute;
+  right: 12px;
+  color: var(--gray-400);
+}
+
+.simple-search input {
+  width: 200px;
+  padding: 8px 12px 8px 36px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  font-size: 13px;
+  transition: var(--transition-all);
+  background: var(--bg-primary);
+}
+
+.simple-search input:focus {
+  outline: none;
+  border-color: var(--primary-500);
+  box-shadow: 0 0 0 3px var(--primary-100);
+}
+
+.browse-all-btn {
+  width: 36px;
+  height: 36px;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: var(--transition-all);
+}
+
+.browse-all-btn:hover {
+  background: var(--primary-50);
+  border-color: var(--primary-400);
+  color: var(--primary-600);
+  /* تم إزالة transform: scale */
+}
+
+.simple-games-list {
+  padding: 20px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.simple-game-card {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: 12px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  transition: var(--transition-all);
+  position: relative;
+  overflow: hidden;
+}
+
+.simple-game-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 4px;
+  height: 100%;
+  background: var(--primary-500);
+  opacity: 0;
+  transition: var(--transition-all);
+}
+
+.simple-game-card:hover {
+  /* تم إزالة transform: translateY */
+  box-shadow: var(--shadow-lg);
+  border-color: var(--primary-300);
+  background: var(--primary-50);
+}
+
+.simple-game-card:hover::before {
+  opacity: 1;
+}
+
+/* ==================== تحسين الصور - أكثر وضوحاً ==================== */
+.game-image-container {
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background: var(--gray-100);
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: var(--transition-all);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-color);
+}
+
+.game-image-container:hover {
+  box-shadow: var(--shadow-md);
+  border-color: var(--primary-400);
+}
+
+.game-image-container.image-small {
+  width: 70px;  /* تم زيادة الحجم قليلاً */
+  height: 70px; /* تم زيادة الحجم قليلاً */
+}
+
+.game-image-container.image-medium {
+  width: 90px;  /* تم زيادة الحجم قليلاً */
+  height: 90px; /* تم زيادة الحجم قليلاً */
+}
+
+.game-image-container.image-large {
+  width: 130px;  /* تم زيادة الحجم قليلاً */
+  height: 130px; /* تم زيادة الحجم قليلاً */
+}
+
+.simple-game-image {
+  width: 70px;  /* تم زيادة الحجم */
+  height: 70px; /* تم زيادة الحجم */
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background: var(--gray-100);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-color);
+}
+
+.image-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--gray-400);
+  background: var(--gray-100);
+}
+
+.image-error {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: var(--gray-500);
+  background: var(--gray-100);
+  font-size: 12px;
+  text-align: center;
+  padding: 8px;
+}
+
+.game-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: var(--transition-all);
+  filter: contrast(1.05) brightness(1.02); /* تحسين تباين الصورة */
+}
+
+.game-image.hidden {
+  display: none;
+}
+
+.game-image.visible {
+  display: block;
+}
+
+.simple-game-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.simple-game-name {
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--text-primary);
+}
+
+.simple-game-price {
+  font-size: 13px;
+  color: var(--success-600);
+  font-weight: 600;
+}
+
+.simple-add-btn {
+  width: 28px;
+  height: 28px;
+  background: var(--primary-500);
+  border: none;
+  border-radius: var(--radius-full);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: var(--transition-all);
+  opacity: 0.8; /* جعلها مرئية بشكل أفضل */
+  transform: scale(1);
+}
+
+.simple-game-card:hover .simple-add-btn {
+  opacity: 1;
+  /* تم إزالة transform: scale */
+}
+
+.simple-add-btn:hover {
+  background: var(--primary-600);
+  /* تم إزالة transform: scale */
+}
+
+.expand-toggle {
+  width: 100%;
+  padding: 12px;
+  background: var(--gray-50);
+  border: none;
+  border-top: 1px solid var(--border-color);
+  color: var(--primary-600);
+  font-weight: 600;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: var(--transition-all);
+}
+
+.expand-toggle:hover {
+  background: var(--primary-50);
+  color: var(--primary-700);
+}
+
+/* ==================== سلة التأجير - مثبتة ==================== */
+.enhanced-cart {
+  background: var(--bg-primary);
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--border-color);
+  overflow: hidden;
+  box-shadow: var(--shadow-lg);
+  height: fit-content;
+  position: sticky;
+  top: 150px; /* ارتفاع الشريط + الهيدر */
+  z-index: 80;
+}
+
+.enhanced-cart.disabled {
+  opacity: 0.7;
+  background: var(--gray-50);
+}
+
+.cart-header {
+  padding: 16px 20px;
+  background: linear-gradient(135deg, var(--primary-500), var(--primary-600));
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: white;
+}
+
+.cart-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.cart-title h3 {
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.cart-count {
+  background: rgba(255, 255, 255, 0.2);
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+  font-size: 12px;
+}
+
+.cart-clear {
+  width: 32px;
+  height: 32px;
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  border-radius: var(--radius-lg);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: var(--transition-all);
+}
+
+.cart-clear:hover {
+  background: var(--danger-500);
+  /* تم إزالة transform: rotate */
+}
+
+.cart-empty-state {
+  padding: 48px 24px;
+  text-align: center;
+  color: var(--gray-400);
+}
+
+.cart-empty-state svg {
+  margin-bottom: 16px;
+}
+
+.cart-empty-state p {
+  margin-bottom: 16px;
+}
+
+.cart-items-list {
+  padding: 16px;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.cart-item-simple {
+  background: var(--gray-50);
+  border-radius: var(--radius-lg);
+  padding: 12px;
+  margin-bottom: 8px;
+  border: 1px solid var(--border-color);
+  transition: var(--transition-all);
+}
+
+.cart-item-simple:hover {
+  border-color: var(--primary-300);
+  box-shadow: var(--shadow-md);
+}
+
+.cart-item-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.item-name {
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--text-primary);
+}
+
+.item-remove {
+  width: 24px;
+  height: 24px;
+  background: var(--gray-200);
+  border: none;
+  border-radius: var(--radius-full);
+  color: var(--gray-600);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: var(--transition-all);
+}
+
+.item-remove:hover {
+  background: var(--danger-500);
+  color: white;
+  /* تم إزالة transform: rotate */
+}
+
+.cart-item-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.control-select {
+  flex: 1;
+  padding: 6px 8px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  font-size: 12px;
+  background: var(--bg-primary);
+  cursor: pointer;
+  transition: var(--transition-all);
+}
+
+.control-select:hover {
+  border-color: var(--primary-400);
+}
+
+.quantity-control {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 2px;
+}
+
+.quantity-btn {
+  width: 24px;
+  height: 24px;
+  background: var(--gray-100);
+  border: none;
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: var(--transition-all);
+}
+
+.quantity-btn:hover {
+  background: var(--primary-500);
+  color: white;
+}
+
+.quantity-control span {
+  min-width: 24px;
+  text-align: center;
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.cart-item-total {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 13px;
+  color: var(--text-secondary);
+  border-top: 1px dashed var(--border-color);
+  padding-top: 8px;
+  margin-top: 4px;
+}
+
+.item-price {
+  font-weight: 700;
+  color: var(--success-600);
+}
+
+.cart-customer-info {
+  padding: 16px;
+  border-top: 1px solid var(--border-color);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.customer-input {
+  padding: 10px 12px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  font-size: 14px;
+  transition: var(--transition-all);
+  background: var(--bg-primary);
+}
+
+.customer-input:focus {
+  outline: none;
+  border-color: var(--primary-500);
+  box-shadow: 0 0 0 3px var(--primary-100);
+}
+
+.cart-summary {
+  padding: 16px;
+  background: var(--gray-50);
+  border-top: 1px solid var(--border-color);
+}
+
+.summary-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  font-size: 14px;
+}
+
+.summary-total {
+  font-weight: 700;
+  color: var(--primary-600);
+}
+
+.discount-input {
+  width: 80px;
+  padding: 4px 8px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  text-align: left;
+}
+
+/* ==================== أقسام الجداول ==================== */
+.tables-section {
+  margin-top: 32px;
+}
+
+.tables-section h2 {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 16px;
+}
+
+/* ==================== جدول التأجيرات النشطة ==================== */
+.active-rentals-table,
+.completed-rentals-table {
+  background: var(--bg-primary);
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--border-color);
+  overflow: hidden;
+  box-shadow: var(--shadow-lg);
+}
+
+.table-header {
+  padding: 16px;
+  border-bottom: 1px solid var(--border-color);
+  background: var(--gray-50);
+}
+
+.search-container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.table-search {
+  flex: 1;
+  padding: 10px 16px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  font-size: 14px;
+  transition: var(--transition-all);
+  background: var(--bg-primary);
+}
+
+.table-search:focus {
+  outline: none;
+  border-color: var(--primary-500);
+  box-shadow: 0 0 0 3px var(--primary-100);
+}
+
+.refresh-btn {
+  width: 40px;
+  height: 40px;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: var(--transition-all);
+}
+
+.refresh-btn:hover {
+  background: var(--primary-50);
+  border-color: var(--primary-400);
+  color: var(--primary-600);
+  /* تم إزالة transform: rotate */
+}
+
+.table-body {
+  padding: 16px;
+  max-height: 500px;
+  overflow-y: auto;
+}
+
+.rental-group {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  margin-bottom: 12px;
+  transition: var(--transition-all);
+}
+
+.rental-group:hover {
+  box-shadow: var(--shadow-md);
+  border-color: var(--primary-300);
+}
+
+.rental-group.expired {
+  border-right: 4px solid var(--danger-500);
+  background: var(--danger-50);
+}
+
+.rental-group.completed {
+  background: var(--gray-50);
+}
+
+.rental-header {
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--border-color);
+  background: var(--gray-50);
+}
+
+.rental-info {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.rental-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--primary-100);
+  padding: 4px 10px;
+  border-radius: var(--radius-full);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--primary-700);
+}
+
+.rental-customer {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
+.rental-time {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.rental-time .expired {
+  color: var(--danger-600);
+}
+
+.open-badge {
+  background: var(--warning-100);
+  color: var(--warning-700);
+  padding: 2px 10px;
+  border-radius: var(--radius-full);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.rental-amount {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--success-600);
+}
+
+.rental-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.action-btn {
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: var(--radius-lg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: var(--transition-all);
+  background: var(--bg-primary);
+  color: var(--text-secondary);
+}
+
+.action-btn:hover {
+  /* تم إزالة transform: translateY */
+  box-shadow: var(--shadow-md);
+}
+
+.action-btn.expand:hover {
+  background: var(--primary-500);
+  color: white;
+}
+
+.action-btn.info:hover {
+  background: var(--primary-500);
+  color: white;
+}
+
+.action-btn.success:hover {
+  background: var(--success-500);
+  color: white;
+}
+
+.action-btn.warning:hover {
+  background: var(--warning-500);
+  color: white;
+}
+
+.action-btn.primary:hover {
+  background: var(--primary-500);
+  color: white;
+}
+
+.rental-items {
+  padding: 12px 16px;
+  border-bottom: 1px dashed var(--border-color);
+}
+
+.rental-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 0;
+}
+
+.rental-item.secondary {
+  opacity: 0.8;
+  padding-right: 24px;
+}
+
+.item-game {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+}
+
+.game-name {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.child-name {
+  color: var(--primary-600);
+  font-size: 12px;
+}
+
+.item-details {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.badge {
+  background: var(--gray-200);
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.rental-items-expanded {
+  padding: 0 16px 12px 16px;
+  background: var(--gray-50);
+}
+
+.rental-summary {
+  padding: 8px 16px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: var(--gray-50);
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.summary-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.rental-time-info {
+  padding: 8px 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--text-muted);
+  border-top: 1px solid var(--border-color);
+}
+
+/* ==================== التبويب (Pagination) ==================== */
+.table-pagination {
+  padding: 16px;
+  border-top: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  background: var(--gray-50);
+}
+
+.pagination-btn {
+  padding: 6px 16px;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  color: var(--text-secondary);
+  font-weight: 600;
+  font-size: 13px;
+  cursor: pointer;
+  transition: var(--transition-all);
+}
+
+.pagination-btn:hover:not(:disabled) {
+  background: var(--primary-500);
+  border-color: var(--primary-600);
+  color: white;
+  /* تم إزالة transform: translateY */
+  box-shadow: var(--shadow-md);
+}
+
+.pagination-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.pagination-info {
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
+/* ==================== القائمة المنسدلة للألعاب ==================== */
+.games-dropdown-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: fadeIn 0.1s ease; /* تقليل مدة الأنيميشن */
+}
+
+.games-dropdown-container {
+  width: 90%;
+  max-width: 800px;
+  max-height: 80vh;
+  background: var(--bg-primary);
+  border-radius: var(--radius-2xl);
+  box-shadow: var(--shadow-2xl);
+  overflow: hidden;
+  animation: slideUp 0.15s ease; /* تقليل مدة الأنيميشن */
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px); /* تقليل الحركة */
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.dropdown-header {
+  padding: 20px 24px;
+  background: linear-gradient(135deg, var(--primary-500), var(--primary-600));
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: white;
+}
+
+.header-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.header-title h3 {
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.view-mode-btn {
+  width: 40px;
+  height: 40px;
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  border-radius: var(--radius-lg);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: var(--transition-all);
+}
+
+.view-mode-btn:hover,
+.view-mode-btn.active {
+  background: white;
+  color: var(--primary-600);
+}
+
+.close-btn {
+  width: 40px;
+  height: 40px;
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  border-radius: var(--radius-lg);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: var(--transition-all);
+}
+
+.close-btn:hover {
+  background: var(--danger-500);
+  /* تم إزالة transform: rotate */
+}
+
+.dropdown-search {
+  padding: 16px 20px;
+  position: relative;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.dropdown-search .search-icon {
+  position: absolute;
+  right: 36px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--gray-400);
+}
+
+.dropdown-search input {
+  width: 100%;
+  padding: 12px 20px 12px 48px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-xl);
+  font-size: 14px;
+  transition: var(--transition-all);
+  background: var(--gray-50);
+}
+
+.dropdown-search input:focus {
+  outline: none;
+  border-color: var(--primary-500);
+  box-shadow: 0 0 0 3px var(--primary-100);
+  background: var(--bg-primary);
+}
+
+.clear-search {
+  position: absolute;
+  left: 36px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 24px;
+  height: 24px;
+  background: var(--gray-200);
+  border: none;
+  border-radius: var(--radius-full);
+  color: var(--gray-600);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: var(--transition-all);
+}
+
+.clear-search:hover {
+  background: var(--danger-500);
+  color: white;
+}
+
+.dropdown-categories {
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  border-bottom: 1px solid var(--border-color);
+  background: var(--gray-50);
+}
+
+.category-btn {
+  padding: 8px 16px;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-full);
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: var(--transition-all);
+}
+
+.category-btn:hover {
+  background: var(--primary-50);
+  border-color: var(--primary-400);
+  color: var(--primary-700);
+}
+
+.category-btn.active {
+  background: var(--primary-500);
+  border-color: var(--primary-600);
+  color: white;
+}
+
+.dropdown-games {
+  padding: 20px;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.dropdown-games.grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.dropdown-games.list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.game-item {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: 12px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  transition: var(--transition-all);
+  position: relative;
+  overflow: hidden;
+}
+
+.game-item.grid {
+  flex-direction: column;
+  text-align: center;
+}
+
+.game-item::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 4px;
+  height: 100%;
+  background: var(--primary-500);
+  opacity: 0;
+  transition: var(--transition-all);
+}
+
+.game-item:hover {
+  /* تم إزالة transform: translateY */
+  box-shadow: var(--shadow-lg);
+  border-color: var(--primary-300);
+  background: var(--primary-50);
+}
+
+.game-item:hover::before {
+  opacity: 1;
+}
+
+.game-item-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.game-item.grid .game-item-info {
+  align-items: center;
+}
+
+.game-name {
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--text-primary);
+}
+
+.game-price {
+  font-size: 13px;
+  color: var(--success-600);
+  font-weight: 600;
+}
+
+.game-category {
+  font-size: 11px;
+  color: var(--text-muted);
+  background: var(--gray-100);
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+  width: fit-content;
+}
+
+.add-game-btn {
+  width: 32px;
+  height: 32px;
+  background: var(--primary-500);
+  border: none;
+  border-radius: var(--radius-full);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: var(--transition-all);
+  opacity: 0.8;
+  transform: scale(1);
+}
+
+.game-item:hover .add-game-btn {
+  opacity: 1;
+  /* تم إزالة transform: scale */
+}
+
+.add-game-btn:hover {
+  background: var(--primary-600);
+  /* تم إزالة transform: scale */
+}
+
+.dropdown-footer {
+  padding: 16px 20px;
+  border-top: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--gray-50);
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
+.dropdown-disabled,
+.dropdown-empty {
+  padding: 60px 24px;
+  text-align: center;
+  color: var(--gray-400);
+}
+
+.dropdown-disabled svg,
+.dropdown-empty svg {
+  margin-bottom: 16px;
+}
+
 
 
 
