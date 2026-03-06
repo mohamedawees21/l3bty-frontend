@@ -1960,9 +1960,13 @@ const EarlyEndRentalModal = ({ show, onClose, rental, items, onConfirm }) => {
     }
   }, [rental]);
 
-  const refundAmount = useMemo(() => {
-    return rental.total_amount || 0;
-  }, [rental]);
+const refundAmount = useMemo(() => {
+  // التحقق من أن rental موجود وليس null
+  if (!rental) return 0;
+  
+  // التحقق من وجود total_amount
+  return rental.total_amount || 0;
+}, [rental]);
 
   const handleConfirm = async () => {
     setIsSubmitting(true);
