@@ -1,4 +1,3 @@
-// src/pages/employee/Rentals.jsx
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { 
   Gamepad2, Clock, User, Phone, ShoppingCart, DollarSign, 
