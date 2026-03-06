@@ -41,9 +41,18 @@ const GAME_CATEGORIES = [
   { id: 'table', label: 'ألعاب طاولة', icon: Table }
 ];
 
+const DURATION_OPTIONS = [
+  { value: 15, label: '١٥ دقيقة' },
+  { value: 30, label: '٣٠ دقيقة' },
+  { value: 45, label: '٤٥ دقيقة' },
+  { value: 60, label: 'ساعة' },
+  { value: 90, label: 'ساعة ونصف' },
+  { value: 120, label: 'ساعتين' }
+];
+
 // ==================== دوال المساعدة العامة ====================
 const formatCurrency = (amount) => {
-  if (amount === null || amount === undefined || amount === '') return '0 ج.م';
+  if (amount === null || amount === undefined || amount === '') return '٠ ج.م';
   const num = parseFloat(amount) || 0;
   return new Intl.NumberFormat('ar-EG', {
     style: 'currency',
@@ -301,7 +310,6 @@ const ShiftStatusBar = ({
         </div>
 
         <div className="shift-stats">
-          {/* إخفاء الإيرادات للموظف العادي */}
           {isManager && (
             <div className="shift-stat">
               <DollarSign size={16} className="stat-icon revenue" />
@@ -318,7 +326,6 @@ const ShiftStatusBar = ({
               <span className="shift-stat-value">{activeRentals?.length || 0}</span>
             </div>
           </div>
-          {/* إخفاء عدد المكتملات للموظف العادي */}
           {isManager && (
             <div className="shift-stat">
               <History size={16} className="stat-icon completed" />
@@ -372,7 +379,6 @@ const ShiftStatusBar = ({
                 </div>
               )}
 
-              {/* حقول إضافية للمدير فقط */}
               {isManager && (
                 <>
                   <div className="form-group">
@@ -447,7 +453,6 @@ const GamesDropdown = ({
   const [viewMode, setViewMode] = useState('grid');
   const dropdownRef = useRef(null);
 
-  // تصفية الألعاب حسب الفرع
   const branchGames = useMemo(() => {
     if (!games?.length || !branchId) return [];
     return games.filter(game => 
@@ -457,16 +462,13 @@ const GamesDropdown = ({
     );
   }, [games, branchId]);
 
-  // تصفية الألعاب حسب البحث والتصنيف
   const filteredGames = useMemo(() => {
     if (!branchGames.length) return [];
     
     return branchGames.filter(game => {
-      // فلتر البحث
       const matchesSearch = !searchTerm || 
         game.name?.toLowerCase().includes(searchTerm.toLowerCase());
       
-      // فلتر التصنيف
       const matchesCategory = selectedCategory === 'all' || 
         game.category?.toLowerCase() === selectedCategory.toLowerCase() ||
         game.type?.toLowerCase() === selectedCategory.toLowerCase();
@@ -475,7 +477,6 @@ const GamesDropdown = ({
     });
   }, [branchGames, searchTerm, selectedCategory]);
 
-  // إغلاق القائمة عند النقر خارجها
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -492,7 +493,6 @@ const GamesDropdown = ({
     };
   }, [isOpen, onClose]);
 
-  // إغلاق القائمة بالضغط على ESC
   useEffect(() => {
     const handleEsc = (event) => {
       if (event.key === 'Escape') {
@@ -903,12 +903,9 @@ const EnhancedCart = ({
                       onChange={(e) => onUpdateItem(item.id, { duration_minutes: parseInt(e.target.value) })}
                       className="control-select"
                     >
-                      <option value="15">15 د</option>
-                      <option value="30">30 د</option>
-                      <option value="45">45 د</option>
-                      <option value="60">60 د</option>
-                      <option value="90">90 د</option>
-                      <option value="120">120 د</option>
+                      {DURATION_OPTIONS.map(option => (
+                        <option key={option.value} value={option.value}>{option.label}</option>
+                      ))}
                     </select>
                   )}
 
@@ -962,7 +959,6 @@ const EnhancedCart = ({
               <span>المجموع:</span>
               <span className="summary-total">{formatCurrency(calculateTotal())}</span>
             </div>
-            {/* إخفاء الخصم للموظف العادي */}
             {isManager && (
               <div className="summary-row">
                 <span>الخصم %:</span>
@@ -1002,11 +998,13 @@ const ActiveRentalsTable = ({
   loading, 
   onComplete,
   onCancel,
+  onEarlyEnd,
   onModify,
   onViewDetails,
   currentShift,
   userRole,
-  onRefresh
+  onRefresh,
+  activeRentalsRef
 }) => {
   const [timeNow, setTimeNow] = useState(new Date());
   const [searchTerm, setSearchTerm] = useState('');
@@ -1019,11 +1017,9 @@ const ActiveRentalsTable = ({
     return () => clearInterval(interval);
   }, []);
 
-  // تجميع العناصر لكل تأجير
   const rentalsWithItems = useMemo(() => {
     if (!rentals || !items) return [];
     
-    // إنشاء خريطة للعناصر حسب rental_id
     const itemsMap = {};
     items.forEach(item => {
       if (item && item.rental_id) {
@@ -1046,7 +1042,7 @@ const ActiveRentalsTable = ({
     
     try {
       const startTime = new Date(rental.start_time);
-      const duration = rental.total_duration || 15;
+      const duration = rental.total_duration || rental.duration_minutes || 15;
       const endTime = new Date(startTime.getTime() + duration * 60000);
       const remainingMs = endTime - timeNow;
       
@@ -1064,7 +1060,7 @@ const ActiveRentalsTable = ({
     if (rental.rental_type !== 'fixed' || !rental.start_time) return false;
     try {
       const startTime = new Date(rental.start_time);
-      const duration = rental.total_duration || 15;
+      const duration = rental.total_duration || rental.duration_minutes || 15;
       const endTime = new Date(startTime.getTime() + duration * 60000);
       return timeNow > endTime;
     } catch {
@@ -1102,6 +1098,15 @@ const ActiveRentalsTable = ({
     }));
   };
 
+  const handleActiveRentalsClick = () => {
+    if (activeRentalsRef?.current) {
+      activeRentalsRef.current.scrollIntoView({ 
+        behavior: 'smooth',
+        block: 'start'
+      });
+    }
+  };
+
   if (!currentShift) return null;
 
   if (loading.rentals) {
@@ -1121,7 +1126,7 @@ const ActiveRentalsTable = ({
   }
 
   return (
-    <div className="active-rentals-table">
+    <div className="active-rentals-table" ref={activeRentalsRef}>
       <div className="table-header">
         <div className="search-container">
           <input
@@ -1138,15 +1143,13 @@ const ActiveRentalsTable = ({
       </div>
       <div className="table-body">
         {filteredRentals.map(rental => {
-          const mainItem = rental.items && rental.items[0];
           const elapsedMinutes = getElapsedMinutes(rental.start_time);
-          const canCancel = elapsedMinutes < 3;
+          const canEarlyEnd = elapsedMinutes < 3; // إمكانية الإنهاء المبكر خلال أول 3 دقائق
           const hasMultipleItems = rental.items && rental.items.length > 1;
           const isExpanded = expandedRentals[rental.id];
           
           return (
             <div key={rental.id} className={`rental-group ${isExpired(rental) ? 'expired' : ''}`}>
-              {/* رأس التأجير */}
               <div className="rental-header">
                 <div className="rental-info">
                   <div className="rental-badge">
@@ -1172,50 +1175,58 @@ const ActiveRentalsTable = ({
                   )}
                 </div>
 
-               <div className="rental-actions">
-  {hasMultipleItems && (
-    <button 
-      onClick={() => toggleExpand(rental.id)} 
-      className="action-btn expand"
-      title={isExpanded ? 'إخفاء التفاصيل' : 'عرض التفاصيل'}
-    >
-      {isExpanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-      <span>التفاصيل</span>
-    </button>
-  )}
+                <div className="rental-actions">
+                  {hasMultipleItems && (
+                    <button 
+                      onClick={() => toggleExpand(rental.id)} 
+                      className="action-btn expand"
+                      title={isExpanded ? 'إخفاء التفاصيل' : 'عرض التفاصيل'}
+                    >
+                      {isExpanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                      <span>التفاصيل</span>
+                    </button>
+                  )}
 
-  <button onClick={() => onViewDetails(rental)} className="action-btn info" title="تفاصيل">
-    <Eye size={14} />
-    <span>عرض</span>
-  </button>
+                  <button onClick={() => onViewDetails(rental)} className="action-btn info" title="تفاصيل">
+                    <Eye size={14} />
+                    <span>عرض</span>
+                  </button>
 
-  {rental.rental_type === 'open' && (
-    <button onClick={() => onComplete(rental)} className="action-btn success" title="إنهاء">
-      <Check size={14} />
-      <span>إنهاء</span>
-    </button>
-  )}
+                  {rental.rental_type === 'open' && (
+                    <button onClick={() => onComplete(rental)} className="action-btn success" title="إنهاء">
+                      <Check size={14} />
+                      <span>إنهاء</span>
+                    </button>
+                  )}
 
-  {isManager && (
-    <>
-      {canCancel && (
-        <button onClick={() => onCancel(rental)} className="action-btn warning" title="إلغاء">
-          <X size={14} />
-          <span>إلغاء</span>
-        </button>
-      )}
+                  {/* زر الإنهاء المبكر - يظهر للمدير فقط أو للموظف إذا كان لديه صلاحية */}
+                  {(isManager || userRole === 'employee') && canEarlyEnd && (
+                    <button 
+                      onClick={() => onEarlyEnd(rental)} 
+                      className="action-btn early-end"
+                      title="إنهاء مبكر (استرداد كامل)"
+                    >
+                      <Undo2 size={14} />
+                      <span>إنهاء مبكر</span>
+                    </button>
+                  )}
 
-      <button onClick={() => onModify(rental)} className="action-btn primary" title="تعديل">
-        <Edit size={14} />
-        <span>تعديل</span>
-      </button>
-    </>
-  )}
-</div>
+                  {isManager && (
+                    <>
+                      <button onClick={() => onCancel(rental)} className="action-btn warning" title="إلغاء">
+                        <X size={14} />
+                        <span>إلغاء</span>
+                      </button>
 
+                      <button onClick={() => onModify(rental)} className="action-btn primary" title="تعديل">
+                        <Edit size={14} />
+                        <span>تعديل</span>
+                      </button>
+                    </>
+                  )}
+                </div>
               </div>
 
-              {/* العناصر الرئيسية (أول لعبة) */}
               <div className="rental-items">
                 {rental.items && rental.items.slice(0, 1).map(item => (
                   <div key={item.id} className="rental-item">
@@ -1225,13 +1236,13 @@ const ActiveRentalsTable = ({
                       {item.child_name && <span className="child-name">({item.child_name})</span>}
                     </div>
                     <div className="item-details">
+                      <span className="badge">المدة: {item.duration_minutes || 15} د</span>
                       {item.quantity > 1 && <span className="badge">x{item.quantity}</span>}
                     </div>
                   </div>
                 ))}
               </div>
 
-              {/* العناصر الإضافية (عند التوسيع) */}
               {isExpanded && rental.items && rental.items.length > 1 && (
                 <div className="rental-items-expanded">
                   {rental.items.slice(1).map(item => (
@@ -1242,6 +1253,7 @@ const ActiveRentalsTable = ({
                         {item.child_name && <span className="child-name">({item.child_name})</span>}
                       </div>
                       <div className="item-details">
+                        <span className="badge">المدة: {item.duration_minutes || 15} د</span>
                         {item.quantity > 1 && <span className="badge">x{item.quantity}</span>}
                       </div>
                     </div>
@@ -1249,7 +1261,6 @@ const ActiveRentalsTable = ({
                 </div>
               )}
 
-              {/* ملخص التأجير - إخفاء المبالغ للموظف العادي */}
               {isManager && (
                 <div className="rental-summary">
                   <div className="summary-item">
@@ -1284,7 +1295,6 @@ const CompletedRentalsTable = ({
   const [expandedRentals, setExpandedRentals] = useState({});
   const itemsPerPage = 10;
 
-  // تجميع العناصر لكل تأجير
   const rentalsWithItems = useMemo(() => {
     if (!rentals || !items) return [];
     
@@ -1375,7 +1385,6 @@ const CompletedRentalsTable = ({
           
           return (
             <div key={rental.id} className="rental-group completed">
-              {/* رأس التأجير */}
               <div className="rental-header">
                 <div className="rental-info">
                   <div className="rental-badge">
@@ -1409,7 +1418,6 @@ const CompletedRentalsTable = ({
                 </div>
               </div>
 
-              {/* العناصر الرئيسية (أول لعبة) */}
               <div className="rental-items">
                 {rental.items && rental.items.slice(0, 1).map(item => (
                   <div key={item.id} className="rental-item">
@@ -1418,13 +1426,13 @@ const CompletedRentalsTable = ({
                       <span className="game-name">{item.game_name}</span>
                     </div>
                     <div className="item-details">
+                      <span className="badge">المدة: {item.duration_minutes || 15} د</span>
                       {item.quantity > 1 && <span className="badge">x{item.quantity}</span>}
                     </div>
                   </div>
                 ))}
               </div>
 
-              {/* العناصر الإضافية (عند التوسيع) */}
               {isExpanded && rental.items && rental.items.length > 1 && (
                 <div className="rental-items-expanded">
                   {rental.items.slice(1).map(item => (
@@ -1434,6 +1442,7 @@ const CompletedRentalsTable = ({
                         <span className="game-name">{item.game_name}</span>
                       </div>
                       <div className="item-details">
+                        <span className="badge">المدة: {item.duration_minutes || 15} د</span>
                         {item.quantity > 1 && <span className="badge">x{item.quantity}</span>}
                       </div>
                     </div>
@@ -1441,7 +1450,6 @@ const CompletedRentalsTable = ({
                 </div>
               )}
 
-              {/* معلومات الوقت */}
               <div className="rental-time-info">
                 <Clock size={12} />
                 <span>البداية: {formatTime(rental.start_time)}</span>
@@ -1668,6 +1676,7 @@ const RentalDetailsModal = ({ show, onClose, rental, items }) => {
                 <Gamepad2 size={14} />
                 <span className="game-name">{item.game_name}</span>
                 {item.child_name && <span className="child-name">({item.child_name})</span>}
+                <span className="badge">المدة: {item.duration_minutes || 15} د</span>
                 {item.quantity > 1 && <span className="badge">x{item.quantity}</span>}
                 <span className="item-price">{formatCurrency(item.total_price || 0)}</span>
               </div>
@@ -1929,9 +1938,121 @@ const CancelRentalModal = ({ show, onClose, rental, items, onConfirm }) => {
   );
 };
 
-// ==================== المكون الرئيسي مع التخزين في قاعدة البيانات ====================
+// ==================== مكون إنهاء مبكر ====================
+const EarlyEndRentalModal = ({ show, onClose, rental, items, onConfirm }) => {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [reason, setReason] = useState('');
+
+  const rentalItems = useMemo(() => {
+    if (!items || !rental) return [];
+    return items.filter(item => item && item.rental_id === rental.id);
+  }, [rental, items]);
+
+  const elapsedMinutes = useMemo(() => {
+    if (!rental?.start_time) return 0;
+    try {
+      return Math.floor((new Date() - new Date(rental.start_time)) / (1000 * 60));
+    } catch {
+      return 0;
+    }
+  }, [rental]);
+
+  const refundAmount = useMemo(() => {
+    return rental.total_amount || 0;
+  }, [rental]);
+
+  const handleConfirm = async () => {
+    setIsSubmitting(true);
+    try {
+      await onConfirm(rental, {
+        refund_amount: refundAmount,
+        reason: reason || 'إنهاء مبكر (استرداد كامل)',
+        elapsed_minutes: elapsedMinutes
+      });
+      onClose();
+    } catch (error) {
+      console.error('خطأ في الإنهاء المبكر:', error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  if (!show || !rental) return null;
+
+  return (
+    <div className="modal-overlay">
+      <div className="modal">
+        <div className="modal-header">
+          <div className="header-icon info">
+            <Undo2 size={24} />
+          </div>
+          <h3>إنهاء مبكر للتأجير</h3>
+          <button onClick={onClose} className="modal-close">
+            <X size={20} />
+          </button>
+        </div>
+        
+        <div className="modal-body">
+          <div className="alert alert-info">
+            <Info size={16} />
+            <div>
+              <strong>العميل: {rental.customer_name}</strong>
+              <p>رقم التأجير: {rental.rental_number}</p>
+            </div>
+          </div>
+
+          <div className="alert alert-success">
+            <CheckCircle size={16} />
+            <div>
+              <strong>استرداد كامل المبلغ</strong>
+              <p>لم يمر أكثر من 3 دقائق على بدء التأجير</p>
+            </div>
+          </div>
+
+          <div className="refund-calculation">
+            <div className="calc-row">
+              <span>الوقت المنقضي:</span>
+              <span>{elapsedMinutes} دقيقة</span>
+            </div>
+            <div className="calc-row">
+              <span>المبلغ المدفوع:</span>
+              <span>{formatCurrency(rental.total_amount || 0)}</span>
+            </div>
+            <div className="calc-row total highlight">
+              <span>المبلغ المسترد (كامل):</span>
+              <span>{formatCurrency(refundAmount)}</span>
+            </div>
+          </div>
+
+          <div className="form-group">
+            <label>سبب الإنهاء المبكر (اختياري):</label>
+            <textarea
+              value={reason}
+              onChange={(e) => setReason(e.target.value)}
+              placeholder="أدخل سبب الإنهاء المبكر..."
+              rows="3"
+              className="form-control"
+            />
+          </div>
+        </div>
+
+        <div className="modal-footer">
+          <button onClick={onClose} className="btn btn-secondary">
+            إلغاء
+          </button>
+          <button onClick={handleConfirm} className="btn btn-info" disabled={isSubmitting}>
+            {isSubmitting ? <Loader2 className="spinner" size={16} /> : 'تأكيد الإنهاء المبكر والاسترداد'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ==================== المكون الرئيسي ====================
 const Rentals = () => {
   const { user } = useAuth();
+  const activeRentalsRef = useRef(null);
   
   const [loading, setLoading] = useState({
     games: false,
@@ -1959,6 +2080,7 @@ const Rentals = () => {
   const [showRentalDetailsModal, setShowRentalDetailsModal] = useState(false);
   const [showCompleteOpenModal, setShowCompleteOpenModal] = useState(false);
   const [showCancelModal, setShowCancelModal] = useState(false);
+  const [showEarlyEndModal, setShowEarlyEndModal] = useState(false);
   const [showModifyModal, setShowModifyModal] = useState(false);
   const [showActiveTable, setShowActiveTable] = useState(false);
   const [showCompletedTable, setShowCompletedTable] = useState(false);
@@ -1971,7 +2093,6 @@ const Rentals = () => {
   const userRole = user?.role || 'employee';
   const isManager = userRole === 'admin' || userRole === 'branch_manager';
 
-  // تحميل الألعاب
   const loadGames = useCallback(async () => {
     if (!user?.branch_id) return;
     setLoading(prev => ({ ...prev, games: true }));
@@ -1995,7 +2116,6 @@ const Rentals = () => {
     }
   }, [user?.branch_id]);
 
-  // تحميل الشيفت الحالي
   const loadCurrentShift = useCallback(async () => {
     setLoading(prev => ({ ...prev, shift: true }));
     try {
@@ -2019,7 +2139,6 @@ const Rentals = () => {
     }
   }, []);
 
-  // تحميل التأجيرات النشطة
   const loadActiveRentals = useCallback(async () => {
     if (!currentShift?.id) {
       setActiveRentals([]);
@@ -2060,7 +2179,6 @@ const Rentals = () => {
     }
   }, [currentShift?.id]);
 
-  // تحميل التأجيرات المكتملة (للمدير فقط)
   const loadCompletedRentals = useCallback(async () => {
     if (!isManager || !currentShift?.id) {
       setCompletedRentals([]);
@@ -2101,13 +2219,11 @@ const Rentals = () => {
     }
   }, [currentShift?.id, isManager]);
 
-  // تحديث جميع البيانات
   const refreshAllData = useCallback(async () => {
     await loadCurrentShift();
     await loadGames();
   }, [loadCurrentShift, loadGames]);
 
-  // تحديث التأجيرات
   const refreshRentals = useCallback(() => {
     if (currentShift?.id) {
       loadActiveRentals();
@@ -2117,7 +2233,6 @@ const Rentals = () => {
     }
   }, [currentShift?.id, loadActiveRentals, loadCompletedRentals, isManager]);
 
-  // تحميل البيانات عند تغيير الشيفت أو عند التحديث اليدوي
   useEffect(() => {
     if (currentShift?.id) {
       loadActiveRentals();
@@ -2127,12 +2242,10 @@ const Rentals = () => {
     }
   }, [currentShift?.id, refreshTrigger, loadActiveRentals, loadCompletedRentals, isManager]);
 
-  // تحميل أولي
   useEffect(() => {
     refreshAllData();
   }, [refreshAllData]);
 
-  // تحديث دوري للتأجيرات النشطة (كل 30 ثانية)
   useEffect(() => {
     if (!currentShift?.id) return;
     const interval = setInterval(() => {
@@ -2141,7 +2254,6 @@ const Rentals = () => {
     return () => clearInterval(interval);
   }, [currentShift?.id, loadActiveRentals]);
 
-  // بدء الشيفت
   const handleStartShift = useCallback(async () => {
     if (!user?.branch_id) {
       setError('لا يوجد فرع محدد للمستخدم');
@@ -2169,7 +2281,6 @@ const Rentals = () => {
     }
   }, [user?.branch_id, refreshAllData]);
 
-  // إنهاء الشيفت
   const handleEndShift = useCallback(async (closingCash, notes) => {
     if (!currentShift) return;
     setLoading(prev => ({ ...prev, processing: true }));
@@ -2199,7 +2310,6 @@ const Rentals = () => {
     }
   }, [currentShift]);
 
-  // إضافة لعبة للسلة
   const handleAddToCart = useCallback((game) => {
     console.log('إضافة لعبة:', game);
     
@@ -2229,33 +2339,28 @@ const Rentals = () => {
     setSuccess(`✅ تم إضافة ${game.name || 'اللعبة'} إلى السلة`);
   }, [currentShift, userRole]);
 
-  // تحديث عنصر في السلة
   const handleUpdateCartItem = useCallback((itemId, updates) => {
     setCartItems(prev =>
       prev.map(item => item.id === itemId ? { ...item, ...updates } : item)
     );
   }, []);
 
-  // حذف عنصر من السلة
   const handleRemoveCartItem = useCallback((itemId) => {
     setCartItems(prev => prev.filter(item => item.id !== itemId));
     setSuccess('✅ تم حذف العنصر من السلة');
   }, []);
 
-  // تفريغ السلة
   const handleClearCart = useCallback(() => {
     setCartItems([]);
     setCustomerInfo({ name: '', phone: '' });
   }, []);
 
-  // دالة مساعدة لحساب total للعنصر
   const calculateItemTotal = useCallback((item) => {
     if (item.rental_type === 'open') return 0;
     const units = Math.ceil((item.duration_minutes || 15) / 15);
     return (item.price_per_15min || 0) * units * (item.quantity || 1);
   }, []);
 
-  // إنشاء تأجير جديد
   const handleCreateRental = useCallback(async (data) => {
     if (!currentShift) {
       setError('❌ لا يوجد شيفت نشط');
@@ -2278,7 +2383,6 @@ const Rentals = () => {
       const createdRentals = [];
       const createdItems = [];
 
-      // إنشاء تأجير منفصل لكل لعبة في السلة
       for (const item of cartItems) {
         const rentalData = {
           shift_id: currentShift.id,
@@ -2309,7 +2413,6 @@ const Rentals = () => {
         }
       }
 
-      // تحديث قوائم التأجيرات
       if (createdRentals.length > 0) {
         setActiveRentals(prev => [...prev, ...createdRentals]);
         setRentalItems(prev => [...prev, ...createdItems]);
@@ -2321,10 +2424,8 @@ const Rentals = () => {
         
         setSuccess(`✅ تم إنشاء ${createdRentals.length} تأجير للعميل ${customerInfo.name}: ${gameNames}`);
         
-        // تفريغ السلة بعد النجاح
         handleClearCart();
         
-        // تحديث التأجيرات المكتملة (للمدير فقط)
         if (isManager) {
           await loadCompletedRentals();
         }
@@ -2340,7 +2441,6 @@ const Rentals = () => {
     }
   }, [currentShift, cartItems, customerInfo, handleClearCart, loadCompletedRentals, isManager]);
 
-  // إنهاء تأجير مفتوح
   const handleCompleteOpenRental = useCallback(async (rental, data) => {
     if (!rental) return;
     setLoading(prev => ({ ...prev, processing: true }));
@@ -2370,7 +2470,6 @@ const Rentals = () => {
     }
   }, [loadActiveRentals, loadCompletedRentals, isManager]);
 
-  // إلغاء تأجير
   const handleCancelRental = useCallback(async (rental, data) => {
     if (!isManager) {
       setError('❌ ليس لديك صلاحية إلغاء التأجيرات');
@@ -2400,7 +2499,36 @@ const Rentals = () => {
     }
   }, [isManager, loadActiveRentals, loadCompletedRentals]);
 
-  // تعديل تأجير
+  const handleEarlyEndRental = useCallback(async (rental, data) => {
+    setLoading(prev => ({ ...prev, processing: true }));
+    try {
+      console.log('إنهاء مبكر لتأجير:', rental.id, data);
+      
+      const response = await api.earlyEndRental(rental.id, {
+        reason: data.reason,
+        refund_amount: data.refund_amount,
+        elapsed_minutes: data.elapsed_minutes
+      });
+      
+      console.log('استجابة الإنهاء المبكر:', response);
+
+      if (response && response.success) {
+        setSuccess(`✅ تم إنهاء التأجير مبكراً ${rental.rental_number} واسترداد كامل المبلغ`);
+        await loadActiveRentals();
+        if (isManager) {
+          await loadCompletedRentals();
+        }
+      } else {
+        setError('❌ فشل الإنهاء المبكر: ' + (response?.message || 'خطأ غير معروف'));
+      }
+    } catch (error) {
+      console.error('خطأ في الإنهاء المبكر:', error);
+      setError('حدث خطأ في الإنهاء المبكر');
+    } finally {
+      setLoading(prev => ({ ...prev, processing: false }));
+    }
+  }, [loadActiveRentals, loadCompletedRentals, isManager]);
+
   const handleModifyRental = useCallback(async (rental, data) => {
     if (!isManager) {
       setError('❌ ليس لديك صلاحية تعديل التأجيرات');
@@ -2410,9 +2538,20 @@ const Rentals = () => {
     setLoading(prev => ({ ...prev, processing: true }));
     try {
       console.log('تعديل تأجير:', rental.id, data);
-      // هنا يمكن إضافة API للتعديل إذا كان موجوداً
-      setSuccess(`✅ تم تعديل التأجير ${rental.rental_number} بنجاح`);
-      await loadActiveRentals();
+      const response = await api.modifyRental(rental.id, {
+        old_game_id: data.old_game_id,
+        new_game_id: data.new_game_id,
+        price_difference: data.price_difference
+      });
+      
+      console.log('استجابة تعديل التأجير:', response);
+
+      if (response && response.success) {
+        setSuccess(`✅ تم تعديل التأجير ${rental.rental_number} بنجاح`);
+        await loadActiveRentals();
+      } else {
+        setError('❌ فشل تعديل التأجير: ' + (response?.message || 'خطأ غير معروف'));
+      }
     } catch (error) {
       console.error('خطأ في تعديل التأجير:', error);
       setError('حدث خطأ في تعديل التأجير');
@@ -2421,7 +2560,6 @@ const Rentals = () => {
     }
   }, [isManager, loadActiveRentals]);
 
-  // التحقق من انتهاء التأجيرات الثابتة تلقائياً
   useEffect(() => {
     const checkExpiredRentals = async () => {
       if (!activeRentals || !activeRentals.length) return;
@@ -2430,7 +2568,7 @@ const Rentals = () => {
         if (rental.rental_type !== 'fixed' || !rental.start_time) return false;
         try {
           const startTime = new Date(rental.start_time);
-          const duration = rental.total_duration || 15;
+          const duration = rental.total_duration || rental.duration_minutes || 15;
           const endTime = new Date(startTime.getTime() + duration * 60000);
           return new Date() > endTime;
         } catch {
@@ -2454,11 +2592,10 @@ const Rentals = () => {
       }
     };
 
-    const interval = setInterval(checkExpiredRentals, 5000); // فحص كل 5 ثواني
+    const interval = setInterval(checkExpiredRentals, 5000);
     return () => clearInterval(interval);
   }, [activeRentals, loadActiveRentals, loadCompletedRentals, isManager]);
 
-  // إخفاء الإشعارات بعد 5 ثواني
   useEffect(() => {
     if (error || success) {
       const timer = setTimeout(() => {
@@ -2469,11 +2606,22 @@ const Rentals = () => {
     }
   }, [error, success]);
 
-  // دالة لتحديث البيانات يدوياً
   const handleRefresh = useCallback(() => {
     setRefreshTrigger(prev => prev + 1);
     setSuccess('✅ تم تحديث البيانات');
   }, []);
+
+  const handleActiveRentalsClick = () => {
+    setShowActiveTable(true);
+    if (activeRentalsRef.current) {
+      setTimeout(() => {
+        activeRentalsRef.current.scrollIntoView({ 
+          behavior: 'smooth',
+          block: 'start'
+        });
+      }, 100);
+    }
+  };
 
   return (
     <div className="rentals-page">
@@ -2493,12 +2641,11 @@ const Rentals = () => {
         <div className="header-buttons">
           <button 
             className={`header-btn ${showActiveTable ? 'active' : ''}`}
-            onClick={() => setShowActiveTable(!showActiveTable)}
+            onClick={handleActiveRentalsClick}
           >
             <Activity size={18} />
             <span>التأجيرات النشطة ({activeRentals?.length || 0})</span>
           </button>
-          {/* إخفاء زر التأجيرات المكتملة للموظف العادي */}
           {isManager && (
             <button 
               className={`header-btn ${showCompletedTable ? 'active' : ''}`}
@@ -2573,6 +2720,10 @@ const Rentals = () => {
                 setSelectedRental(rental);
                 setShowCancelModal(true);
               }}
+              onEarlyEnd={(rental) => {
+                setSelectedRental(rental);
+                setShowEarlyEndModal(true);
+              }}
               onModify={(rental) => {
                 setSelectedRental(rental);
                 setShowModifyModal(true);
@@ -2584,11 +2735,11 @@ const Rentals = () => {
               currentShift={currentShift}
               userRole={userRole}
               onRefresh={loadActiveRentals}
+              activeRentalsRef={activeRentalsRef}
             />
           </div>
         )}
 
-        {/* إخفاء جدول التأجيرات المكتملة للموظف العادي */}
         {showCompletedTable && isManager && (
           <div className="tables-section">
             <h2>
@@ -2650,6 +2801,17 @@ const Rentals = () => {
         rental={selectedRental}
         items={rentalItems}
         onConfirm={handleCancelRental}
+      />
+
+      <EarlyEndRentalModal
+        show={showEarlyEndModal}
+        onClose={() => {
+          setShowEarlyEndModal(false);
+          setSelectedRental(null);
+        }}
+        rental={selectedRental}
+        items={rentalItems}
+        onConfirm={handleEarlyEndRental}
       />
 
       <ModifyRentalModal
