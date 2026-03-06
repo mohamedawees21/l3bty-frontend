@@ -2059,3 +2059,93 @@ textarea.form-control {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* ==================== أزرار إغلاق الجداول ==================== */
+
+/* زر الإغلاق في شريط البحث */
+.close-table-btn {
+  width: 40px;
+  height: 40px;
+  border: 1px solid var(--border-color);
+  background: var(--bg-primary);
+  border-radius: var(--radius-lg);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 8px;
+}
+
+.close-table-btn:hover {
+  background: var(--danger-50);
+  border-color: var(--danger-500);
+  color: var(--danger-600);
+  transform: rotate(90deg);
+}
+
+/* رأس القسم مع زر الإغلاق */
+.section-header {
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--border-color);
+  background: var(--gray-50);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.section-header h2 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.close-section-btn {
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--border-color);
+  background: var(--bg-primary);
+  border-radius: var(--radius-lg);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.close-section-btn:hover {
+  background: var(--danger-50);
+  border-color: var(--danger-500);
+  color: var(--danger-600);
+  transform: rotate(90deg);
+}
+
+/* تحسينات للشاشات الصغيرة */
+@media (max-width: 768px) {
+  .close-table-btn,
+  .close-section-btn {
+    width: 36px;
+    height: 36px;
+  }
+  
+  .section-header {
+    padding: 16px 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .search-container {
+    flex-wrap: wrap;
+  }
+  
+  .close-table-btn {
+    margin-right: 0;
+    margin-top: 8px;
+  }
+}

@@ -1007,8 +1007,8 @@ const ActiveRentalsTable = ({
   currentShift,
   userRole,
   onRefresh,
-  onClose,
-  activeRentalsRef
+  activeRentalsRef,
+  onClose // ✅ إضافة prop للإغلاق
 }) => {
   const [timeNow, setTimeNow] = useState(new Date());
   const [searchTerm, setSearchTerm] = useState('');
@@ -1046,11 +1046,9 @@ const calculateRemainingTime = useCallback((rental) => {
   
   try {
     const startTime = new Date(rental.start_time);
-    // ✅ البحث عن المدة من الـ items أولاً، ثم من rental
-    let duration = 15; // قيمة افتراضية
+    let duration = 15;
     
     if (rental.items && rental.items.length > 0) {
-      // نفترض أن كل الألعاب لها نفس المدة
       duration = rental.items[0].duration_minutes || 15;
     } else {
       duration = rental.duration_minutes || 15;
@@ -1073,8 +1071,7 @@ const isExpired = useCallback((rental) => {
   if (rental.rental_type !== 'fixed' || !rental.start_time) return false;
   try {
     const startTime = new Date(rental.start_time);
-    // ✅ البحث عن المدة من الـ items أولاً، ثم من rental
-    let duration = 15; // قيمة افتراضية
+    let duration = 15;
     
     if (rental.items && rental.items.length > 0) {
       duration = rental.items[0].duration_minutes || 15;
@@ -1160,12 +1157,16 @@ const isExpired = useCallback((rental) => {
           <button onClick={onRefresh} className="refresh-btn" title="تحديث">
             <RefreshCw size={16} />
           </button>
+          {/* ✅ زر إغلاق الجدول */}
+          <button onClick={onClose} className="close-table-btn" title="إغلاق">
+            <X size={18} />
+          </button>
         </div>
       </div>
       <div className="table-body">
         {filteredRentals.map(rental => {
           const elapsedMinutes = getElapsedMinutes(rental.start_time);
-          const canEarlyEnd = elapsedMinutes < 3; // إمكانية الإنهاء المبكر خلال أول 3 دقائق
+          const canEarlyEnd = elapsedMinutes < 3;
           const hasMultipleItems = rental.items && rental.items.length > 1;
           const isExpanded = expandedRentals[rental.id];
           
@@ -1220,7 +1221,6 @@ const isExpired = useCallback((rental) => {
                     </button>
                   )}
 
-                  {/* زر الإنهاء المبكر - يظهر للمدير فقط أو للموظف إذا كان لديه صلاحية */}
                   {(isManager || userRole === 'employee') && canEarlyEnd && (
                     <button 
                       onClick={() => onEarlyEnd(rental)} 
@@ -1257,7 +1257,6 @@ const isExpired = useCallback((rental) => {
         {item.child_name && <span className="child-name">({item.child_name})</span>}
       </div>
       <div className="item-details">
-        {/* ✅ عرض المدة من item وليس من rental */}
         <span className="badge">المدة: {item.duration_minutes || 15} د</span>
         {item.quantity > 1 && <span className="badge">x{item.quantity}</span>}
       </div>
@@ -1303,7 +1302,7 @@ const isExpired = useCallback((rental) => {
   );
 };
 
-// ==================== مكون جدول التأجيرات المكتملة (للمدير فقط) ====================
+// ==================== مكون جدول التأجيرات المكتملة (مع زر إغلاق) ====================
 const CompletedRentalsTable = ({ 
   rentals, 
   items,
@@ -1311,7 +1310,7 @@ const CompletedRentalsTable = ({
   onViewDetails,
   currentShift,
   onRefresh,
-  onClose
+  onClose // ✅ إضافة prop للإغلاق
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [page, setPage] = useState(1);
@@ -1398,6 +1397,10 @@ const CompletedRentalsTable = ({
           />
           <button onClick={onRefresh} className="refresh-btn" title="تحديث">
             <RefreshCw size={16} />
+          </button>
+          {/* ✅ زر إغلاق الجدول */}
+          <button onClick={onClose} className="close-table-btn" title="إغلاق">
+            <X size={18} />
           </button>
         </div>
       </div>
@@ -2272,6 +2275,14 @@ const loadActiveRentals = useCallback(async () => {
       }
     }
   }, [currentShift?.id, loadActiveRentals, loadCompletedRentals, isManager]);
+  // داخل المكون Rentals - أضف هذه الدوال
+const handleCloseActiveTable = useCallback(() => {
+  setShowActiveTable(false);
+}, []);
+
+const handleCloseCompletedTable = useCallback(() => {
+  setShowCompletedTable(false);
+}, []);
 
   useEffect(() => {
     if (currentShift?.id) {
@@ -2749,64 +2760,78 @@ const handleCreateRental = useCallback(async (data) => {
         </div>
 
         {showActiveTable && (
-          <div className="tables-section">
-            <h2>
-              <Activity size={20} />
-              التأجيرات النشطة
-            </h2>
-            <ActiveRentalsTable
-              rentals={activeRentals}
-              items={rentalItems}
-              loading={loading}
-              onComplete={(rental) => {
-                if (rental.rental_type === 'open') {
-                  setSelectedRental(rental);
-                  setShowCompleteOpenModal(true);
-                }
-              }}
-              onCancel={(rental) => {
-                setSelectedRental(rental);
-                setShowCancelModal(true);
-              }}
-              onEarlyEnd={(rental) => {
-                setSelectedRental(rental);
-                setShowEarlyEndModal(true);
-              }}
-              onModify={(rental) => {
-                setSelectedRental(rental);
-                setShowModifyModal(true);
-              }}
-              onViewDetails={(rental) => {
-                setSelectedRental(rental);
-                setShowRentalDetailsModal(true);
-              }}
-              currentShift={currentShift}
-              userRole={userRole}
-              onRefresh={loadActiveRentals}
-              activeRentalsRef={activeRentalsRef}
-            />
-          </div>
-        )}
+  <div className="tables-section">
+    <div className="section-header">
+      <h2>
+        <Activity size={20} />
+        التأجيرات النشطة
+      </h2>
+      {/* ✅ زر إغلاق إضافي في العنوان */}
+      <button onClick={handleCloseActiveTable} className="close-section-btn" title="إغلاق">
+        <X size={18} />
+      </button>
+    </div>
+    <ActiveRentalsTable
+      rentals={activeRentals}
+      items={rentalItems}
+      loading={loading}
+      onComplete={(rental) => {
+        if (rental.rental_type === 'open') {
+          setSelectedRental(rental);
+          setShowCompleteOpenModal(true);
+        }
+      }}
+      onCancel={(rental) => {
+        setSelectedRental(rental);
+        setShowCancelModal(true);
+      }}
+      onEarlyEnd={(rental) => {
+        setSelectedRental(rental);
+        setShowEarlyEndModal(true);
+      }}
+      onModify={(rental) => {
+        setSelectedRental(rental);
+        setShowModifyModal(true);
+      }}
+      onViewDetails={(rental) => {
+        setSelectedRental(rental);
+        setShowRentalDetailsModal(true);
+      }}
+      currentShift={currentShift}
+      userRole={userRole}
+      onRefresh={loadActiveRentals}
+      activeRentalsRef={activeRentalsRef}
+      onClose={handleCloseActiveTable} // ✅ تمرير دالة الإغلاق
+    />
+  </div>
+)}
 
-        {showCompletedTable && isManager && (
-          <div className="tables-section">
-            <h2>
-              <History size={20} />
-              التأجيرات المكتملة
-            </h2>
-            <CompletedRentalsTable
-              rentals={completedRentals}
-              items={completedItems}
-              loading={loading}
-              onViewDetails={(rental) => {
-                setSelectedRental(rental);
-                setShowRentalDetailsModal(true);
-              }}
-              currentShift={currentShift}
-              onRefresh={loadCompletedRentals}
-            />
-          </div>
-        )}
+{showCompletedTable && isManager && (
+  <div className="tables-section">
+    <div className="section-header">
+      <h2>
+        <History size={20} />
+        التأجيرات المكتملة
+      </h2>
+      {/* ✅ زر إغلاق إضافي في العنوان */}
+      <button onClick={handleCloseCompletedTable} className="close-section-btn" title="إغلاق">
+        <X size={18} />
+      </button>
+    </div>
+    <CompletedRentalsTable
+      rentals={completedRentals}
+      items={completedItems}
+      loading={loading}
+      onViewDetails={(rental) => {
+        setSelectedRental(rental);
+        setShowRentalDetailsModal(true);
+      }}
+      currentShift={currentShift}
+      onRefresh={loadCompletedRentals}
+      onClose={handleCloseCompletedTable} // ✅ تمرير دالة الإغلاق
+    />
+  </div>
+)}
       </div>
 
       <GamesDropdown
