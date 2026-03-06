@@ -1039,37 +1039,54 @@ const ActiveRentalsTable = ({
     }));
   }, [rentals, items]);
 
-  const calculateRemainingTime = useCallback((rental) => {
-    if (rental.rental_type === 'open') return 'مفتوح';
-    if (!rental.start_time) return '--:--';
+const calculateRemainingTime = useCallback((rental) => {
+  if (rental.rental_type === 'open') return 'مفتوح';
+  if (!rental.start_time) return '--:--';
+  
+  try {
+    const startTime = new Date(rental.start_time);
+    // ✅ البحث عن المدة من الـ items أولاً، ثم من rental
+    let duration = 15; // قيمة افتراضية
     
-    try {
-      const startTime = new Date(rental.start_time);
-      const duration = rental.total_duration || rental.duration_minutes || 15;
-      const endTime = new Date(startTime.getTime() + duration * 60000);
-      const remainingMs = endTime - timeNow;
-      
-      if (remainingMs <= 0) return '00:00';
-      
-      const remainingMinutes = Math.floor(remainingMs / 60000);
-      const remainingSeconds = Math.floor((remainingMs % 60000) / 1000);
-      return `${remainingMinutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
-    } catch {
-      return '--:--';
+    if (rental.items && rental.items.length > 0) {
+      // نفترض أن كل الألعاب لها نفس المدة
+      duration = rental.items[0].duration_minutes || 15;
+    } else {
+      duration = rental.duration_minutes || 15;
     }
-  }, [timeNow]);
+    
+    const endTime = new Date(startTime.getTime() + duration * 60000);
+    const remainingMs = endTime - timeNow;
+    
+    if (remainingMs <= 0) return '00:00';
+    
+    const remainingMinutes = Math.floor(remainingMs / 60000);
+    const remainingSeconds = Math.floor((remainingMs % 60000) / 1000);
+    return `${remainingMinutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
+  } catch {
+    return '--:--';
+  }
+}, [timeNow]);
 
-  const isExpired = useCallback((rental) => {
-    if (rental.rental_type !== 'fixed' || !rental.start_time) return false;
-    try {
-      const startTime = new Date(rental.start_time);
-      const duration = rental.total_duration || rental.duration_minutes || 15;
-      const endTime = new Date(startTime.getTime() + duration * 60000);
-      return timeNow > endTime;
-    } catch {
-      return false;
+const isExpired = useCallback((rental) => {
+  if (rental.rental_type !== 'fixed' || !rental.start_time) return false;
+  try {
+    const startTime = new Date(rental.start_time);
+    // ✅ البحث عن المدة من الـ items أولاً، ثم من rental
+    let duration = 15; // قيمة افتراضية
+    
+    if (rental.items && rental.items.length > 0) {
+      duration = rental.items[0].duration_minutes || 15;
+    } else {
+      duration = rental.duration_minutes || 15;
     }
-  }, [timeNow]);
+    
+    const endTime = new Date(startTime.getTime() + duration * 60000);
+    return timeNow > endTime;
+  } catch {
+    return false;
+  }
+}, [timeNow]);
 
   const getElapsedMinutes = useCallback((startTime) => {
     if (!startTime) return 0;
@@ -1230,21 +1247,22 @@ const ActiveRentalsTable = ({
                 </div>
               </div>
 
-              <div className="rental-items">
-                {rental.items && rental.items.slice(0, 1).map(item => (
-                  <div key={item.id} className="rental-item">
-                    <div className="item-game">
-                      <Gamepad2 size={14} />
-                      <span className="game-name">{item.game_name}</span>
-                      {item.child_name && <span className="child-name">({item.child_name})</span>}
-                    </div>
-                    <div className="item-details">
-                      <span className="badge">المدة: {item.duration_minutes || 15} د</span>
-                      {item.quantity > 1 && <span className="badge">x{item.quantity}</span>}
-                    </div>
-                  </div>
-                ))}
-              </div>
+             <div className="rental-items">
+  {rental.items && rental.items.slice(0, 1).map(item => (
+    <div key={item.id} className="rental-item">
+      <div className="item-game">
+        <Gamepad2 size={14} />
+        <span className="game-name">{item.game_name}</span>
+        {item.child_name && <span className="child-name">({item.child_name})</span>}
+      </div>
+      <div className="item-details">
+        {/* ✅ عرض المدة من item وليس من rental */}
+        <span className="badge">المدة: {item.duration_minutes || 15} د</span>
+        {item.quantity > 1 && <span className="badge">x{item.quantity}</span>}
+      </div>
+    </div>
+  ))}
+</div>
 
               {isExpanded && rental.items && rental.items.length > 1 && (
                 <div className="rental-items-expanded">
@@ -1674,17 +1692,18 @@ const RentalDetailsModal = ({ show, onClose, rental, items }) => {
 
           <h4>الألعاب ({rentalItems.length})</h4>
           <div className="items-list">
-            {rentalItems.map(item => (
-              <div key={item.id} className="item-row">
-                <Gamepad2 size={14} />
-                <span className="game-name">{item.game_name}</span>
-                {item.child_name && <span className="child-name">({item.child_name})</span>}
-                <span className="badge">المدة: {item.duration_minutes || 15} د</span>
-                {item.quantity > 1 && <span className="badge">x{item.quantity}</span>}
-                <span className="item-price">{formatCurrency(item.total_price || 0)}</span>
-              </div>
-            ))}
-          </div>
+  {rentalItems.map(item => (
+    <div key={item.id} className="item-row">
+      <Gamepad2 size={14} />
+      <span className="game-name">{item.game_name}</span>
+      {item.child_name && <span className="child-name">({item.child_name})</span>}
+      {/* ✅ عرض المدة الصحيحة من item */}
+      <span className="badge">المدة: {item.duration_minutes || 15} د</span>
+      {item.quantity > 1 && <span className="badge">x{item.quantity}</span>}
+      <span className="item-price">{formatCurrency(item.total_price || 0)}</span>
+    </div>
+  ))}
+</div>
         </div>
 
         <div className="modal-footer">
@@ -2146,45 +2165,57 @@ const Rentals = () => {
     }
   }, []);
 
-  const loadActiveRentals = useCallback(async () => {
-    if (!currentShift?.id) {
-      setActiveRentals([]);
-      setRentalItems([]);
-      return;
-    }
+const loadActiveRentals = useCallback(async () => {
+  if (!currentShift?.id) {
+    setActiveRentals([]);
+    setRentalItems([]);
+    return;
+  }
+  
+  setLoading(prev => ({ ...prev, rentals: true }));
+  
+  try {
+    console.log('📡 جاري تحميل التأجيرات النشطة للشيفت:', currentShift.id);
+    const response = await api.getActiveRentals(currentShift.id);
+    console.log('📦 استجابة التأجيرات النشطة:', response);
     
-    setLoading(prev => ({ ...prev, rentals: true }));
-    
-    try {
-      console.log('جاري تحميل التأجيرات النشطة للشيفت:', currentShift.id);
-      const response = await api.getActiveRentals(currentShift.id);
-      console.log('استجابة التأجيرات النشطة:', response);
+    if (response && response.success) {
+      const rentals = response.data || [];
       
-      if (response && response.success) {
-        const rentals = response.data || [];
-        setActiveRentals(rentals);
-        
-        const allItems = [];
-        if (rentals && rentals.length > 0) {
-          rentals.forEach(rental => {
-            if (rental.items && rental.items.length > 0) {
-              allItems.push(...rental.items);
-            }
-          });
-        }
-        setRentalItems(allItems);
-      } else {
-        setActiveRentals([]);
-        setRentalItems([]);
+      // ✅ التأكد من أن كل تأجير يحتوي على items مع المدة الصحيحة
+      const processedRentals = rentals.map(rental => ({
+        ...rental,
+        items: rental.items || []
+      }));
+      
+      setActiveRentals(processedRentals);
+      
+      const allItems = [];
+      if (processedRentals && processedRentals.length > 0) {
+        processedRentals.forEach(rental => {
+          if (rental.items && rental.items.length > 0) {
+            allItems.push(...rental.items);
+          }
+        });
       }
-    } catch (error) {
-      console.error('خطأ في تحميل التأجيرات النشطة:', error);
+      setRentalItems(allItems);
+      
+      console.log('✅ تم تحميل:', {
+        rentals: processedRentals.length,
+        items: allItems.length
+      });
+    } else {
       setActiveRentals([]);
       setRentalItems([]);
-    } finally {
-      setLoading(prev => ({ ...prev, rentals: false }));
     }
-  }, [currentShift?.id]);
+  } catch (error) {
+    console.error('🔥 خطأ في تحميل التأجيرات النشطة:', error);
+    setActiveRentals([]);
+    setRentalItems([]);
+  } finally {
+    setLoading(prev => ({ ...prev, rentals: false }));
+  }
+}, [currentShift?.id]);
 
   const loadCompletedRentals = useCallback(async () => {
     if (!isManager || !currentShift?.id) {
@@ -2362,91 +2393,99 @@ const Rentals = () => {
     setCustomerInfo({ name: '', phone: '' });
   }, []);
 
-  const calculateItemTotal = useCallback((item) => {
-    if (item.rental_type === 'open') return 0;
-    const units = Math.ceil((item.duration_minutes || 15) / 15);
-    return (item.price_per_15min || 0) * units * (item.quantity || 1);
-  }, []);
+const calculateItemTotal = useCallback((item) => {
+  if (item.rental_type === 'open') return 0;
+  // ✅ استخدام duration_minutes من item مباشرة
+  const duration = item.duration_minutes || 15;
+  const units = Math.ceil(duration / 15);
+  return (item.price_per_15min || 0) * units * (item.quantity || 1);
+}, []);
 
-  const handleCreateRental = useCallback(async (data) => {
-    if (!currentShift) {
-      setError('❌ لا يوجد شيفت نشط');
-      return;
-    }
+const handleCreateRental = useCallback(async (data) => {
+  if (!currentShift) {
+    setError('❌ لا يوجد شيفت نشط');
+    return;
+  }
 
-    if (cartItems.length === 0) {
-      setError('❌ السلة فارغة');
-      return;
-    }
+  if (cartItems.length === 0) {
+    setError('❌ السلة فارغة');
+    return;
+  }
 
-    if (!customerInfo.name?.trim()) {
-      setError('❌ اسم العميل مطلوب');
-      return;
-    }
+  if (!customerInfo.name?.trim()) {
+    setError('❌ اسم العميل مطلوب');
+    return;
+  }
 
-    setLoading(prev => ({ ...prev, processing: true }));
-    
-    try {
-      const createdRentals = [];
-      const createdItems = [];
+  setLoading(prev => ({ ...prev, processing: true }));
+  
+  try {
+    const createdRentals = [];
+    const createdItems = [];
 
-      for (const item of cartItems) {
-        const rentalData = {
-          shift_id: currentShift.id,
-          customer_name: customerInfo.name.trim(),
-          customer_phone: customerInfo.phone || null,
-          items: [{
-            game_id: item.game_id,
-            child_name: item.child_name || null,
-            duration_minutes: item.rental_type === 'fixed' ? item.duration_minutes : null,
-            quantity: item.quantity,
-            rental_type: item.rental_type,
-            price_per_15min: item.price_per_15min
-          }]
-        };
+    for (const item of cartItems) {
+      // ✅ التأكد من إرسال duration_minutes الصحيحة
+      const itemDuration = item.rental_type === 'fixed' ? (item.duration_minutes || 15) : null;
+      
+      const rentalData = {
+        shift_id: currentShift.id,
+        customer_name: customerInfo.name.trim(),
+        customer_phone: customerInfo.phone || null,
+        items: [{
+          game_id: item.game_id,
+          child_name: item.child_name || null,
+          duration_minutes: itemDuration, // ✅ استخدام المدة الصحيحة
+          quantity: item.quantity,
+          rental_type: item.rental_type,
+          price_per_15min: item.price_per_15min
+        }]
+      };
 
-        console.log('إنشاء تأجير للعبة:', item.game_name, rentalData);
-        
-        const response = await api.createRental(rentalData);
-        console.log('استجابة إنشاء التأجير:', response);
+      console.log('📦 إنشاء تأجير:', {
+        game: item.game_name,
+        duration: itemDuration,
+        quantity: item.quantity
+      });
 
-        if (response && response.success && response.data) {
-          createdRentals.push(response.data);
-          if (response.data.items) {
-            createdItems.push(...response.data.items);
-          }
-        } else {
-          throw new Error(response?.message || 'فشل إنشاء التأجير');
-        }
-      }
-
-      if (createdRentals.length > 0) {
-        setActiveRentals(prev => [...prev, ...createdRentals]);
-        setRentalItems(prev => [...prev, ...createdItems]);
-        
-        const gameNames = createdRentals.map(r => {
-          const item = r.items && r.items[0];
-          return item ? item.game_name : 'لعبة';
-        }).join('، ');
-        
-        setSuccess(`✅ تم إنشاء ${createdRentals.length} تأجير للعميل ${customerInfo.name}: ${gameNames}`);
-        
-        handleClearCart();
-        
-        if (isManager) {
-          await loadCompletedRentals();
+      const response = await api.createRental(rentalData);
+      
+      if (response && response.success && response.data) {
+        createdRentals.push(response.data);
+        if (response.data.items) {
+          createdItems.push(...response.data.items);
         }
       } else {
-        setError('❌ فشل إنشاء التأجيرات');
+        throw new Error(response?.message || 'فشل إنشاء التأجير');
       }
-      
-    } catch (error) {
-      console.error('خطأ في إنشاء التأجير:', error);
-      setError('فشل إنشاء التأجير: ' + (error.message || 'خطأ غير معروف'));
-    } finally {
-      setLoading(prev => ({ ...prev, processing: false }));
     }
-  }, [currentShift, cartItems, customerInfo, handleClearCart, loadCompletedRentals, isManager]);
+
+    if (createdRentals.length > 0) {
+      setActiveRentals(prev => [...prev, ...createdRentals]);
+      setRentalItems(prev => [...prev, ...createdItems]);
+      
+      const gameNames = createdRentals.map(r => {
+        const item = r.items && r.items[0];
+        return item ? `${item.game_name} (${item.duration_minutes || 15} د)` : 'لعبة';
+      }).join('، ');
+      
+      setSuccess(`✅ تم إنشاء ${createdRentals.length} تأجير للعميل ${customerInfo.name}: ${gameNames}`);
+      
+      handleClearCart();
+      
+      if (isManager) {
+        await loadCompletedRentals();
+      }
+    } else {
+      setError('❌ فشل إنشاء التأجيرات');
+    }
+    
+  } catch (error) {
+    console.error('🔥 خطأ في إنشاء التأجير:', error);
+    setError('فشل إنشاء التأجير: ' + (error.message || 'خطأ غير معروف'));
+  } finally {
+    setLoading(prev => ({ ...prev, processing: false }));
+  }
+}, [currentShift, cartItems, customerInfo, handleClearCart, loadCompletedRentals, isManager]);
 
   const handleCompleteOpenRental = useCallback(async (rental, data) => {
     if (!rental) return;
