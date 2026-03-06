@@ -180,6 +180,8 @@ api.verifyToken = async () => {
   }
 };
 
+
+
 // ==================== BRANCHES ENDPOINTS ====================
 api.getBranches = async (params = {}) => {
   try {
@@ -433,6 +435,31 @@ api.getShifts = async (params = {}) => {
 };
 
 // ==================== RENTALS ENDPOINTS ====================
+
+// أضف هذه الدالة الجديدة في نهاية قسم rentals
+api.earlyEndRental = async (rentalId, earlyEndData = {}) => {
+  try {
+    console.log(`⏱️ إنهاء مبكر للتأجير ${rentalId}:`, earlyEndData);
+    
+    const response = await api.post(`/rentals/${rentalId}/early-end`, {
+      reason: earlyEndData.reason || 'إنهاء مبكر',
+      refund_amount: earlyEndData.refund_amount || 0,
+      elapsed_minutes: earlyEndData.elapsed_minutes || 0
+    });
+    
+    return {
+      success: true,
+      data: response.data,
+      message: response.message || 'تم إنهاء التأجير مبكراً بنجاح'
+    };
+  } catch (error) {
+    console.error(`❌ خطأ في earlyEndRental ${rentalId}:`, error);
+    return { 
+      success: false, 
+      message: error.message || 'فشل إنهاء التأجير المبكر' 
+    };
+  }
+};
 api.getActiveRentals = async (shiftId = null) => {
   try {
     const params = shiftId ? { shift_id: shiftId } : {};
@@ -552,6 +579,8 @@ api.completeFixedTime = async (rentalId) => {
     return { success: false, message: error.message || 'فشل إنهاء الوقت الثابت' };
   }
 };
+
+
 
 // ==================== RENTAL ITEMS ENDPOINTS ====================
 api.getRentalItems = async (rentalId) => {
