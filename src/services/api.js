@@ -480,6 +480,31 @@ api.deleteRental = async (rentalId) => {
   }
 };
 
+// ==================== MODIFY RENTAL ENDPOINT ====================
+api.modifyRental = async (rentalId, modifyData) => {
+  try {
+    console.log(`✏️ تعديل تأجير ${rentalId}:`, modifyData);
+    
+    const response = await api.post(`/rentals/${rentalId}/modify`, {
+      old_game_id: modifyData.old_game_id,
+      new_game_id: modifyData.new_game_id,
+      price_difference: modifyData.price_difference
+    });
+    
+    return {
+      success: true,
+      data: response.data,
+      message: response.message || 'تم تعديل التأجير بنجاح'
+    };
+  } catch (error) {
+    console.error(`❌ خطأ في modifyRental ${rentalId}:`, error);
+    return { 
+      success: false, 
+      message: error.message || 'فشل تعديل التأجير' 
+    };
+  }
+};
+
 api.getActiveRentals = async (shiftId = null) => {
   try {
     const params = shiftId ? { shift_id: shiftId } : {};

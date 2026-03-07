@@ -1236,10 +1236,7 @@ const isExpired = useCallback((rental) => {
 
                   {isManager && (
                     <>
-                      <button onClick={() => onCancel(rental)} className="action-btn warning" title="إلغاء">
-                        <X size={14} />
-                        <span>إلغاء</span>
-                      </button>
+                  
 
                       <button onClick={() => onModify(rental)} className="action-btn primary" title="تعديل">
                         <Edit size={14} />
