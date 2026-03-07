@@ -460,6 +460,26 @@ api.earlyEndRental = async (rentalId, earlyEndData = {}) => {
     };
   }
 };
+
+// في api.js - إضافة دالة حذف التأجير
+api.deleteRental = async (rentalId) => {
+  try {
+    console.log(`🗑️ حذف تأجير ${rentalId}...`);
+    const response = await api.delete(`/rentals/${rentalId}`);
+    return {
+      success: true,
+      data: response.data,
+      message: response.message || 'تم حذف التأجير بنجاح'
+    };
+  } catch (error) {
+    console.error(`❌ خطأ في deleteRental ${rentalId}:`, error);
+    return { 
+      success: false, 
+      message: error.message || 'فشل حذف التأجير' 
+    };
+  }
+};
+
 api.getActiveRentals = async (shiftId = null) => {
   try {
     const params = shiftId ? { shift_id: shiftId } : {};

@@ -2149,3 +2149,69 @@ textarea.form-control {
     margin-top: 8px;
   }
 }
+/* في Rentals.css - إضافة أنماط جديدة */
+
+/* ✅ تنسيق خاص لمدة 10 دقائق */
+.badge-special {
+  background: linear-gradient(135deg, #f39c12, #e67e22);
+  color: white;
+  font-weight: bold;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
+/* ✅ تنسيق إشعار عرض الموسم */
+.alert.notice {
+  background: linear-gradient(135deg, #f39c12, #e67e22);
+  color: white;
+  border: none;
+  margin-top: 1rem;
+}
+
+.alert.notice svg {
+  color: white;
+}
+
+/* ✅ تنسيق علامة الاسترداد */
+.refund-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  background-color: #f39c12;
+  color: white;
+  padding: 0.15rem 0.5rem;
+  border-radius: 1rem;
+  font-size: 0.7rem;
+  font-weight: bold;
+  margin-right: 0.5rem;
+}
+
+/* ✅ تنسيق زر الحذف */
+.action-btn.danger {
+  background-color: #dc3545;
+  color: white;
+}
+
+.action-btn.danger:hover {
+  background-color: #c82333;
+}
+
+/* ✅ تنسيق الصفوف المحذوفة (اختياري) */
+.rental-group.deleted {
+  opacity: 0.6;
+  background-color: #f8d7da;
+}
+
+/* ✅ تنسيق معلومات إضافية في التفاصيل */
+.notice-text {
+  font-size: 0.9rem;
+  color: #f39c12;
+  margin-top: 0.5rem;
+  text-align: center;
+  font-weight: 500;
+}
