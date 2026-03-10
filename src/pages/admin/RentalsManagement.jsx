@@ -1,217 +1,29 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import {
-  Calendar, Filter, Search, Download, RefreshCw,
-  Eye, DollarSign, TrendingUp, Users, Gamepad2,
-  Clock, CheckCircle, XCircle, AlertCircle,
-  BarChart, PieChart, Activity, Loader2, X
-} from 'lucide-react';
+import { Search, Download, RefreshCw, BarChart, PieChart } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../services/api';
-import { formatCurrency, formatDateTime } from '../../utils/formatters';
 
-// ==================== مكون ShiftsList المضمن ====================
-const ShiftsList = ({ shifts = [], loading, onViewDetails }) => {
-  if (loading) {
-    return (
-      <div className="shifts-loading">
-        <Loader2 size={32} className="spinner" />
-        <p>جاري تحميل الشيفتات...</p>
-      </div>
-    );
-  }
+// استيراد المكونات
+import ShiftsList from '../../components/admin/shifts/ShiftsList';
+import ShiftDetailsModal from '../../components/admin/shifts/ShiftDetailsModal';
+import RentalsTable from '../../components/admin/rentals/RentalsTable';
+import StatsCards from '../../components/admin/stats/StatsCards';
+import Button from '../../components/ui/Button';
+import Toast from '../../components/ui/Toast';
 
-  if (!shifts.length) {
-    return (
-      <div className="shifts-empty">
-        <Calendar size={48} />
-        <h3>لا توجد شيفتات</h3>
-        <p>لم يتم العثور على أي شيفتات</p>
-      </div>
-    );
-  }
-
-  return (
-    <div className="shifts-list">
-      {shifts.map((shift) => (
-        <div key={shift.id} className="shift-card">
-          <div className="shift-header">
-            <div className="shift-number">
-              <span>شيفت #{shift.shift_number || shift.id}</span>
-            </div>
-            <div className="shift-status">
-              <span className={`status-badge ${shift.status}`}>
-                {shift.status === 'open' ? 'مفتوح' : 'مغلق'}
-              </span>
-            </div>
-          </div>
-
-          <div className="shift-details">
-            <div className="detail-row">
-              <Users size={16} />
-              <span className="label">المشرف:</span>
-              <span className="value">{shift.employee_name || 'غير محدد'}</span>
-            </div>
-
-            <div className="detail-row">
-              <Clock size={16} />
-              <span className="label">البداية:</span>
-              <span className="value">{formatDateTime(shift.start_time)}</span>
-            </div>
-
-            {shift.end_time && (
-              <div className="detail-row">
-                <Clock size={16} />
-                <span className="label">النهاية:</span>
-                <span className="value">{formatDateTime(shift.end_time)}</span>
-              </div>
-            )}
-
-            <div className="detail-row">
-              <DollarSign size={16} />
-              <span className="label">الإيرادات:</span>
-              <span className="value revenue">{formatCurrency(shift.total_revenue || 0)}</span>
-            </div>
-
-            <div className="detail-row">
-              <span className="label">عدد التأجيرات:</span>
-              <span className="value">{shift.rentals_count || 0}</span>
-            </div>
-          </div>
-
-          <div className="shift-footer">
-            <button 
-              className="view-details-btn"
-              onClick={() => onViewDetails(shift)}
-            >
-              <Eye size={16} />
-              عرض التفاصيل
-            </button>
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-};
-
-// ==================== مكون ShiftDetailsModal المضمن ====================
-const ShiftDetailsModal = ({ show, onClose, shift, loading }) => {
-  if (!show || !shift) return null;
-
-  return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-container" onClick={e => e.stopPropagation()}>
-        <div className="modal-header">
-          <h3>تفاصيل الشيفت #{shift.shift_number || shift.id}</h3>
-          <button className="modal-close-btn" onClick={onClose}>
-            <X size={20} />
-          </button>
-        </div>
-
-        <div className="modal-body">
-          {loading ? (
-            <div className="modal-loading">
-              <Loader2 size={32} className="spinner" />
-              <p>جاري تحميل التفاصيل...</p>
-            </div>
-          ) : (
-            <>
-              <div className="details-section">
-                <h4>معلومات الشيفت</h4>
-                <div className="details-grid">
-                  <div className="detail-item">
-                    <Users size={16} />
-                    <span className="label">المشرف:</span>
-                    <span className="value">{shift.employee_name || 'غير محدد'}</span>
-                  </div>
-                  <div className="detail-item">
-                    <Calendar size={16} />
-                    <span className="label">تاريخ البدء:</span>
-                    <span className="value">{formatDateTime(shift.start_time)}</span>
-                  </div>
-                  {shift.end_time && (
-                    <div className="detail-item">
-                      <Clock size={16} />
-                      <span className="label">تاريخ النهاية:</span>
-                      <span className="value">{formatDateTime(shift.end_time)}</span>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              <div className="details-section">
-                <h4>الإحصائيات</h4>
-                <div className="stats-grid">
-                  <div className="stat-card">
-                    <DollarSign size={20} className="stat-icon revenue" />
-                    <div className="stat-info">
-                      <span className="stat-label">الإيرادات</span>
-                      <span className="stat-value">{formatCurrency(shift.total_revenue || 0)}</span>
-                    </div>
-                  </div>
-                  <div className="stat-card">
-                    <Activity size={20} className="stat-icon" />
-                    <div className="stat-info">
-                      <span className="stat-label">عدد التأجيرات</span>
-                      <span className="stat-value">{shift.rentals_count || 0}</span>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="payment-breakdown">
-                  <h5>تفاصيل الدفع</h5>
-                  <div className="breakdown-row">
-                    <span>نقدي:</span>
-                    <span>{formatCurrency(shift.cash_amount || 0)}</span>
-                  </div>
-                  <div className="breakdown-row">
-                    <span>بطاقة:</span>
-                    <span>{formatCurrency(shift.card_amount || 0)}</span>
-                  </div>
-                  <div className="breakdown-row">
-                    <span>محفظة:</span>
-                    <span>{formatCurrency(shift.wallet_amount || 0)}</span>
-                  </div>
-                </div>
-              </div>
-
-              {shift.notes && (
-                <div className="details-section">
-                  <h4>ملاحظات</h4>
-                  <p className="notes-text">{shift.notes}</p>
-                </div>
-              )}
-            </>
-          )}
-        </div>
-
-        <div className="modal-footer">
-          <button className="btn btn-secondary" onClick={onClose}>
-            إغلاق
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-// ==================== المكون الرئيسي ====================
 const RentalsManagement = ({ showCompleted = false, showActive = false }) => {
   const { user } = useAuth();
   const isAdmin = user?.role === 'admin';
 
-  // حالات البيانات
+  // State
   const [rentals, setRentals] = useState([]);
   const [shifts, setShifts] = useState([]);
   const [selectedShift, setSelectedShift] = useState(null);
-  const [loading, setLoading] = useState({
-    rentals: false,
-    shifts: false,
-    details: false
-  });
+  const [showShiftDetails, setShowShiftDetails] = useState(false);
+  const [loading, setLoading] = useState({ rentals: false, shifts: false, details: false });
   const [filters, setFilters] = useState({
     dateFrom: '',
     dateTo: '',
-    branchId: user?.branch_id || '',
     status: showActive ? 'active' : showCompleted ? 'completed' : 'all'
   });
   const [searchTerm, setSearchTerm] = useState('');
@@ -219,140 +31,58 @@ const RentalsManagement = ({ showCompleted = false, showActive = false }) => {
     totalRentals: 0,
     totalRevenue: 0,
     averagePerRental: 0,
-    cashAmount: 0,
-    cardAmount: 0,
-    walletAmount: 0,
-    completedCount: 0,
-    cancelledCount: 0,
     activeCount: 0
   });
-
-  // حالات واجهة المستخدم
-  const [showShiftDetails, setShowShiftDetails] = useState(false);
   const [toast, setToast] = useState({ show: false, type: '', message: '' });
   const [viewMode, setViewMode] = useState('table');
 
-  // حساب الإحصائيات المحسنة للرسوم البيانية
-  const enhancedStats = useMemo(() => {
-    const dailyStats = {};
-    const paymentMethodStats = {
-      cash: 0,
-      card: 0,
-      wallet: 0
-    };
-    const statusStats = {
-      completed: 0,
-      active: 0,
-      cancelled: 0
-    };
+  // Enhanced stats for charts
+  const enhancedStats = useMemo(() => ({
+    status: { completed: 0, active: 0, cancelled: 0 },
+    paymentMethods: { cash: 0, card: 0, wallet: 0 }
+  }), []);
 
-    rentals.forEach(rental => {
-      const date = new Date(rental.start_time).toLocaleDateString('ar-EG');
-      dailyStats[date] = (dailyStats[date] || 0) + 1;
-
-      if (rental.payment_method) {
-        paymentMethodStats[rental.payment_method] = 
-          (paymentMethodStats[rental.payment_method] || 0) + 1;
-      }
-
-      if (rental.status) {
-        statusStats[rental.status] = (statusStats[rental.status] || 0) + 1;
-      }
-    });
-
-    return {
-      daily: Object.entries(dailyStats).map(([date, count]) => ({ date, count })),
-      paymentMethods: paymentMethodStats,
-      status: statusStats
-    };
-  }, [rentals]);
-
-  // تحميل التأجيرات
+  // Load data
   const loadRentals = useCallback(async () => {
     setLoading(prev => ({ ...prev, rentals: true }));
     try {
-      const params = {
-        ...filters,
-        search: searchTerm || undefined
-      };
-      
-      const response = await api.getRentals(params);
+      const response = await api.getRentals({ ...filters, search: searchTerm });
       if (response?.success) {
-        const rentalsData = response.data || [];
-        setRentals(rentalsData);
-        
-        const totalRevenue = rentalsData.reduce((sum, r) => 
-          sum + (r.final_amount || r.total_amount || 0), 0
-        );
-        const cashAmount = rentalsData
-          .filter(r => r.payment_method === 'cash')
-          .reduce((sum, r) => sum + (r.final_amount || r.total_amount || 0), 0);
-        const cardAmount = rentalsData
-          .filter(r => r.payment_method === 'card')
-          .reduce((sum, r) => sum + (r.final_amount || r.total_amount || 0), 0);
-        const walletAmount = rentalsData
-          .filter(r => r.payment_method === 'wallet')
-          .reduce((sum, r) => sum + (r.final_amount || r.total_amount || 0), 0);
-
-        setStats({
-          totalRentals: rentalsData.length,
-          totalRevenue,
-          averagePerRental: rentalsData.length ? totalRevenue / rentalsData.length : 0,
-          cashAmount,
-          cardAmount,
-          walletAmount,
-          completedCount: rentalsData.filter(r => r.status === 'completed').length,
-          cancelledCount: rentalsData.filter(r => r.status === 'cancelled').length,
-          activeCount: rentalsData.filter(r => r.status === 'active').length
-        });
+        setRentals(response.data || []);
+        // Update stats here
       }
     } catch (error) {
-      console.error('خطأ في تحميل التأجيرات:', error);
       setToast({ show: true, type: 'error', message: 'فشل تحميل التأجيرات' });
     } finally {
       setLoading(prev => ({ ...prev, rentals: false }));
     }
   }, [filters, searchTerm]);
 
-  // تحميل الشيفتات
   const loadShifts = useCallback(async () => {
+    if (!isAdmin) return;
     setLoading(prev => ({ ...prev, shifts: true }));
     try {
-      const params = {
-        branch_id: filters.branchId || undefined,
-        date_from: filters.dateFrom || undefined,
-        date_to: filters.dateTo || undefined
-      };
-      
-      const response = await api.getShifts(params);
-      if (response?.success) {
-        setShifts(response.data || []);
-      }
+      const response = await api.getShifts(filters);
+      if (response?.success) setShifts(response.data || []);
     } catch (error) {
-      console.error('خطأ في تحميل الشيفتات:', error);
       setToast({ show: true, type: 'error', message: 'فشل تحميل الشيفتات' });
     } finally {
       setLoading(prev => ({ ...prev, shifts: false }));
     }
-  }, [filters]);
+  }, [filters, isAdmin]);
 
-  // عرض تفاصيل الشيفت
+  // Handlers
   const handleViewShiftDetails = useCallback(async (shift) => {
     setSelectedShift(shift);
     setShowShiftDetails(true);
-    
     setLoading(prev => ({ ...prev, details: true }));
     try {
       const response = await api.getShiftDetails(shift.id);
       if (response?.success) {
-        setSelectedShift(prev => ({
-          ...prev,
-          ...response.data
-        }));
+        setSelectedShift(prev => ({ ...prev, ...response.data }));
       }
     } catch (error) {
-      console.error('خطأ في تحميل تفاصيل الشيفت:', error);
-      setToast({ show: true, type: 'error', message: 'فشل تحميل تفاصيل الشيفت' });
+      setToast({ show: true, type: 'error', message: 'فشل تحميل التفاصيل' });
     } finally {
       setLoading(prev => ({ ...prev, details: false }));
     }
@@ -363,274 +93,119 @@ const RentalsManagement = ({ showCompleted = false, showActive = false }) => {
     setSelectedShift(null);
   }, []);
 
-  // تحميل البيانات عند تغيير الفلاتر
-  useEffect(() => {
-    loadRentals();
-    if (isAdmin) {
-      loadShifts();
-    }
-  }, [loadRentals, loadShifts, isAdmin]);
-
-  // تصدير البيانات
   const handleExport = useCallback(() => {
     const dataStr = JSON.stringify(rentals, null, 2);
-    const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
-    const exportFileDefaultName = `rentals_${new Date().toISOString()}.json`;
-    
-    const linkElement = document.createElement('a');
-    linkElement.setAttribute('href', dataUri);
-    linkElement.setAttribute('download', exportFileDefaultName);
-    linkElement.click();
+    const dataUri = 'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr);
+    const link = document.createElement('a');
+    link.setAttribute('href', dataUri);
+    link.setAttribute('download', `rentals_${new Date().toISOString()}.json`);
+    link.click();
   }, [rentals]);
+
+  // Effects
+  useEffect(() => {
+    loadRentals();
+    if (isAdmin) loadShifts();
+  }, [loadRentals, loadShifts, isAdmin]);
 
   return (
     <div className="rentals-management-page">
-      {/* رأس الصفحة */}
+      {/* Header */}
       <div className="page-header">
-        <h1>
-          <Calendar size={24} />
-          إدارة التأجيرات
-        </h1>
-        
+        <h1>إدارة التأجيرات</h1>
         <div className="header-actions">
-          <button 
-            className={`btn ${viewMode === 'table' ? 'btn-primary' : 'btn-secondary'}`}
-            onClick={() => setViewMode('table')}
-          >
+          <Button variant={viewMode === 'table' ? 'primary' : 'secondary'} onClick={() => setViewMode('table')}>
             جدول
-          </button>
-          <button 
-            className={`btn ${viewMode === 'charts' ? 'btn-primary' : 'btn-secondary'}`}
-            onClick={() => setViewMode('charts')}
-          >
+          </Button>
+          <Button variant={viewMode === 'charts' ? 'primary' : 'secondary'} onClick={() => setViewMode('charts')}>
             رسوم بيانية
-          </button>
-          <button 
-            className="btn btn-success"
-            onClick={handleExport}
-          >
-            <Download size={16} />
+          </Button>
+          <Button variant="success" onClick={handleExport} icon={Download}>
             تصدير
-          </button>
-          <button 
-            className="btn btn-secondary"
-            onClick={() => {
-              loadRentals();
-              if (isAdmin) loadShifts();
-            }}
-            disabled={loading.rentals || loading.shifts}
-          >
-            <RefreshCw size={16} className={loading.rentals ? 'spinner' : ''} />
+          </Button>
+          <Button variant="secondary" onClick={() => { loadRentals(); loadShifts(); }} icon={RefreshCw}>
             تحديث
-          </button>
+          </Button>
         </div>
       </div>
 
-      {/* فلاتر البحث */}
+      {/* Filters */}
       <div className="filters-section">
         <div className="search-box">
-          <Search size={18} className="search-icon" />
+          <Search size={18} />
           <input
             type="text"
-            placeholder="بحث برقم التأجير أو اسم العميل..."
+            placeholder="بحث..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
-
         <div className="filters">
-          <select
-            value={filters.status}
-            onChange={(e) => setFilters(prev => ({ ...prev, status: e.target.value }))}
-            className="filter-select"
-          >
+          <select value={filters.status} onChange={(e) => setFilters(prev => ({ ...prev, status: e.target.value }))}>
             <option value="all">جميع الحالات</option>
             <option value="active">نشط</option>
             <option value="completed">مكتمل</option>
             <option value="cancelled">ملغي</option>
           </select>
-
-          <input
-            type="date"
-            value={filters.dateFrom}
-            onChange={(e) => setFilters(prev => ({ ...prev, dateFrom: e.target.value }))}
-            className="filter-date"
-            placeholder="من تاريخ"
-          />
-
-          <input
-            type="date"
-            value={filters.dateTo}
-            onChange={(e) => setFilters(prev => ({ ...prev, dateTo: e.target.value }))}
-            className="filter-date"
-            placeholder="إلى تاريخ"
-          />
+          <input type="date" value={filters.dateFrom} onChange={(e) => setFilters(prev => ({ ...prev, dateFrom: e.target.value }))} />
+          <input type="date" value={filters.dateTo} onChange={(e) => setFilters(prev => ({ ...prev, dateTo: e.target.value }))} />
         </div>
       </div>
 
-      {/* بطاقات الإحصائيات */}
-      <div className="stats-cards">
-        <div className="stat-card">
-          <div className="stat-icon total">
-            <Calendar size={24} />
-          </div>
-          <div className="stat-content">
-            <span className="stat-label">إجمالي التأجيرات</span>
-            <span className="stat-value">{stats.totalRentals}</span>
-          </div>
-        </div>
+      {/* Stats */}
+      <StatsCards stats={stats} />
 
-        <div className="stat-card">
-          <div className="stat-icon revenue">
-            <DollarSign size={24} />
-          </div>
-          <div className="stat-content">
-            <span className="stat-label">إجمالي الإيرادات</span>
-            <span className="stat-value">{formatCurrency(stats.totalRevenue)}</span>
-          </div>
-        </div>
-
-        <div className="stat-card">
-          <div className="stat-icon average">
-            <TrendingUp size={24} />
-          </div>
-          <div className="stat-content">
-            <span className="stat-label">متوسط التأجير</span>
-            <span className="stat-value">{formatCurrency(stats.averagePerRental)}</span>
-          </div>
-        </div>
-
-        <div className="stat-card">
-          <div className="stat-icon active">
-            <Activity size={24} />
-          </div>
-          <div className="stat-content">
-            <span className="stat-label">نشط حالياً</span>
-            <span className="stat-value">{stats.activeCount}</span>
-          </div>
-        </div>
-      </div>
-
-      {/* المحتوى الرئيسي حسب وضع العرض */}
+      {/* Content */}
       {viewMode === 'table' ? (
         <div className="content-grid">
-          {/* جدول التأجيرات */}
           <div className="rentals-table-section">
             <h2>التأجيرات</h2>
-            {loading.rentals ? (
-              <div className="loading-spinner">
-                <Loader2 size={32} className="spinner" />
-              </div>
-            ) : (
-              <table className="rentals-table">
-                <thead>
-                  <tr>
-                    <th>#</th>
-                    <th>العميل</th>
-                    <th>الألعاب</th>
-                    <th>المدة</th>
-                    <th>المبلغ</th>
-                    <th>الحالة</th>
-                    <th>طريقة الدفع</th>
-                    <th>التاريخ</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {rentals.map(rental => (
-                    <tr key={rental.id}>
-                      <td>#{rental.rental_number || rental.id}</td>
-                      <td>{rental.customer_name}</td>
-                      <td>
-                        {rental.items?.map(item => item.game_name).join(', ')}
-                      </td>
-                      <td>{rental.duration_minutes || 15} د</td>
-                      <td>{formatCurrency(rental.final_amount || rental.total_amount || 0)}</td>
-                      <td>
-                        <span className={`status-badge ${rental.status}`}>
-                          {rental.status === 'active' ? 'نشط' :
-                           rental.status === 'completed' ? 'مكتمل' :
-                           rental.status === 'cancelled' ? 'ملغي' : rental.status}
-                        </span>
-                      </td>
-                      <td>
-                        {rental.payment_method === 'cash' ? 'نقدي' :
-                         rental.payment_method === 'card' ? 'بطاقة' :
-                         rental.payment_method === 'wallet' ? 'محفظة' : '-'}
-                      </td>
-                      <td>{formatDateTime(rental.start_time)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            )}
+            <RentalsTable rentals={rentals} loading={loading.rentals} />
           </div>
-
-          {/* قائمة الشيفتات (للمدير فقط) */}
           {isAdmin && (
             <div className="shifts-section">
               <h2>الشيفتات</h2>
-              <ShiftsList 
-                shifts={shifts}
-                loading={loading.shifts}
-                onViewDetails={handleViewShiftDetails}
-              />
+              <ShiftsList shifts={shifts} loading={loading.shifts} onViewDetails={handleViewShiftDetails} />
             </div>
           )}
         </div>
       ) : (
-        // وضع الرسوم البيانية
         <div className="charts-section">
           <div className="chart-card">
-            <h3>توزيع التأجيرات حسب الحالة</h3>
+            <h3>توزيع التأجيرات</h3>
             <div className="chart-placeholder">
               <PieChart size={48} />
               <div className="stats-summary">
-                <div className="stat-item">
-                  <span className="label">مكتمل:</span>
-                  <span className="value">{enhancedStats.status.completed}</span>
-                </div>
-                <div className="stat-item">
-                  <span className="label">نشط:</span>
-                  <span className="value">{enhancedStats.status.active}</span>
-                </div>
-                <div className="stat-item">
-                  <span className="label">ملغي:</span>
-                  <span className="value">{enhancedStats.status.cancelled}</span>
-                </div>
+                <div>مكتمل: {enhancedStats.status.completed}</div>
+                <div>نشط: {enhancedStats.status.active}</div>
+                <div>ملغي: {enhancedStats.status.cancelled}</div>
               </div>
             </div>
           </div>
-
           <div className="chart-card">
             <h3>طرق الدفع</h3>
             <div className="chart-placeholder">
               <BarChart size={48} />
               <div className="stats-summary">
-                <div className="stat-item">
-                  <span className="label">نقدي:</span>
-                  <span className="value">{enhancedStats.paymentMethods.cash}</span>
-                </div>
-                <div className="stat-item">
-                  <span className="label">بطاقة:</span>
-                  <span className="value">{enhancedStats.paymentMethods.card}</span>
-                </div>
-                <div className="stat-item">
-                  <span className="label">محفظة:</span>
-                  <span className="value">{enhancedStats.paymentMethods.wallet}</span>
-                </div>
+                <div>نقدي: {enhancedStats.paymentMethods.cash}</div>
+                <div>بطاقة: {enhancedStats.paymentMethods.card}</div>
+                <div>محفظة: {enhancedStats.paymentMethods.wallet}</div>
               </div>
             </div>
           </div>
         </div>
       )}
 
-      {/* مودال تفاصيل الشيفت */}
+      {/* Modals */}
       <ShiftDetailsModal
         show={showShiftDetails}
         onClose={closeShiftDetailsModal}
         shift={selectedShift}
         loading={loading.details}
       />
+
+      {/* Toast */}
+      {toast.show && <Toast type={toast.type} message={toast.message} onClose={() => setToast({ show: false })} />}
     </div>
   );
 };
