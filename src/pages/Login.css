@@ -7,7 +7,7 @@
 body {
   margin: 0;
   font-family: 'Cairo', sans-serif;
-  background: linear-gradient(135deg, #4f46e5, #9333ea);
+  background: #f4f6f8; /* خلفية فاتحة احترافية */
 }
 
 .login-container {
@@ -19,33 +19,34 @@ body {
 }
 
 .login-box {
-  background: #fff;
+  background: #ffffff;
   width: 100%;
   max-width: 420px;
   padding: 40px 30px;
-  border-radius: 20px;
-  box-shadow: 0 20px 50px rgba(0,0,0,0.2);
+  border-radius: 15px;
+  box-shadow: 0 15px 40px rgba(0,0,0,0.15);
   text-align: center;
-  transition: transform 0.3s;
+  transition: transform 0.3s, box-shadow 0.3s;
 }
 
 .login-box:hover {
   transform: translateY(-5px);
+  box-shadow: 0 25px 50px rgba(0,0,0,0.2);
 }
 
 .login-header img {
-  width: 90px;
+  width: 80px;
   margin-bottom: 10px;
 }
 
 .login-header h1 {
   margin: 5px 0;
-  color: #4f46e5;
-  font-size: 28px;
+  color: #1f2937; /* لون غامق احترافي */
+  font-size: 26px;
 }
 
 .login-header p {
-  color: #666;
+  color: #6b7280; /* رمادي معتدل */
   font-size: 14px;
 }
 
@@ -73,30 +74,34 @@ body {
   font-weight: 600;
   display: block;
   margin-bottom: 6px;
+  color: #374151; /* رمادي غامق للخط */
 }
 
 .input-group input {
   width: 100%;
   padding: 12px;
-  border-radius: 10px;
-  border: 1px solid #ddd;
+  border-radius: 8px;
+  border: 1px solid #d1d5db;
   font-size: 14px;
   transition: 0.3s;
+  background-color: #f9fafb;
+  color: #111827;
 }
 
 .input-group input:focus {
   outline: none;
-  border-color: #4f46e5;
-  box-shadow: 0 0 0 3px rgba(79,70,229,0.1);
+  border-color: #2563eb; /* أزرق احترافي */
+  box-shadow: 0 0 0 3px rgba(37,99,235,0.1);
+  background-color: #ffffff;
 }
 
 button {
   width: 100%;
   padding: 13px;
-  background: linear-gradient(135deg, #4f46e5, #9333ea);
-  color: #fff;
+  background: linear-gradient(135deg, #2563eb, #1e40af); /* أزرق رسمي */
+  color: #ffffff;
   border: none;
-  border-radius: 10px;
+  border-radius: 8px;
   font-size: 15px;
   font-weight: 600;
   cursor: pointer;
@@ -104,7 +109,7 @@ button {
 }
 
 button:hover:not(:disabled) {
-  opacity: 0.9;
+  opacity: 0.95;
   transform: translateY(-2px);
 }
 
@@ -116,5 +121,5 @@ button:disabled {
 .login-footer {
   margin-top: 25px;
   font-size: 12px;
-  color: #888;
+  color: #6b7280; /* رمادي فاتح */
 }
