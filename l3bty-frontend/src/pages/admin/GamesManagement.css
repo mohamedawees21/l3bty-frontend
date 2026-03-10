@@ -1,0 +1,558 @@
+/* GamesManagement.css - تصميم مبسط وشامل */
+
+.games-management-page {
+  padding: 20px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+  background: #f8f9fa;
+  min-height: 100vh;
+}
+
+/* تحميل */
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 300px;
+  text-align: center;
+}
+
+.spinner {
+  width: 50px;
+  height: 50px;
+  border: 5px solid #e0e0e0;
+  border-top-color: #3498db;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 20px;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* رأس الصفحة */
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+  padding-bottom: 20px;
+  border-bottom: 2px solid #eaeaea;
+}
+
+.header-left h1 {
+  margin: 0;
+  color: #2c3e50;
+  font-size: 28px;
+}
+
+.page-description {
+  color: #7f8c8d;
+  margin: 5px 0 0;
+  font-size: 16px;
+}
+
+/* الأزرار */
+.btn {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-secondary {
+  background: #3498db;
+  color: white;
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background: #2980b9;
+  transform: translateY(-2px);
+}
+
+.btn-secondary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn-outline {
+  background: transparent;
+  border: 1px solid #3498db;
+  color: #3498db;
+}
+
+.btn-outline:hover:not(:disabled) {
+  background: #3498db;
+  color: white;
+}
+
+.btn-outline:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* تنبيهات */
+.alert {
+  padding: 15px;
+  border-radius: 6px;
+  margin-bottom: 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.alert-error {
+  background: #fee;
+  border: 1px solid #fcc;
+  color: #c33;
+}
+
+.alert-error button {
+  background: #c33;
+  color: white;
+  border: none;
+  padding: 5px 15px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+/* الإحصائيات الإجمالية */
+.total-stats {
+  margin-bottom: 30px;
+}
+
+.total-stats h2 {
+  color: #2c3e50;
+  margin-bottom: 20px;
+  font-size: 22px;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 20px;
+}
+
+.stat-card {
+  background: white;
+  border-radius: 10px;
+  padding: 20px;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  transition: transform 0.3s ease;
+}
+
+.stat-card:hover {
+  transform: translateY(-5px);
+}
+
+.stat-icon {
+  font-size: 40px;
+  width: 70px;
+  height: 70px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+}
+
+.stat-primary .stat-icon {
+  background: #e3f2fd;
+  color: #1976d2;
+}
+
+.stat-success .stat-icon {
+  background: #e8f5e9;
+  color: #2e7d32;
+}
+
+.stat-content h3 {
+  margin: 0 0 5px;
+  color: #555;
+  font-size: 16px;
+}
+
+.stat-value {
+  font-size: 32px;
+  font-weight: bold;
+  margin: 0;
+  color: #2c3e50;
+}
+
+.stat-subtext {
+  color: #7f8c8d;
+  margin: 5px 0 0;
+  font-size: 14px;
+}
+
+/* نظرة عامة على الفروع */
+.branches-overview {
+  margin-bottom: 30px;
+}
+
+.branches-overview h2 {
+  color: #2c3e50;
+  margin-bottom: 20px;
+  font-size: 22px;
+}
+
+.overview-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 15px;
+}
+
+.overview-card {
+  background: white;
+  border-radius: 8px;
+  padding: 15px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  transition: all 0.3s ease;
+  border: 2px solid transparent;
+}
+
+.overview-card:hover {
+  border-color: #3498db;
+  transform: translateY(-3px);
+}
+
+.overview-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 15px;
+}
+
+.overview-header h3 {
+  margin: 0;
+  color: #2c3e50;
+  font-size: 16px;
+}
+
+.branch-id {
+  background: #f1f1f1;
+  color: #666;
+  font-size: 11px;
+  padding: 2px 6px;
+  border-radius: 10px;
+}
+
+.overview-body {
+  text-align: center;
+}
+
+.games-count-display {
+  margin-bottom: 15px;
+}
+
+.count-number {
+  display: block;
+  font-size: 32px;
+  font-weight: bold;
+  color: #2c3e50;
+}
+
+.count-label {
+  color: #7f8c8d;
+  font-size: 14px;
+}
+
+.btn-view-games {
+  width: 100%;
+  padding: 8px;
+  background: #3498db;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background 0.3s;
+}
+
+.btn-view-games:hover:not(:disabled) {
+  background: #2980b9;
+}
+
+.btn-view-games:disabled {
+  background: #95a5a6;
+  cursor: not-allowed;
+}
+
+/* فلترة الفروع */
+.branch-filter {
+  background: white;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 30px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.branch-filter h2 {
+  margin: 0 0 15px;
+  color: #2c3e50;
+  font-size: 18px;
+}
+
+.filter-controls {
+  display: flex;
+  gap: 15px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.branch-select {
+  flex: 1;
+  min-width: 250px;
+  padding: 10px 15px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 14px;
+  color: #333;
+  background: white;
+}
+
+.branch-select:disabled {
+  background: #f5f5f5;
+  cursor: not-allowed;
+}
+
+.filter-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.loading-text {
+  color: #7f8c8d;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+/* قسم جدول الألعاب */
+.games-table-section {
+  background: white;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.section-header h2 {
+  margin: 0;
+  color: #2c3e50;
+  font-size: 20px;
+}
+
+.section-subtitle {
+  color: #7f8c8d;
+  font-size: 14px;
+}
+
+/* جدول الألعاب */
+.games-table-container {
+  overflow-x: auto;
+}
+
+.games-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.games-table thead {
+  background: #f8f9fa;
+  border-bottom: 2px solid #eaeaea;
+}
+
+.games-table th {
+  padding: 12px 15px;
+  text-align: right;
+  color: #2c3e50;
+  font-weight: 600;
+  border-bottom: 2px solid #eaeaea;
+}
+
+.games-table td {
+  padding: 12px 15px;
+  border-bottom: 1px solid #eee;
+  vertical-align: top;
+}
+
+.games-table tbody tr:hover {
+  background: #f8f9fa;
+}
+
+.text-center {
+  text-align: center !important;
+}
+
+.text-right {
+  text-align: left !important;
+  direction: ltr;
+}
+
+/* معلومات اللعبة */
+.game-info {
+  max-width: 300px;
+}
+
+.game-name {
+  font-weight: 500;
+  color: #2c3e50;
+  margin-bottom: 3px;
+}
+
+.game-description {
+  color: #7f8c8d;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+/* الفئات */
+.category-badge {
+  display: inline-block;
+  background: #e8f5e9;
+  color: #2e7d32;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+/* معلومات الفرع */
+.branch-info {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.branch-name {
+  font-weight: 500;
+  color: #2c3e50;
+}
+
+.branch-id {
+  color: #7f8c8d;
+  font-size: 11px;
+}
+
+/* حالة فارغة */
+.empty-state {
+  text-align: center;
+  padding: 50px 20px;
+  color: #7f8c8d;
+}
+
+.empty-icon {
+  font-size: 60px;
+  margin-bottom: 20px;
+  opacity: 0.5;
+}
+
+.empty-state h3 {
+  margin: 0 0 10px;
+  color: #555;
+  font-size: 20px;
+}
+
+.empty-state p {
+  margin: 0;
+  font-size: 16px;
+}
+
+/* زر التفاصيل */
+.btn-details {
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border-radius: 4px;
+}
+
+.btn-details:hover {
+  background: rgba(255,255,255,0.3) !important;
+  transform: translateY(-1px);
+}
+
+/* تصميم متجاوب */
+@media (max-width: 768px) {
+  .games-management-page {
+    padding: 15px;
+  }
+  
+  .page-header {
+    flex-direction: column;
+    gap: 15px;
+    text-align: center;
+  }
+  
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .overview-grid {
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  }
+  
+  .filter-controls {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .branch-select {
+    min-width: 100%;
+  }
+  
+  .section-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .games-table {
+    font-size: 13px;
+  }
+  
+  .games-table th,
+  .games-table td {
+    padding: 8px 10px;
+  }
+}
+
+@media (max-width: 480px) {
+  .overview-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .stat-card {
+    flex-direction: column;
+    text-align: center;
+  }
+  
+  .header-left h1 {
+    font-size: 24px;
+  }
+  
+  .total-stats h2,
+  .branches-overview h2,
+  .section-header h2 {
+    font-size: 18px;
+  }
+}

@@ -1,0 +1,184 @@
+{
+  "games": [
+    {
+      "id": 1,
+      "name": "بلاي ستيشن 5",
+      "category": "بلاي ستيشن",
+      "image": "/images/playstation.jpg",
+      "price_per_15min": 25,
+      "max_players": 4,
+      "min_age": 7,
+      "description": "أحدث إصدار من بلاي ستيشن مع ألعاب حصرية"
+    },
+    {
+      "id": 2,
+      "name": "سيارة كهربائية",
+      "category": "سيارات",
+      "image": "/images/Car.jpg",
+      "price_per_15min": 40,
+      "max_players": 1,
+      "min_age": 3,
+      "description": "سيارة كهربائية للأطفال مع تحكم عن بعد"
+    },
+    {
+      "id": 3,
+      "name": "سيارة دريفت",
+      "category": "سيارات",
+      "image": "/images/Driftcar.jpg",
+      "price_per_15min": 35,
+      "max_players": 1,
+      "min_age": 5,
+      "description": "سيارة دريفت للانجراف"
+    },
+    {
+      "id": 4,
+      "name": "دراجة هارلي",
+      "category": "دراجات",
+      "image": "/images/harley.jpg",
+      "price_per_15min": 45,
+      "max_players": 1,
+      "min_age": 8,
+      "description": "دراجة نارية كهربائية على شكل هارلي"
+    },
+    {
+      "id": 5,
+      "name": "هوفر بورد",
+      "category": "كهربائية",
+      "image": "/images/Hoverboard.jpg",
+      "price_per_15min": 30,
+      "max_players": 1,
+      "min_age": 8,
+      "description": "هوفر بورد بتقنية التوازن الذاتي"
+    },
+    {
+      "id": 6,
+      "name": "لعبة I3bty",
+      "category": "ألعاب أطفال",
+      "image": "/images/I3bty.png",
+      "price_per_15min": 20,
+      "max_players": 2,
+      "min_age": 3,
+      "description": "لعبة أطفال تفاعلية"
+    },
+    {
+      "id": 7,
+      "name": "دراجة نارية",
+      "category": "دراجات",
+      "image": "/images/Motor.jpg",
+      "price_per_15min": 40,
+      "max_players": 1,
+      "min_age": 6,
+      "description": "دراجة نارية كهربائية"
+    },
+    {
+      "id": 8,
+      "name": "موتوسيكل",
+      "category": "دراجات",
+      "image": "/images/motorcycle.jpg",
+      "price_per_15min": 40,
+      "max_players": 1,
+      "min_age": 6,
+      "description": "موتوسيكل كهربائي"
+    },
+    {
+      "id": 9,
+      "name": "Ninebot",
+      "category": "كهربائية",
+      "image": "/images/Ninebot.jpg",
+      "price_per_15min": 35,
+      "max_players": 1,
+      "min_age": 8,
+      "description": "سكوتر Ninebot الكهربائي"
+    },
+    {
+      "id": 10,
+      "name": "بينج بونج",
+      "category": "رياضة",
+      "image": "/images/pingpong.jpg",
+      "price_per_15min": 15,
+      "max_players": 2,
+      "min_age": 6,
+      "description": "طاولة تنس الطاولة"
+    },
+    {
+      "id": 11,
+      "name": "سكوتر",
+      "category": "كهربائية",
+      "image": "/images/Scooter.jpg",
+      "price_per_15min": 25,
+      "max_players": 1,
+      "min_age": 5,
+      "description": "سكوتر كهربائي"
+    },
+    {
+      "id": 12,
+      "name": "Segway",
+      "category": "كهربائية",
+      "image": "/images/Segway.jpg",
+      "price_per_15min": 40,
+      "max_players": 1,
+      "min_age": 10,
+      "description": "سيجواي بتقنية التوازن"
+    },
+    {
+      "id": 13,
+      "name": "جهاز محاكاة",
+      "category": "واقع افتراضي",
+      "image": "/images/Simulator.jpg",
+      "price_per_15min": 50,
+      "max_players": 1,
+      "min_age": 10,
+      "description": "جهاز محاكاة سباق"
+    },
+    {
+      "id": 14,
+      "name": "سكيت بورد",
+      "category": "رياضة",
+      "image": "/images/Skate.jpg",
+      "price_per_15min": 20,
+      "max_players": 1,
+      "min_age": 6,
+      "description": "سكيت بورد كهربائي"
+    },
+    {
+      "id": 15,
+      "name": "ترامبولين",
+      "category": "ألعاب أطفال",
+      "image": "/images/Trampoline.jpg",
+      "price_per_15min": 25,
+      "max_players": 2,
+      "min_age": 4,
+      "description": "ترامبولين آمن للأطفال"
+    },
+    {
+      "id": 16,
+      "name": "VR",
+      "category": "واقع افتراضي",
+      "image": "/images/VR.jpg",
+      "price_per_15min": 45,
+      "max_players": 1,
+      "min_age": 12,
+      "description": "نظارة واقع افتراضي"
+    },
+    {
+      "id": 17,
+      "name": "منزلق مائي",
+      "category": "ألعاب مائية",
+      "image": "/images/waterslide.jpg",
+      "price_per_15min": 30,
+      "max_players": 1,
+      "min_age": 5,
+      "description": "منزلق مائي كبير"
+    },
+    {
+      "id": 18,
+      "name": "عجلة دوارة",
+      "category": "ألعاب أطفال",
+      "image": "/images/wheel.jpg",
+      "price_per_15min": 20,
+      "max_players": 1,
+      "min_age": 3,
+      "description": "عجلة دوارة للأطفال"
+    }
+  ]
+}
