@@ -52,6 +52,139 @@ import { useAuth } from '../../context/AuthContext';
 import api from '../../services/api';
 import './Dashboard.css';
 
+
+
+// ==================== تعريف المكونات والدوال المفقودة مؤقتاً ====================
+
+// تعريف StatCard المفقود
+const StatCard = ({ title, value, icon: Icon, color, subtitle }) => (
+  <div className={`stat-card stat-${color}`}>
+    <div className="stat-icon">
+      <Icon size={24} />
+    </div>
+    <div className="stat-content">
+      <h3>{title}</h3>
+      <p className="stat-value">{value}</p>
+      {subtitle && <span className="stat-subtitle">{subtitle}</span>}
+    </div>
+  </div>
+);
+
+// تعريف CurrentUserShiftCard المفقود
+const CurrentUserShiftCard = ({ shift, stats, onViewDetails }) => (
+  <div className="current-shift-card">
+    <h3>شيفتك الحالي</h3>
+    <div className="shift-details">
+      <p>رقم الشيفت: #{shift.id}</p>
+      <p>وقت البدء: {formatTime(shift.start_time)}</p>
+      <p>الإيرادات: {formatCurrency(stats?.totalRevenue || 0)}</p>
+      <p>التأجيرات: {stats?.totalRentals || 0}</p>
+    </div>
+    <button onClick={() => onViewDetails(shift)}>عرض التفاصيل</button>
+  </div>
+);
+
+// تعريف AllBranchesActiveRentals المفقود
+const AllBranchesActiveRentals = ({ rentals, loading, onView }) => (
+  <div className="all-rentals-section">
+    {loading ? <Loader2 className="spinner" /> : (
+      <div className="rentals-grid">
+        {rentals.map(rental => (
+          <div key={rental.id} className="rental-card" onClick={() => onView(rental)}>
+            <p>#{rental.id} - {rental.customer_name}</p>
+            <p>{rental.game_name}</p>
+          </div>
+        ))}
+      </div>
+    )}
+  </div>
+);
+
+// تعريف AllBranchesCompletedRentals المفقود
+const AllBranchesCompletedRentals = ({ rentals, loading, onView }) => (
+  <div className="all-rentals-section">
+    {loading ? <Loader2 className="spinner" /> : (
+      <div className="rentals-grid">
+        {rentals.map(rental => (
+          <div key={rental.id} className="rental-card completed" onClick={() => onView(rental)}>
+            <p>#{rental.id} - {rental.customer_name}</p>
+            <p>{rental.game_name} - {formatCurrency(rental.total_amount)}</p>
+          </div>
+        ))}
+      </div>
+    )}
+  </div>
+);
+
+// تعريف AllBranchesRecentRentals المفقود
+const AllBranchesRecentRentals = ({ rentals, loading, onView }) => (
+  <div className="all-rentals-section">
+    {loading ? <Loader2 className="spinner" /> : (
+      <div className="rentals-grid">
+        {rentals.map(rental => (
+          <div key={rental.id} className="rental-card recent" onClick={() => onView(rental)}>
+            <p>#{rental.id} - {rental.customer_name}</p>
+            <p>{rental.game_name} - {formatTime(rental.start_time)}</p>
+          </div>
+        ))}
+      </div>
+    )}
+  </div>
+);
+
+// تعريف ShiftsList المفقود
+const ShiftsList = ({ shifts, onViewShift }) => (
+  <div className="shifts-list">
+    {shifts.map(shift => (
+      <div key={shift.id} className="shift-item">
+        <p>شيفت #{shift.id}</p>
+        <p>{formatDateTime(shift.start_time)}</p>
+        <button onClick={() => onViewShift(shift)}>عرض</button>
+      </div>
+    ))}
+  </div>
+);
+
+// تعريف ShiftDetailsModal المفقود
+const ShiftDetailsModal = ({ show, onClose, shift, details }) => {
+  if (!show) return null;
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal-content" onClick={e => e.stopPropagation()}>
+        <h3>تفاصيل الشيفت #{shift?.id}</h3>
+        <button onClick={onClose}>إغلاق</button>
+      </div>
+    </div>
+  );
+};
+
+// تعريف الدوال المفقودة
+const loadDashboardStats = async () => { console.log('loadDashboardStats'); };
+const loadAllActiveRentals = async () => { console.log('loadAllActiveRentals'); };
+const loadAllCompletedRentals = async () => { console.log('loadAllCompletedRentals'); };
+const loadAllRecentRentals = async () => { console.log('loadAllRecentRentals'); };
+const loadCurrentUserShift = async () => { console.log('loadCurrentUserShift'); };
+const loadPreviousShifts = async () => { console.log('loadPreviousShifts'); };
+const handleExportData = () => { console.log('handleExportData'); };
+const handlePrintReport = () => { console.log('handlePrintReport'); };
+const handleViewShiftDetails = (shift) => { console.log('handleViewShiftDetails', shift); };
+const handleViewRental = (rental) => { console.log('handleViewRental', rental); };
+const closeShiftDetailsModal = () => { setShowShiftDetailsModal(false); };
+
+// تعريف enhancedStats
+const enhancedStats = {
+  openTimeRentals: 0,
+  fixedTimeRentals: 0,
+  averageRentalDuration: 15,
+  totalActiveRentals: 0,
+  topGame: { 'لعبة': 0 }
+};
+
+// تعريف الـ states المفقودة
+const [selectedShiftForDetails, setSelectedShiftForDetails] = useState(null);
+const [shiftDetails, setShiftDetails] = useState(null);
+const [showShiftDetailsModal, setShowShiftDetailsModal] = useState(false);
+
 // ==================== دوال المساعدة ====================
 const formatCurrency = (amount) => {
   if (amount === null || amount === undefined || amount === '') return '0 ج.م';

@@ -1,5 +1,6 @@
+// src/AppRoutes.jsx
 import React from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom'; // ✅ لا تستورد BrowserRouter هنا
 import { useAuth } from './context/AuthContext';
 import Layout from './components/Layout';
 import Login from './pages/Login';
@@ -15,7 +16,7 @@ import Settings from './pages/admin/Settings';
 import GamesManagement from './pages/admin/GamesManagement';
 
 // صفحات الموظف
-import Rentals from './pages/employee/Rentals.jsx';
+import Rentals from './pages/employee/Rentals';
 import ProtectedRoute from './components/ProtectedRoute';
 
 // مكون التحميل
@@ -24,10 +25,8 @@ import Spinner from './components/ui/Spinner';
 const AppRoutes = () => {
   const { user, isAuthenticated, loading } = useAuth();
 
-  // للتأكد من القيم (debugging)
+  // للتأكد من القيم
   console.log('👤 Current user in AppRoutes:', user);
-  console.log('👤 User role:', user?.role);
-  console.log('👤 isAuthenticated:', isAuthenticated);
 
   // دالة تحديد المسار الافتراضي حسب الدور
   const getDefaultRoute = () => {
@@ -48,10 +47,7 @@ const AppRoutes = () => {
       return '/admin/dashboard';
     }
 
-    if (
-      normalizedRole === 'employee' ||
-      normalizedRole === 'branch_manager'
-    ) {
+    if (normalizedRole === 'employee' || normalizedRole === 'branch_manager') {
       return '/employee/rentals';
     }
 
@@ -68,20 +64,15 @@ const AppRoutes = () => {
   }
 
   return (
-    <Routes>
-      {/* صفحة تسجيل الدخول - متاحة للجميع */}
+    <Routes> {/* ✅ فقط Routes بدون BrowserRouter */}
+      {/* صفحة تسجيل الدخول */}
       <Route path="/login" element={<Login />} />
 
       {/* صفحة غير مصرح */}
       <Route path="/unauthorized" element={<Unauthorized />} />
 
       {/* المسار الافتراضي */}
-      <Route
-        path="/"
-        element={
-          <Navigate to={getDefaultRoute()} replace />
-        }
-      />
+      <Route path="/" element={<Navigate to={getDefaultRoute()} replace />} />
 
       {/* Routes للمدير */}
       <Route
@@ -106,7 +97,7 @@ const AppRoutes = () => {
         }
       />
 
-      {/* Routes للموظف ومدير الفرع */}
+      {/* Routes للموظف */}
       <Route
         path="/employee/*"
         element={
@@ -121,41 +112,16 @@ const AppRoutes = () => {
         }
       />
 
-      {/* مسار مباشر للتأجيرات (يدعم الأدوار المختلفة) */}
-      <Route
-        path="/rentals"
-        element={
-          <ProtectedRoute>
-            {user?.role === 'admin' ? (
-              <Layout>
-                <RentalsManagement />
-              </Layout>
-            ) : (
-              <Layout>
-                <Rentals />
-              </Layout>
-            )}
-          </ProtectedRoute>
-        }
-      />
-
       {/* صفحة 404 */}
       <Route
         path="*"
         element={
           <ProtectedRoute>
             <div className="not-found-page">
-              <div className="not-found-content">
-                <h1>404</h1>
-                <h2>الصفحة غير موجودة</h2>
-                <p>عذراً، الصفحة التي تبحث عنها غير موجودة</p>
-                <button
-                  onClick={() => window.location.href = getDefaultRoute()}
-                  className="btn-primary"
-                >
-                  العودة للصفحة الرئيسية
-                </button>
-              </div>
+              <h1>404 - الصفحة غير موجودة</h1>
+              <button onClick={() => window.location.href = getDefaultRoute()}>
+                العودة للرئيسية
+              </button>
             </div>
           </ProtectedRoute>
         }

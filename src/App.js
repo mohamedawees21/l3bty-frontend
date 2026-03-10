@@ -1,24 +1,25 @@
+// src/App.js
 import React from 'react';
-import { BrowserRouter as Router } from 'react-router-dom';
+import { BrowserRouter } from 'react-router-dom'; // ✅ مرة واحدة فقط هنا
 import { AuthProvider } from './context/AuthContext';
 import { RentalProvider } from './context/RentalContext';
-import { ShiftProvider } from './context/ShiftContext'; // ✅ إضافة ShiftProvider
+import { ShiftProvider } from './context/ShiftContext';
 import AppRoutes from './AppRoutes';
 import './App.css';
 
 function App() {
   return (
-    <Router>
+    <BrowserRouter> {/* ✅ الراوتر الرئيسي مرة واحدة */}
       <AuthProvider>
-        <ShiftProvider> {/* ✅ ShiftProvider للتعامل مع الشيفتات */}
-          <RentalProvider> {/* ✅ RentalProvider للتعامل مع التأجيرات */}
+        <ShiftProvider>
+          <RentalProvider>
             <div className="App">
-              <AppRoutes />
+              <AppRoutes /> {/* ✅ هذا المكون يستخدم <Routes> فقط وليس <BrowserRouter> */}
             </div>
           </RentalProvider>
         </ShiftProvider>
       </AuthProvider>
-    </Router>
+    </BrowserRouter>
   );
 }
 
