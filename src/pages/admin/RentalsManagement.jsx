@@ -3,19 +3,198 @@ import {
   Calendar, Filter, Search, Download, RefreshCw,
   Eye, DollarSign, TrendingUp, Users, Gamepad2,
   Clock, CheckCircle, XCircle, AlertCircle,
-  BarChart, PieChart, Activity, Loader2
+  BarChart, PieChart, Activity, Loader2, X
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../services/api';
 import { formatCurrency, formatDateTime } from '../../utils/formatters';
 
-// استيراد المكونات
-import ShiftsList from '../../components/rentals/admin/ShiftsList';
-import ShiftDetailsModal from '../../components/rentals/admin/ShiftDetailsModal';
-import Button from '../../components/ui/Button';
-import Spinner from '../../components/ui/Spinner';
-import Toast from '../../components/ui/Toast';
+// ==================== مكون ShiftsList المضمن ====================
+const ShiftsList = ({ shifts = [], loading, onViewDetails }) => {
+  if (loading) {
+    return (
+      <div className="shifts-loading">
+        <Loader2 size={32} className="spinner" />
+        <p>جاري تحميل الشيفتات...</p>
+      </div>
+    );
+  }
 
+  if (!shifts.length) {
+    return (
+      <div className="shifts-empty">
+        <Calendar size={48} />
+        <h3>لا توجد شيفتات</h3>
+        <p>لم يتم العثور على أي شيفتات</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="shifts-list">
+      {shifts.map((shift) => (
+        <div key={shift.id} className="shift-card">
+          <div className="shift-header">
+            <div className="shift-number">
+              <span>شيفت #{shift.shift_number || shift.id}</span>
+            </div>
+            <div className="shift-status">
+              <span className={`status-badge ${shift.status}`}>
+                {shift.status === 'open' ? 'مفتوح' : 'مغلق'}
+              </span>
+            </div>
+          </div>
+
+          <div className="shift-details">
+            <div className="detail-row">
+              <Users size={16} />
+              <span className="label">المشرف:</span>
+              <span className="value">{shift.employee_name || 'غير محدد'}</span>
+            </div>
+
+            <div className="detail-row">
+              <Clock size={16} />
+              <span className="label">البداية:</span>
+              <span className="value">{formatDateTime(shift.start_time)}</span>
+            </div>
+
+            {shift.end_time && (
+              <div className="detail-row">
+                <Clock size={16} />
+                <span className="label">النهاية:</span>
+                <span className="value">{formatDateTime(shift.end_time)}</span>
+              </div>
+            )}
+
+            <div className="detail-row">
+              <DollarSign size={16} />
+              <span className="label">الإيرادات:</span>
+              <span className="value revenue">{formatCurrency(shift.total_revenue || 0)}</span>
+            </div>
+
+            <div className="detail-row">
+              <span className="label">عدد التأجيرات:</span>
+              <span className="value">{shift.rentals_count || 0}</span>
+            </div>
+          </div>
+
+          <div className="shift-footer">
+            <button 
+              className="view-details-btn"
+              onClick={() => onViewDetails(shift)}
+            >
+              <Eye size={16} />
+              عرض التفاصيل
+            </button>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+};
+
+// ==================== مكون ShiftDetailsModal المضمن ====================
+const ShiftDetailsModal = ({ show, onClose, shift, loading }) => {
+  if (!show || !shift) return null;
+
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal-container" onClick={e => e.stopPropagation()}>
+        <div className="modal-header">
+          <h3>تفاصيل الشيفت #{shift.shift_number || shift.id}</h3>
+          <button className="modal-close-btn" onClick={onClose}>
+            <X size={20} />
+          </button>
+        </div>
+
+        <div className="modal-body">
+          {loading ? (
+            <div className="modal-loading">
+              <Loader2 size={32} className="spinner" />
+              <p>جاري تحميل التفاصيل...</p>
+            </div>
+          ) : (
+            <>
+              <div className="details-section">
+                <h4>معلومات الشيفت</h4>
+                <div className="details-grid">
+                  <div className="detail-item">
+                    <Users size={16} />
+                    <span className="label">المشرف:</span>
+                    <span className="value">{shift.employee_name || 'غير محدد'}</span>
+                  </div>
+                  <div className="detail-item">
+                    <Calendar size={16} />
+                    <span className="label">تاريخ البدء:</span>
+                    <span className="value">{formatDateTime(shift.start_time)}</span>
+                  </div>
+                  {shift.end_time && (
+                    <div className="detail-item">
+                      <Clock size={16} />
+                      <span className="label">تاريخ النهاية:</span>
+                      <span className="value">{formatDateTime(shift.end_time)}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="details-section">
+                <h4>الإحصائيات</h4>
+                <div className="stats-grid">
+                  <div className="stat-card">
+                    <DollarSign size={20} className="stat-icon revenue" />
+                    <div className="stat-info">
+                      <span className="stat-label">الإيرادات</span>
+                      <span className="stat-value">{formatCurrency(shift.total_revenue || 0)}</span>
+                    </div>
+                  </div>
+                  <div className="stat-card">
+                    <Activity size={20} className="stat-icon" />
+                    <div className="stat-info">
+                      <span className="stat-label">عدد التأجيرات</span>
+                      <span className="stat-value">{shift.rentals_count || 0}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="payment-breakdown">
+                  <h5>تفاصيل الدفع</h5>
+                  <div className="breakdown-row">
+                    <span>نقدي:</span>
+                    <span>{formatCurrency(shift.cash_amount || 0)}</span>
+                  </div>
+                  <div className="breakdown-row">
+                    <span>بطاقة:</span>
+                    <span>{formatCurrency(shift.card_amount || 0)}</span>
+                  </div>
+                  <div className="breakdown-row">
+                    <span>محفظة:</span>
+                    <span>{formatCurrency(shift.wallet_amount || 0)}</span>
+                  </div>
+                </div>
+              </div>
+
+              {shift.notes && (
+                <div className="details-section">
+                  <h4>ملاحظات</h4>
+                  <p className="notes-text">{shift.notes}</p>
+                </div>
+              )}
+            </>
+          )}
+        </div>
+
+        <div className="modal-footer">
+          <button className="btn btn-secondary" onClick={onClose}>
+            إغلاق
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ==================== المكون الرئيسي ====================
 const RentalsManagement = ({ showCompleted = false, showActive = false }) => {
   const { user } = useAuth();
   const isAdmin = user?.role === 'admin';
@@ -51,7 +230,42 @@ const RentalsManagement = ({ showCompleted = false, showActive = false }) => {
   // حالات واجهة المستخدم
   const [showShiftDetails, setShowShiftDetails] = useState(false);
   const [toast, setToast] = useState({ show: false, type: '', message: '' });
-  const [viewMode, setViewMode] = useState('table'); // 'table' or 'charts'
+  const [viewMode, setViewMode] = useState('table');
+
+  // حساب الإحصائيات المحسنة للرسوم البيانية
+  const enhancedStats = useMemo(() => {
+    const dailyStats = {};
+    const paymentMethodStats = {
+      cash: 0,
+      card: 0,
+      wallet: 0
+    };
+    const statusStats = {
+      completed: 0,
+      active: 0,
+      cancelled: 0
+    };
+
+    rentals.forEach(rental => {
+      const date = new Date(rental.start_time).toLocaleDateString('ar-EG');
+      dailyStats[date] = (dailyStats[date] || 0) + 1;
+
+      if (rental.payment_method) {
+        paymentMethodStats[rental.payment_method] = 
+          (paymentMethodStats[rental.payment_method] || 0) + 1;
+      }
+
+      if (rental.status) {
+        statusStats[rental.status] = (statusStats[rental.status] || 0) + 1;
+      }
+    });
+
+    return {
+      daily: Object.entries(dailyStats).map(([date, count]) => ({ date, count })),
+      paymentMethods: paymentMethodStats,
+      status: statusStats
+    };
+  }, [rentals]);
 
   // تحميل التأجيرات
   const loadRentals = useCallback(async () => {
@@ -64,10 +278,9 @@ const RentalsManagement = ({ showCompleted = false, showActive = false }) => {
       
       const response = await api.getRentals(params);
       if (response?.success) {
-        setRentals(response.data || []);
-        
-        // حساب الإحصائيات
         const rentalsData = response.data || [];
+        setRentals(rentalsData);
+        
         const totalRevenue = rentalsData.reduce((sum, r) => 
           sum + (r.final_amount || r.total_amount || 0), 0
         );
@@ -170,44 +383,6 @@ const RentalsManagement = ({ showCompleted = false, showActive = false }) => {
     linkElement.click();
   }, [rentals]);
 
-  // حساب الإحصائيات المحسنة للرسوم البيانية
-  const enhancedStats = useMemo(() => {
-    const dailyStats = {};
-    const paymentMethodStats = {
-      cash: 0,
-      card: 0,
-      wallet: 0
-    };
-    const statusStats = {
-      completed: 0,
-      active: 0,
-      cancelled: 0
-    };
-
-    rentals.forEach(rental => {
-      // إحصائيات يومية
-      const date = new Date(rental.start_time).toLocaleDateString('ar-EG');
-      dailyStats[date] = (dailyStats[date] || 0) + 1;
-
-      // إحصائيات طرق الدفع
-      if (rental.payment_method) {
-        paymentMethodStats[rental.payment_method] = 
-          (paymentMethodStats[rental.payment_method] || 0) + 1;
-      }
-
-      // إحصائيات الحالات
-      if (rental.status) {
-        statusStats[rental.status] = (statusStats[rental.status] || 0) + 1;
-      }
-    });
-
-    return {
-      daily: Object.entries(dailyStats).map(([date, count]) => ({ date, count })),
-      paymentMethods: paymentMethodStats,
-      status: statusStats
-    };
-  }, [rentals]);
-
   return (
     <div className="rentals-management-page">
       {/* رأس الصفحة */}
@@ -218,40 +393,36 @@ const RentalsManagement = ({ showCompleted = false, showActive = false }) => {
         </h1>
         
         <div className="header-actions">
-          <Button 
-            variant={viewMode === 'table' ? 'primary' : 'secondary'}
-            size="small"
+          <button 
+            className={`btn ${viewMode === 'table' ? 'btn-primary' : 'btn-secondary'}`}
             onClick={() => setViewMode('table')}
           >
             جدول
-          </Button>
-          <Button 
-            variant={viewMode === 'charts' ? 'primary' : 'secondary'}
-            size="small"
+          </button>
+          <button 
+            className={`btn ${viewMode === 'charts' ? 'btn-primary' : 'btn-secondary'}`}
             onClick={() => setViewMode('charts')}
           >
             رسوم بيانية
-          </Button>
-          <Button 
-            variant="success" 
-            size="small"
+          </button>
+          <button 
+            className="btn btn-success"
             onClick={handleExport}
-            icon={Download}
           >
+            <Download size={16} />
             تصدير
-          </Button>
-          <Button 
-            variant="secondary" 
-            size="small"
+          </button>
+          <button 
+            className="btn btn-secondary"
             onClick={() => {
               loadRentals();
               if (isAdmin) loadShifts();
             }}
-            icon={RefreshCw}
-            loading={loading.rentals || loading.shifts}
+            disabled={loading.rentals || loading.shifts}
           >
+            <RefreshCw size={16} className={loading.rentals ? 'spinner' : ''} />
             تحديث
-          </Button>
+          </button>
         </div>
       </div>
 
@@ -294,17 +465,6 @@ const RentalsManagement = ({ showCompleted = false, showActive = false }) => {
             className="filter-date"
             placeholder="إلى تاريخ"
           />
-
-          {isAdmin && (
-            <select
-              value={filters.branchId}
-              onChange={(e) => setFilters(prev => ({ ...prev, branchId: e.target.value }))}
-              className="filter-select"
-            >
-              <option value="">جميع الفروع</option>
-              {/* سيتم ملؤها من API الفروع */}
-            </select>
-          )}
         </div>
       </div>
 
@@ -358,7 +518,9 @@ const RentalsManagement = ({ showCompleted = false, showActive = false }) => {
           <div className="rentals-table-section">
             <h2>التأجيرات</h2>
             {loading.rentals ? (
-              <Spinner />
+              <div className="loading-spinner">
+                <Loader2 size={32} className="spinner" />
+              </div>
             ) : (
               <table className="rentals-table">
                 <thead>
@@ -371,7 +533,6 @@ const RentalsManagement = ({ showCompleted = false, showActive = false }) => {
                     <th>الحالة</th>
                     <th>طريقة الدفع</th>
                     <th>التاريخ</th>
-                    <th>إجراءات</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -397,11 +558,6 @@ const RentalsManagement = ({ showCompleted = false, showActive = false }) => {
                          rental.payment_method === 'wallet' ? 'محفظة' : '-'}
                       </td>
                       <td>{formatDateTime(rental.start_time)}</td>
-                      <td>
-                        <button className="action-btn" title="عرض التفاصيل">
-                          <Eye size={16} />
-                        </button>
-                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -428,11 +584,19 @@ const RentalsManagement = ({ showCompleted = false, showActive = false }) => {
             <h3>توزيع التأجيرات حسب الحالة</h3>
             <div className="chart-placeholder">
               <PieChart size={48} />
-              <p>قيد التطوير - سيتم إضافة رسم بياني دائري</p>
               <div className="stats-summary">
-                <div>مكتمل: {enhancedStats.status.completed}</div>
-                <div>نشط: {enhancedStats.status.active}</div>
-                <div>ملغي: {enhancedStats.status.cancelled}</div>
+                <div className="stat-item">
+                  <span className="label">مكتمل:</span>
+                  <span className="value">{enhancedStats.status.completed}</span>
+                </div>
+                <div className="stat-item">
+                  <span className="label">نشط:</span>
+                  <span className="value">{enhancedStats.status.active}</span>
+                </div>
+                <div className="stat-item">
+                  <span className="label">ملغي:</span>
+                  <span className="value">{enhancedStats.status.cancelled}</span>
+                </div>
               </div>
             </div>
           </div>
@@ -441,11 +605,19 @@ const RentalsManagement = ({ showCompleted = false, showActive = false }) => {
             <h3>طرق الدفع</h3>
             <div className="chart-placeholder">
               <BarChart size={48} />
-              <p>قيد التطوير - سيتم إضافة رسم بياني</p>
               <div className="stats-summary">
-                <div>نقدي: {enhancedStats.paymentMethods.cash}</div>
-                <div>بطاقة: {enhancedStats.paymentMethods.card}</div>
-                <div>محفظة: {enhancedStats.paymentMethods.wallet}</div>
+                <div className="stat-item">
+                  <span className="label">نقدي:</span>
+                  <span className="value">{enhancedStats.paymentMethods.cash}</span>
+                </div>
+                <div className="stat-item">
+                  <span className="label">بطاقة:</span>
+                  <span className="value">{enhancedStats.paymentMethods.card}</span>
+                </div>
+                <div className="stat-item">
+                  <span className="label">محفظة:</span>
+                  <span className="value">{enhancedStats.paymentMethods.wallet}</span>
+                </div>
               </div>
             </div>
           </div>
@@ -459,15 +631,6 @@ const RentalsManagement = ({ showCompleted = false, showActive = false }) => {
         shift={selectedShift}
         loading={loading.details}
       />
-
-      {/* تنبيهات */}
-      {toast.show && (
-        <Toast
-          type={toast.type}
-          message={toast.message}
-          onClose={() => setToast({ show: false, type: '', message: '' })}
-        />
-      )}
     </div>
   );
 };
