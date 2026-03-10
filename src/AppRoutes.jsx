@@ -15,7 +15,7 @@ import Settings from './pages/admin/Settings';
 import GamesManagement from './pages/admin/GamesManagement';
 
 // صفحات الموظف
-import Rentals from './pages/employee/Rentals';
+import Rentals from './pages/employee/Rentals.jsx';
 import ProtectedRoute from './components/ProtectedRoute';
 
 // مكون التحميل
