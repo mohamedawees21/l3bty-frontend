@@ -20,7 +20,6 @@ const Login = () => {
 
   const redirectBasedOnRole = (userData) => {
     const role = userData?.role;
-
     if (role === "admin" || role === "مدير") {
       navigate("/admin/dashboard", { replace: true });
     } else {
@@ -35,7 +34,6 @@ const Login = () => {
 
     try {
       const result = await login(email, password);
-
       if (!result.success) {
         setError(result.error || "بيانات الدخول غير صحيحة");
       }
@@ -61,8 +59,9 @@ const Login = () => {
         <form onSubmit={handleSubmit} className="login-form">
 
           <div className="input-group">
-            <label>البريد الإلكتروني</label>
+            <label htmlFor="email">البريد الإلكتروني</label>
             <input
+              id="email"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -72,8 +71,9 @@ const Login = () => {
           </div>
 
           <div className="input-group">
-            <label>كلمة المرور</label>
+            <label htmlFor="password">كلمة المرور</label>
             <input
+              id="password"
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
