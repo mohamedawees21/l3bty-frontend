@@ -9,12 +9,17 @@ import './App.css';
 
 function App() {
   return (
-    <BrowserRouter> {/* ✅ الراوتر الرئيسي مرة واحدة */}
+    <BrowserRouter
+      future={{
+        v7_startTransition: true,
+        v7_relativeSplatPath: true,
+      }}
+    >
       <AuthProvider>
         <ShiftProvider>
           <RentalProvider>
             <div className="App">
-              <AppRoutes /> {/* ✅ هذا المكون يستخدم <Routes> فقط وليس <BrowserRouter> */}
+              <AppRoutes /> {/* ✅ يحتوي فقط على <Routes> وليس <BrowserRouter> */}
             </div>
           </RentalProvider>
         </ShiftProvider>
