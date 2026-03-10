@@ -1,50 +1,38 @@
 import React from 'react';
-import { Navigate, useLocation } from 'react-router-dom';
+import { Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import Spinner from './ui/Spinner';
 
 const ProtectedRoute = ({ children, allowedRoles = [] }) => {
   const { user, isAuthenticated, loading } = useAuth();
-  const location = useLocation();
 
-  // عرض شاشة التحميل
+  // إذا كان في حالة تحميل
   if (loading) {
     return (
-      <div style={{ 
-        display: 'flex', 
-        justifyContent: 'center', 
-        alignItems: 'center', 
-        height: '100vh',
-        flexDirection: 'column'
-      }}>
-        <div className="spinner"></div>
-        <p style={{ marginTop: '20px', color: '#666' }}>جاري التحميل...</p>
+      <div className="protected-route-loading">
+        <Spinner size="medium" text="جاري التحقق من الصلاحية..." />
       </div>
     );
   }
 
-  // إذا لم يكن المستخدم مصادقاً، وجه إلى صفحة تسجيل الدخول
+  // إذا لم يكن مسجل دخول
   if (!isAuthenticated || !user) {
-    console.log('🔒 غير مصرح، تحويل إلى login. المسار:', location.pathname);
-    return (
-      <Navigate 
-        to="/login" 
-        state={{ from: location.pathname }} 
-        replace 
-      />
-    );
+    return <Navigate to="/login" replace />;
   }
 
-  // تحقق من الصلاحيات
-  const userRole = user?.role;
-  console.log('🔑 دور المستخدم:', userRole);
-  console.log('📋 الأدوار المسموحة:', allowedRoles);
+  // تحويل الأدوار العربية إلى إنجليزية
+  const normalizedRole =
+    user.role === 'مدير' ? 'admin' :
+    user.role === 'مشرف' ? 'branch_manager' :
+    user.role === 'موظف' ? 'employee' :
+    user.role;
 
-  if (allowedRoles.length > 0 && !allowedRoles.includes(userRole)) {
-    console.log('⛔ لا يوجد صلاحية كافية');
+  // إذا كان هناك أدوار محددة مطلوبة
+  if (allowedRoles.length > 0 && !allowedRoles.includes(normalizedRole)) {
     return <Navigate to="/unauthorized" replace />;
   }
 
-  // كل شيء جيد، اعرض المحتوى
+  // إذا كان كل شيء تمام
   return children;
 };
 

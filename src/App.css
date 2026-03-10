@@ -137,3 +137,191 @@ body {
 ::-webkit-scrollbar-thumb:hover {
   background: #a8a8a8;
 }
+/* ==================== صفحة غير مصرح ==================== */
+.unauthorized-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 20px;
+  font-family: 'Cairo', sans-serif;
+}
+
+.unauthorized-container {
+  background: white;
+  border-radius: 20px;
+  padding: 40px;
+  text-align: center;
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.2);
+  max-width: 500px;
+  width: 100%;
+  animation: slideUp 0.5s ease;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.icon-container {
+  position: relative;
+  width: 100px;
+  height: 100px;
+  margin: 0 auto 24px;
+}
+
+.alert-icon {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  background: white;
+  border-radius: 50%;
+  padding: 4px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.unauthorized-container h1 {
+  font-size: 32px;
+  color: #e74c3c;
+  margin: 0 0 16px;
+}
+
+.unauthorized-container p {
+  font-size: 18px;
+  color: #666;
+  margin: 0 0 24px;
+  line-height: 1.6;
+}
+
+.access-details {
+  background: #f8f9fa;
+  border-radius: 12px;
+  padding: 16px;
+  margin: 24px 0;
+  text-align: right;
+}
+
+.access-details p {
+  margin: 8px 0;
+  font-size: 16px;
+  color: #555;
+}
+
+.access-details ul {
+  list-style: none;
+  padding: 0;
+  margin: 12px 0 0;
+  text-align: right;
+}
+
+.access-details li {
+  padding: 8px 0;
+  border-bottom: 1px solid #eee;
+  color: #666;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.access-details li:last-child {
+  border-bottom: none;
+}
+
+.actions {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  margin-top: 32px;
+}
+
+.btn-primary, .btn-secondary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 24px;
+  border: none;
+  border-radius: 10px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-family: 'Cairo', sans-serif;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
+}
+
+.btn-secondary {
+  background: #f8f9fa;
+  color: #333;
+  border: 1px solid #ddd;
+}
+
+.btn-secondary:hover {
+  background: #e9ecef;
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+/* ==================== تحسينات للشاشات الصغيرة ==================== */
+@media (max-width: 768px) {
+  .unauthorized-container {
+    padding: 30px 20px;
+  }
+
+  .unauthorized-container h1 {
+    font-size: 28px;
+  }
+
+  .unauthorized-container p {
+    font-size: 16px;
+  }
+
+  .actions {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .btn-primary, .btn-secondary {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .unauthorized-container {
+    padding: 20px 15px;
+  }
+
+  .icon-container {
+    width: 80px;
+    height: 80px;
+  }
+
+  .unauthorized-container h1 {
+    font-size: 24px;
+  }
+
+  .access-details {
+    padding: 12px;
+  }
+
+  .access-details p {
+    font-size: 14px;
+  }
+}
