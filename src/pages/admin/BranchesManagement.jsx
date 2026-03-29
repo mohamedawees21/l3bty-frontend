@@ -388,7 +388,7 @@ const handleAddGameToBranch = async (game) => {
     const gameName = game.name.trim();
     const branchId = parseInt(selectedBranch.id);
     
-    // 1. التحقق من وجود اللعبة مسبقاً (شغال تمام عندك)
+    // التحقق من وجود اللعبة
     const existingGame = branchGames.find(g => 
       g.name?.trim().toLowerCase() === gameName.toLowerCase()
     );
@@ -404,30 +404,34 @@ const handleAddGameToBranch = async (game) => {
     if (!pricePer15Min || isNaN(pricePer15Min) || parseFloat(pricePer15Min) <= 0) return;
     
     try {
-      // تجهيز البيانات بشكل دقيق
       const gameData = {
         name: gameName,
         category: game.category || 'عام',
         price_per_15min: parseFloat(pricePer15Min),
         branch_id: branchId,
-        // تأكد من إرسال اسم الصورة فقط أو المسار حسب ما يطلبه السيرفر
+        // استخراج اسم الصورة فقط من المسار
         image_url: game.image || (game.imagePath ? game.imagePath.split('/').pop() : 'default-game.jpg')
       };
 
-      // محاولة الإرسال للـ API الموحد
-      const response = await authService.createGameUnbreakable(gameData);
+      // ✅ التعديل هنا: استخدام الدالة الموجودة فعلياً في authService
+      const response = await authService.createGame(gameData);
       
-      if (response.success) {
-        showNotification('success', `✅ تم إضافة "${gameName}" بنجاح`);
-        // تحديث البيانات فوراً
+      if (response && response.success) {
+        showNotification('success', `✅ تم إضافة "${gameName}" للفرع`);
+        
+        // تحديث القائمة فوراً
         await loadBranchGames(branchId);
-        await loadBranches(); 
+        
+        // تحديث الـ state محلياً للفروع لزيادة العدد (Optional but good for UX)
+        setBranches(prev => prev.map(b => 
+          b.id === branchId ? { ...b, total_games: (b.total_games || 0) + 1 } : b
+        ));
       } else {
-        alert(`❌ فشل الإضافة: ${response.message}`);
+        alert(`❌ فشل الإضافة: ${response?.message || 'خطأ من السيرفر'}`);
       }
     } catch (error) {
       console.error("Add Game Error:", error);
-      alert('❌ حدث خطأ أثناء الاتصال بالسيرفر');
+      alert('❌ حدث خطأ غير متوقع: ' + error.message);
     }
   };
 
