@@ -382,29 +382,20 @@ const handleOpenEditModal = (branch) => {
   setShowEditModal(true);
 };
 
-  const handleAddGameToBranch = async (game) => {
+const handleAddGameToBranch = async (game) => {
     if (!selectedBranch) return;
     
     const gameName = game.name.trim();
     const branchId = parseInt(selectedBranch.id);
     
+    // 1. التحقق من وجود اللعبة مسبقاً (شغال تمام عندك)
     const existingGame = branchGames.find(g => 
-      g.name?.trim().toLowerCase() === gameName.toLowerCase() && 
-      parseInt(g.branch_id) === branchId
+      g.name?.trim().toLowerCase() === gameName.toLowerCase()
     );
     
     if (existingGame) {
       if (window.confirm(`⚠️ اللعبة موجودة بالفعل. هل تريد تحديث السعر؟`)) {
-        const newPrice = prompt('أدخل السعر الجديد:', existingGame.price_per_15min);
-        if (newPrice && !isNaN(newPrice) && parseFloat(newPrice) > 0) {
-          try {
-            await authService.updateGame(existingGame.id, { price_per_15min: parseFloat(newPrice) });
-            showNotification('success', '✅ تم تحديث السعر بنجاح');
-            await loadBranchGames(branchId);
-          } catch (error) {
-            alert('❌ فشل تحديث السعر');
-          }
-        }
+        handleUpdateGamePrice(existingGame.id, existingGame.price_per_15min);
       }
       return;
     }
@@ -413,28 +404,30 @@ const handleOpenEditModal = (branch) => {
     if (!pricePer15Min || isNaN(pricePer15Min) || parseFloat(pricePer15Min) <= 0) return;
     
     try {
+      // تجهيز البيانات بشكل دقيق
       const gameData = {
         name: gameName,
-        category: game.category || 'سيارات',
+        category: game.category || 'عام',
         price_per_15min: parseFloat(pricePer15Min),
         branch_id: branchId,
-        image_url: game.imagePath?.replace('/images/', '') || 'default-game.jpg'
+        // تأكد من إرسال اسم الصورة فقط أو المسار حسب ما يطلبه السيرفر
+        image_url: game.image || (game.imagePath ? game.imagePath.split('/').pop() : 'default-game.jpg')
       };
-      
-      let response;
-      try {
-        response = await authService.post(`/api/branches/${branchId}/add-game`, gameData);
-      } catch {
-        response = await authService.createGameUnbreakable(gameData);
-      }
+
+      // محاولة الإرسال للـ API الموحد
+      const response = await authService.createGameUnbreakable(gameData);
       
       if (response.success) {
-        showNotification('success', `✅ تم إضافة "${gameName}" للفرع`);
+        showNotification('success', `✅ تم إضافة "${gameName}" بنجاح`);
+        // تحديث البيانات فوراً
         await loadBranchGames(branchId);
-        await loadBranches();
+        await loadBranches(); 
+      } else {
+        alert(`❌ فشل الإضافة: ${response.message}`);
       }
     } catch (error) {
-      alert('❌ فشل إضافة اللعبة');
+      console.error("Add Game Error:", error);
+      alert('❌ حدث خطأ أثناء الاتصال بالسيرفر');
     }
   };
 
