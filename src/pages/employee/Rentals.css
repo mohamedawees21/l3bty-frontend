@@ -2215,3 +2215,143 @@ textarea.form-control {
   text-align: center;
   font-weight: 500;
 }
+/* ==================== تكملة النوافذ المنبثقة وحساب المبالغ ==================== */
+
+.calc-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 0;
+  border-bottom: 1px dashed var(--border-color);
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
+.calc-row:last-child {
+  border-bottom: none;
+  margin-top: 8px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border-color);
+  font-weight: 700;
+  font-size: 16px;
+  color: var(--success-600);
+}
+
+.calc-value.negative {
+  color: var(--danger-600);
+}
+
+.modal-footer {
+  padding: 20px 24px;
+  background: var(--gray-50);
+  border-top: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+/* ==================== أزرار الإجراءات داخل المودال ==================== */
+.btn-secondary {
+  padding: 10px 20px;
+  border: 1px solid var(--border-color);
+  background: white;
+  color: var(--text-secondary);
+  border-radius: var(--radius-lg);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-secondary:hover {
+  background: var(--gray-100);
+  color: var(--text-primary);
+}
+
+.btn-danger {
+  padding: 10px 20px;
+  background: var(--danger-600);
+  color: white;
+  border: none;
+  border-radius: var(--radius-lg);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-danger:hover {
+  background: var(--danger-700);
+  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.2);
+}
+
+/* ==================== تحسينات الموبايل (Responsive) ==================== */
+@media (max-width: 768px) {
+  .shift-status-bar {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .shift-stats {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .shift-stat {
+    flex: 1;
+    min-width: 140px;
+  }
+
+  .page-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .header-buttons {
+    width: 100%;
+    overflow-x: auto;
+    padding-bottom: 8px;
+  }
+
+  .modal {
+    width: 95%;
+    margin: 10px;
+  }
+
+  .rental-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .rental-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+}
+
+/* ==================== تأثيرات عامة ==================== */
+.fade-in {
+  animation: fadeIn 0.4s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* تخصيص شريط التمرير (Scrollbar) */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--gray-50);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--gray-300);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--gray-400);
+}
