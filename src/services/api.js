@@ -625,7 +625,31 @@ api.completeFixedTime = async (rentalId) => {
   }
 };
 
+// ✅ إضافة الدالة المطلوبة لفك التعارض مع كود الـ UI
+api.createGameUnbreakable = async (gameData) => {
+  try {
+    console.log('🚀 محاولة إنشاء لعبة (Unbreakable Mode):', gameData);
+    
+    // التأكد من وجود البيانات الأساسية
+    if (!gameData.name || !gameData.branch_id) {
+      throw new Error('اسم اللعبة والفرع مطلوبان');
+    }
 
+    const response = await api.post('/games', gameData);
+    
+    return {
+      success: true,
+      data: response.data,
+      message: response.message || 'تم إضافة اللعبة بنجاح'
+    };
+  } catch (error) {
+    console.error('❌ خطأ في createGameUnbreakable:', error);
+    return { 
+      success: false, 
+      message: error.message || 'فشل في إضافة اللعبة' 
+    };
+  }
+};
 
 // ==================== RENTAL ITEMS ENDPOINTS ====================
 api.getRentalItems = async (rentalId) => {
