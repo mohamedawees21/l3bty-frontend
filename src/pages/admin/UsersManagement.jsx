@@ -356,21 +356,30 @@ const handleDeleteUser = async (id, permanent = false) => {
       }
     }
     
-    // الحذف المباشر (نهائي أو تعطيل)
-    console.log(`🗑️ ${permanent ? 'حذف نهائي' : 'تعطيل'} المستخدم:`, id);
-    
-    const response = await api.deleteUser(id, permanent);
-    
-    if (response.success) {
-      setSuccess(`✅ تم ${permanent ? 'حذف' : 'تعطيل'} المستخدم "${user.name}" بنجاح`);
-      setConfirmDelete(null);
-      await loadData();
+    // في UsersManagement.jsx - داخل handleDeleteUser
+if (permanent) {
+  console.log(`🗑️ حذف نهائي للمستخدم:`, id);
+  
+  const response = await api.deleteUser(id, permanent);
+  
+  if (response.success) {
+    setSuccess(`✅ تم حذف المستخدم "${user.name}" نهائياً بنجاح`);
+    setConfirmDelete(null);
+    await loadData();
+  } else {
+    // إذا كان الخطأ بسبب وجود ارتباطات
+    if (response.status === 400 && response.details) {
+      const { rentals, shifts } = response.details;
+      setError(
+        `⚠️ لا يمكن حذف المستخدم نهائياً لأنه مرتبط بـ ${rentals || 0} تأجير و ${shifts || 0} شيفت. ` +
+        `يمكنك تعطيل المستخدم بدلاً من الحذف النهائي.`
+      );
     } else {
       setError(response.message || 'فشل في حذف المستخدم');
     }
-  } catch (error) {
-    console.error('❌ خطأ في حذف المستخدم:', error);
-    
+  }
+}
+
     // رسائل خطأ مخصصة
     if (error.response?.status === 403) {
       setError('ليس لديك صلاحية لحذف هذا المستخدم');
@@ -969,24 +978,30 @@ useEffect(() => {
               <p>هل تريد حذف المستخدم <strong>{confirmDelete.name}</strong>؟</p>
               <p className="warning-text">هذا الإجراء قد لا يمكن التراجع عنه.</p>
               
-              <div className="delete-options">
-                <button 
-                  className="btn-warning"
-                  onClick={() => handleDeleteUser(confirmDelete.id, false)}
-                  disabled={loading}
-                >
-                  <span>⏸️</span>
-                  تعطيل فقط
-                </button>
-                <button 
-                  className="btn-danger"
-                  onClick={() => handleDeleteUser(confirmDelete.id, true)}
-                  disabled={loading}
-                >
-                  <span>🗑️</span>
-                  حذف نهائي
-                </button>
-              </div>
+             {/* داخل modal التأكيد */}
+<div className="delete-options">
+  <button 
+    className="btn-warning"
+    onClick={() => handleDeleteUser(confirmDelete.id, false)}
+    disabled={loading}
+  >
+    <span>⏸️</span>
+    تعطيل فقط (موصى به)
+  </button>
+  <button 
+    className="btn-danger"
+    onClick={() => handleDeleteUser(confirmDelete.id, true)}
+    disabled={loading}
+  >
+    <span>🗑️</span>
+    حذف نهائي (يتطلب عدم وجود تأجيرات)
+  </button>
+  {userHasRentals && (
+    <p className="warning-text-small">
+      ⚠️ هذا المستخدم لديه تأجيرات سابقة، يفضل استخدام "تعطيل فقط"
+    </p>
+  )}
+</div>
             </div>
           </div>
         </div>

@@ -795,6 +795,7 @@ api.updateUser = async (id, userData) => {
   }
 };
 
+// في api.js
 api.deleteUser = async (id, permanent = false) => {
   try {
     const response = await api.delete(`/users/${id}?permanent=${permanent}`);
@@ -804,7 +805,22 @@ api.deleteUser = async (id, permanent = false) => {
     };
   } catch (error) {
     console.error(`❌ خطأ في حذف مستخدم ${id}:`, error);
-    return { success: false, message: error.message };
+    
+    // استخراج التفاصيل من الخطأ إذا وجدت
+    let errorDetails = null;
+    let errorMessage = error.message || 'فشل في حذف المستخدم';
+    
+    if (error.data && error.data.details) {
+      errorDetails = error.data.details;
+      errorMessage = error.data.message || errorMessage;
+    }
+    
+    return { 
+      success: false, 
+      message: errorMessage,
+      details: errorDetails,
+      status: error.status
+    };
   }
 };
 
