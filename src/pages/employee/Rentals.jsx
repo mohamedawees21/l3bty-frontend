@@ -739,20 +739,9 @@ const SimpleGamesList = ({
         <div className="header-actions">
           <div className="simple-search">
             <Search size={14} className="search-icon" />
-            <input
-              type="text"
-              placeholder="ابحث..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
+          
           </div>
-          <button 
-            className="browse-all-btn"
-            onClick={onOpenDropdown}
-            title="عرض الكل"
-          >
-            <Maximize2 size={16} />
-          </button>
+        
         </div>
       </div>
 
@@ -775,18 +764,6 @@ const SimpleGamesList = ({
         )}
       </div>
 
-      {filteredGames.length > 6 && (
-        <button 
-          className="expand-toggle"
-          onClick={() => setIsExpanded(!isExpanded)}
-        >
-          {isExpanded ? (
-            <>عرض أقل <ChevronUp size={14} /></>
-          ) : (
-            <>عرض الكل ({filteredGames.length}) <ChevronDown size={14} /></>
-          )}
-        </button>
-      )}
     </div>
   );
 };
