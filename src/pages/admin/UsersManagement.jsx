@@ -316,19 +316,19 @@ const loadData = useCallback(async () => {
     }
   };
 
-// 🔹 دالة حذف/تعطيل المستخدم - نسخة محسنة مع الدوال الجديدة
+// 🔹 دالة حذف/تعطيل المستخدم - نسخة مُصححة بالكامل
 const handleDeleteUser = async (id, permanent = false) => {
   try {
     setLoading(true);
     
-    // تحقق إذا كان المستخدم هو المدير العام (id = 1)
+    // 1. منع حذف المدير العام
     if (id === 1) {
       setError('لا يمكن حذف أو تعطيل المدير العام');
       setConfirmDelete(null);
       return;
     }
     
-    // البحث عن المستخدم في القائمة
+    // 2. البحث عن المستخدم في القائمة المحلية
     const user = users.find(u => u.id === id);
     if (!user) {
       setError('المستخدم غير موجود');
@@ -338,49 +338,47 @@ const handleDeleteUser = async (id, permanent = false) => {
     
     console.log(`🔍 معالجة المستخدم:`, { id, name: user.name, role: user.role });
     
+    // 3. إذا كان المطلوب هو "تعطيل فقط" (وليس حذفاً نهائياً)
     if (!permanent) {
-      // محاولة التعطيل أولاً باستخدام الدالة الجديدة
       try {
         console.log('🟡 محاولة تعطيل المستخدم:', id);
         const response = await api.deactivateUser(id);
-        
         if (response.success) {
           setSuccess(`✅ تم تعطيل المستخدم "${user.name}" بنجاح`);
           setConfirmDelete(null);
           await loadData();
-          return;
+          return; // ننهي الدالة هنا بعد نجاح التعطيل
         }
       } catch (deactivateError) {
-        console.log('⚠️ فشل التعطيل:', deactivateError);
-        // استمر في محاولة الحذف المباشر
+        console.log('⚠️ فشل التعطيل، سنحاول الحذف العادي:', deactivateError);
+        // في حال فشل دالة deactivateUser، نستمر لمحاولة deleteUser
       }
     }
     
-    // في UsersManagement.jsx - داخل handleDeleteUser
-if (permanent) {
-  console.log(`🗑️ حذف نهائي للمستخدم:`, id);
-  
-  const response = await api.deleteUser(id, permanent);
-  
-  if (response.success) {
-    setSuccess(`✅ تم حذف المستخدم "${user.name}" نهائياً بنجاح`);
-    setConfirmDelete(null);
-    await loadData();
-  } else {
-    // إذا كان الخطأ بسبب وجود ارتباطات
-    if (response.status === 400 && response.details) {
-      const { rentals, shifts } = response.details;
-      setError(
-        `⚠️ لا يمكن حذف المستخدم نهائياً لأنه مرتبط بـ ${rentals || 0} تأجير و ${shifts || 0} شيفت. ` +
-        `يمكنك تعطيل المستخدم بدلاً من الحذف النهائي.`
-      );
+    // 4. حذف نهائي أو تعطيل عبر deleteUser (في حال لم ينجح التعطيل أعلاه)
+    console.log(`🗑️ ${permanent ? 'حذف نهائي' : 'تعطيل'} المستخدم:`, id);
+    const response = await api.deleteUser(id, permanent);
+    
+    if (response.success) {
+      setSuccess(`✅ تم ${permanent ? 'حذف' : 'تعطيل'} المستخدم "${user.name}" بنجاح`);
+      setConfirmDelete(null);
+      await loadData();
     } else {
-      setError(response.message || 'فشل في حذف المستخدم');
+      // معالجة الأخطاء التي يعيدها الـ API (مثل وجود تأجيرات سابقة)
+      if (response.status === 400 && response.details) {
+        const { rentals, shifts } = response.details;
+        setError(
+          `⚠️ لا يمكن حذف المستخدم نهائياً لأنه مرتبط بـ ${rentals || 0} تأجير و ${shifts || 0} شيفت. ` +
+          `يمكنك تعطيل المستخدم بدلاً من الحذف النهائي.`
+        );
+      } else {
+        setError(response.message || 'فشل في حذف المستخدم');
+      }
     }
-  }
-}
-
-    // رسائل خطأ مخصصة
+  } catch (error) {
+    // 5. معالجة أي خطأ غير متوقع من الاتصال بالخادم
+    console.error('❌ خطأ في حذف المستخدم:', error);
+    
     if (error.response?.status === 403) {
       setError('ليس لديك صلاحية لحذف هذا المستخدم');
     } else if (error.response?.status === 400) {
