@@ -247,7 +247,7 @@ const calculateRevenue = useMemo(() => {
   let total = 0;
   if (completedRentals && Array.isArray(completedRentals)) {
     completedRentals
-      .filter(rental => rental && typeof rental === 'object') // إزالة القيم null
+      .filter(rental => rental && typeof rental === 'object')
       .forEach(rental => {
         if (rental.status === 'completed' && !rental.is_refunded) {
           const amount = rental.final_amount || rental.total_amount || 0;
@@ -814,7 +814,7 @@ const EnhancedCart = ({
 const calculateItemTotal = useCallback((item) => {
   if (item.rental_type === 'open') return 0;
   const duration = item.duration_minutes || 15;
-  const units = Math.ceil(duration / 15); // 10/15 = 0.67 → 1 وحدة
+  const units = Math.ceil(duration / 15);
   return (item.price_per_15min || 0) * units * (item.quantity || 1);
 }, []);
 
@@ -1010,7 +1010,7 @@ const ActiveRentalsTable = ({
   userRole,
   onRefresh,
   activeRentalsRef,
-  onClose // ✅ إضافة prop للإغلاق
+  onClose
 }) => {
   const [timeNow, setTimeNow] = useState(new Date());
   const [searchTerm, setSearchTerm] = useState('');
@@ -1159,7 +1159,6 @@ const isExpired = useCallback((rental) => {
           <button onClick={onRefresh} className="refresh-btn" title="تحديث">
             <RefreshCw size={16} />
           </button>
-          {/* ✅ زر إغلاق الجدول */}
           <button onClick={onClose} className="close-table-btn" title="إغلاق">
             <X size={18} />
           </button>
@@ -1236,8 +1235,6 @@ const isExpired = useCallback((rental) => {
 
                   {isManager && (
                     <>
-                  
-
                       <button onClick={() => onModify(rental)} className="action-btn primary" title="تعديل">
                         <Edit size={14} />
                         <span>تعديل</span>
@@ -1399,7 +1396,6 @@ const CompletedRentalsTable = ({
           <button onClick={onRefresh} className="refresh-btn" title="تحديث">
             <RefreshCw size={16} />
           </button>
-          {/* زر إغلاق الجدول */}
           <button onClick={onClose} className="close-table-btn" title="إغلاق">
             <X size={18} />
           </button>
@@ -1422,7 +1418,6 @@ const CompletedRentalsTable = ({
                     <User size={14} />
                     <span>{rental.customer_name || 'بدون اسم'}</span>
                   </div>
-                  {/* ✅ إضافة علامة استرداد للتأجيرات المستردة */}
                   {rental.is_refunded && (
                     <div className="refund-badge" title="تأجير مسترد">
                       <Undo2 size={12} />
@@ -1450,7 +1445,6 @@ const CompletedRentalsTable = ({
                     <Eye size={14} />
                   </button>
                   
-                  {/* ✅ زر حذف للمدير فقط */}
                   {isManager && (
                     <button 
                       onClick={() => onDeleteRental(rental)} 
@@ -1471,7 +1465,6 @@ const CompletedRentalsTable = ({
                       <span className="game-name">{item.game_name}</span>
                     </div>
                     <div className="item-details">
-                      {/* ✅ عرض المدة مع تنسيق خاص لـ 10 دقائق */}
                       <span className={`badge ${item.duration_minutes === 10 ? 'badge-special' : ''}`}>
                         {item.duration_minutes === 10 ? '١٠ دقائق' : `${item.duration_minutes || 15} د`}
                       </span>
@@ -1490,7 +1483,6 @@ const CompletedRentalsTable = ({
                         <span className="game-name">{item.game_name}</span>
                       </div>
                       <div className="item-details">
-                        {/* ✅ عرض المدة مع تنسيق خاص لـ 10 دقائق في العناصر الموسعة */}
                         <span className={`badge ${item.duration_minutes === 10 ? 'badge-special' : ''}`}>
                           {item.duration_minutes === 10 ? '١٠ دقائق' : `${item.duration_minutes || 15} د`}
                         </span>
@@ -1512,7 +1504,6 @@ const CompletedRentalsTable = ({
                 )}
               </div>
               
-              {/* ✅ عرض سبب الإلغاء إذا كان موجوداً */}
               {rental.cancellation_reason && (
                 <div className="cancellation-reason">
                   <AlertCircle size={12} />
@@ -1735,7 +1726,6 @@ const RentalDetailsModal = ({ show, onClose, rental, items }) => {
                 <span className="game-name">{item.game_name}</span>
                 {item.child_name && <span className="child-name">({item.child_name})</span>}
                 
-                {/* ✅ عرض المدة الصحيحة من item مع تنسيق خاص لـ 10 دقائق */}
                 <span className={`badge ${item.duration_minutes === 10 ? 'badge-special' : ''}`}>
                   {item.duration_minutes === 10 ? '١٠ دقائق' : `${item.duration_minutes || 15} د`}
                 </span>
@@ -1746,7 +1736,6 @@ const RentalDetailsModal = ({ show, onClose, rental, items }) => {
             ))}
           </div>
           
-          {/* ✅ إشعار بأن سعر 10 دقائق يساوي سعر 15 دقيقة */}
           {rentalItems.some(item => item.duration_minutes === 10) && (
             <div className="alert alert-info notice">
               <Info size={14} />
@@ -2029,10 +2018,7 @@ const EarlyEndRentalModal = ({ show, onClose, rental, items, onConfirm }) => {
   }, [rental]);
 
 const refundAmount = useMemo(() => {
-  // التحقق من أن rental موجود وليس null
   if (!rental) return 0;
-  
-  // التحقق من وجود total_amount
   return rental.total_amount || 0;
 }, [rental]);
 
@@ -2231,7 +2217,6 @@ const loadActiveRentals = useCallback(async () => {
     if (response && response.success) {
       const rentals = response.data || [];
       
-      // ✅ التأكد من أن كل تأجير يحتوي على items مع المدة الصحيحة
       const processedRentals = rentals.map(rental => ({
         ...rental,
         items: rental.items || []
@@ -2266,7 +2251,6 @@ const loadActiveRentals = useCallback(async () => {
   }
 }, [currentShift?.id]);
 
-// في ملف Rentals.js - تحديث loadCompletedRentals
 const loadCompletedRentals = useCallback(async () => {
   if (!isManager || !currentShift?.id) {
     setCompletedRentals([]);
@@ -2278,11 +2262,10 @@ const loadCompletedRentals = useCallback(async () => {
   
   try {
     console.log('جاري تحميل التأجيرات المكتملة للشيفت:', currentShift.id);
-    // ✅ تضمين completed و cancelled مع is_refunded = true
     const response = await api.getCompletedRentals({ 
       shift_id: currentShift.id, 
       limit: 100,
-      include_refunded: true // ✅ إضافة هذا الخيار
+      include_refunded: true
     });
     
     if (response && response.success) {
@@ -2324,7 +2307,7 @@ const loadCompletedRentals = useCallback(async () => {
       }
     }
   }, [currentShift?.id, loadActiveRentals, loadCompletedRentals, isManager]);
-  // داخل المكون Rentals - أضف هذه الدوال
+  
 const handleCloseActiveTable = useCallback(() => {
   setShowActiveTable(false);
 }, []);
@@ -2333,7 +2316,6 @@ const handleCloseCompletedTable = useCallback(() => {
   setShowCompletedTable(false);
 }, []);
 
-// في Rentals.js - المكون الرئيسي
 const handleDeleteRental = useCallback(async (rental) => {
   if (!isManager) {
     setError('❌ ليس لديك صلاحية حذف التأجيرات');
@@ -2352,7 +2334,6 @@ const handleDeleteRental = useCallback(async (rental) => {
     
     if (response && response.success) {
       setSuccess(`✅ تم حذف التأجير بنجاح`);
-      // تحديث القوائم
       await loadCompletedRentals();
     } else {
       setError('❌ فشل حذف التأجير: ' + (response?.message || 'خطأ غير معروف'));
@@ -2489,7 +2470,6 @@ const handleDeleteRental = useCallback(async (rental) => {
 
 const calculateItemTotal = useCallback((item) => {
   if (item.rental_type === 'open') return 0;
-  // ✅ استخدام duration_minutes من item مباشرة
   const duration = item.duration_minutes || 15;
   const units = Math.ceil(duration / 15);
   return (item.price_per_15min || 0) * units * (item.quantity || 1);
@@ -2518,7 +2498,6 @@ const handleCreateRental = useCallback(async (data) => {
     const createdItems = [];
 
     for (const item of cartItems) {
-      // ✅ التأكد من إرسال duration_minutes الصحيحة
       const itemDuration = item.rental_type === 'fixed' ? (item.duration_minutes || 15) : null;
       
       const rentalData = {
@@ -2528,7 +2507,7 @@ const handleCreateRental = useCallback(async (data) => {
         items: [{
           game_id: item.game_id,
           child_name: item.child_name || null,
-          duration_minutes: itemDuration, // ✅ استخدام المدة الصحيحة
+          duration_minutes: itemDuration,
           quantity: item.quantity,
           rental_type: item.rental_type,
           price_per_15min: item.price_per_15min
@@ -2765,6 +2744,7 @@ const handleCreateRental = useCallback(async (data) => {
 
   return (
     <div className="rentals-page">
+      {/* شريط حالة الشيفت */}
       <ShiftStatusBar
         currentShift={currentShift}
         shiftStats={shiftStats}
@@ -2776,6 +2756,7 @@ const handleCreateRental = useCallback(async (data) => {
         completedRentals={completedRentals}
       />
 
+      {/* رأس الصفحة مع الأزرار */}
       <div className="page-header">
         <h1>صفحة التأجير</h1>
         <div className="header-buttons">
@@ -2811,6 +2792,7 @@ const handleCreateRental = useCallback(async (data) => {
         </div>
       </div>
 
+      {/* المحتوى الرئيسي: الألعاب والسلة */}
       <div className="main-content">
         <div className="games-cart-container">
           <SimpleGamesList
@@ -2840,81 +2822,83 @@ const handleCreateRental = useCallback(async (data) => {
           />
         </div>
 
+        {/* الجداول: نشطة ومكتملة */}
         {showActiveTable && (
-  <div className="tables-section">
-    <div className="section-header">
-      <h2>
-        <Activity size={20} />
-        التأجيرات النشطة
-      </h2>
-      {/* ✅ زر إغلاق إضافي في العنوان */}
-      <button onClick={handleCloseActiveTable} className="close-section-btn" title="إغلاق">
-        <X size={18} />
-      </button>
-    </div>
-    <ActiveRentalsTable
-      rentals={activeRentals}
-      items={rentalItems}
-      loading={loading}
-      onComplete={(rental) => {
-        if (rental.rental_type === 'open') {
-          setSelectedRental(rental);
-          setShowCompleteOpenModal(true);
-        }
-      }}
-      onCancel={(rental) => {
-        setSelectedRental(rental);
-        setShowCancelModal(true);
-      }}
-      onEarlyEnd={(rental) => {
-        setSelectedRental(rental);
-        setShowEarlyEndModal(true);
-      }}
-      onModify={(rental) => {
-        setSelectedRental(rental);
-        setShowModifyModal(true);
-      }}
-      onViewDetails={(rental) => {
-        setSelectedRental(rental);
-        setShowRentalDetailsModal(true);
-      }}
-      currentShift={currentShift}
-      userRole={userRole}
-      onRefresh={loadActiveRentals}
-      activeRentalsRef={activeRentalsRef}
-      onClose={handleCloseActiveTable} // ✅ تمرير دالة الإغلاق
-    />
-  </div>
-)}
+          <div className="tables-section">
+            <div className="section-header">
+              <h2>
+                <Activity size={20} />
+                التأجيرات النشطة
+              </h2>
+              <button onClick={handleCloseActiveTable} className="close-section-btn" title="إغلاق">
+                <X size={18} />
+              </button>
+            </div>
+            <ActiveRentalsTable
+              rentals={activeRentals}
+              items={rentalItems}
+              loading={loading}
+              onComplete={(rental) => {
+                if (rental.rental_type === 'open') {
+                  setSelectedRental(rental);
+                  setShowCompleteOpenModal(true);
+                }
+              }}
+              onCancel={(rental) => {
+                setSelectedRental(rental);
+                setShowCancelModal(true);
+              }}
+              onEarlyEnd={(rental) => {
+                setSelectedRental(rental);
+                setShowEarlyEndModal(true);
+              }}
+              onModify={(rental) => {
+                setSelectedRental(rental);
+                setShowModifyModal(true);
+              }}
+              onViewDetails={(rental) => {
+                setSelectedRental(rental);
+                setShowRentalDetailsModal(true);
+              }}
+              currentShift={currentShift}
+              userRole={userRole}
+              onRefresh={loadActiveRentals}
+              activeRentalsRef={activeRentalsRef}
+              onClose={handleCloseActiveTable}
+            />
+          </div>
+        )}
 
-{showCompletedTable && isManager && (
-  <div className="tables-section">
-    <div className="section-header">
-      <h2>
-        <History size={20} />
-        التأجيرات المكتملة
-      </h2>
-      {/* ✅ زر إغلاق إضافي في العنوان */}
-      <button onClick={handleCloseCompletedTable} className="close-section-btn" title="إغلاق">
-        <X size={18} />
-      </button>
-    </div>
-    <CompletedRentalsTable
-      rentals={completedRentals}
-      items={completedItems}
-      loading={loading}
-      onViewDetails={(rental) => {
-        setSelectedRental(rental);
-        setShowRentalDetailsModal(true);
-      }}
-      currentShift={currentShift}
-      onRefresh={loadCompletedRentals}
-      onClose={handleCloseCompletedTable} // ✅ تمرير دالة الإغلاق
-    />
-  </div>
-)}
+        {showCompletedTable && isManager && (
+          <div className="tables-section">
+            <div className="section-header">
+              <h2>
+                <History size={20} />
+                التأجيرات المكتملة
+              </h2>
+              <button onClick={handleCloseCompletedTable} className="close-section-btn" title="إغلاق">
+                <X size={18} />
+              </button>
+            </div>
+            <CompletedRentalsTable
+              rentals={completedRentals}
+              items={completedItems}
+              loading={loading}
+              onViewDetails={(rental) => {
+                setSelectedRental(rental);
+                setShowRentalDetailsModal(true);
+              }}
+              onDeleteRental={handleDeleteRental}
+              currentShift={currentShift}
+              onRefresh={loadCompletedRentals}
+              onClose={handleCloseCompletedTable}
+              userRole={userRole}
+            />
+          </div>
+        )}
       </div>
 
+      {/* النوافذ المنبثقة */}
       <GamesDropdown
         games={games}
         onSelectGame={handleAddToCart}
@@ -2980,6 +2964,7 @@ const handleCreateRental = useCallback(async (data) => {
         onConfirm={handleModifyRental}
       />
 
+      {/* رسائل الإشعارات */}
       {error && (
         <div className="toast error">
           <AlertCircle size={18} />
@@ -3000,6 +2985,7 @@ const handleCreateRental = useCallback(async (data) => {
         </div>
       )}
 
+      {/* مؤشر تحميل عام */}
       {loading.processing && (
         <div className="global-loading">
           <Loader2 className="spinner" size={24} />
