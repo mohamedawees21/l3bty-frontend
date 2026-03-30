@@ -2549,7 +2549,6 @@ const handleCreateRental = useCallback(async (data) => {
           <SimpleGamesList
             games={games}
             branchId={user?.branch_id}
-            onAddToCart={handleAddToCart}
             loading={loading}
             currentShift={currentShift}
             userRole={userRole}
