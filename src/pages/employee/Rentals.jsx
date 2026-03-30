@@ -489,7 +489,6 @@ const SimpleGamesList = ({
   loading,
   currentShift,
   userRole,
-  onOpenDropdown
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [isExpanded, setIsExpanded] = useState(false);
@@ -1917,7 +1916,6 @@ const Rentals = () => {
     phone: ''
   });
   
-  const [showGamesDropdown, setShowGamesDropdown] = useState(false);
   const [showRentalDetailsModal, setShowRentalDetailsModal] = useState(false);
   const [showCompleteOpenModal, setShowCompleteOpenModal] = useState(false);
   const [showCancelModal, setShowCancelModal] = useState(false);
@@ -2203,34 +2201,7 @@ const handleDeleteRental = useCallback(async (rental) => {
     }
   }, [currentShift]);
 
-  const handleAddToCart = useCallback((game) => {
-    console.log('إضافة لعبة:', game);
-    
-    if (!currentShift && userRole === 'employee') {
-      setError('❌ يجب فتح شيفت أولاً');
-      return;
-    }
 
-    if (!game || !game.id) {
-      setError('❌ بيانات اللعبة غير صالحة');
-      return;
-    }
-
-    const newItem = {
-      id: `item_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-      game_id: game.id,
-      game_name: game.name || 'لعبة',
-      price_per_15min: game.price_per_15min || 0,
-      rental_type: 'fixed',
-      duration_minutes: 15,
-      quantity: 1,
-      child_name: ''
-    };
-
-    setCartItems(prev => [...prev, newItem]);
-    setShowGamesDropdown(false);
-    setSuccess(`✅ تم إضافة ${game.name || 'اللعبة'} إلى السلة`);
-  }, [currentShift, userRole]);
 
   const handleUpdateCartItem = useCallback((itemId, updates) => {
     setCartItems(prev =>
@@ -2582,7 +2553,6 @@ const handleCreateRental = useCallback(async (data) => {
             loading={loading}
             currentShift={currentShift}
             userRole={userRole}
-            onOpenDropdown={() => setShowGamesDropdown(true)}
           />
 
           <EnhancedCart
@@ -2596,7 +2566,6 @@ const handleCreateRental = useCallback(async (data) => {
             }
             onSubmit={handleCreateRental}
             isSubmitting={loading.processing}
-            onAddGame={() => setShowGamesDropdown(true)}
             currentShift={currentShift}
             userRole={userRole}
           />
@@ -2678,16 +2647,7 @@ const handleCreateRental = useCallback(async (data) => {
         )}
       </div>
 
-      {/* النوافذ المنبثقة */}
-      <GamesDropdown
-        games={games}
-        onSelectGame={handleAddToCart}
-        onClose={() => setShowGamesDropdown(false)}
-        isOpen={showGamesDropdown}
-        currentShift={currentShift}
-        userRole={userRole}
-        branchId={user?.branch_id}
-      />
+      
 
       <RentalDetailsModal
         show={showRentalDetailsModal}
