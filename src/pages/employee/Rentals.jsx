@@ -442,7 +442,204 @@ const calculateRevenue = useMemo(() => {
   );
 };
 
+// ==================== مكون قائمة الألعاب المنبثقة ====================
+const GamesDropdown = ({ 
+  games, 
+  onSelectGame, 
+  onClose, 
+  isOpen,
+  currentShift,
+  userRole,
+  branchId
+}) => {
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('all');
+  const [viewMode, setViewMode] = useState('grid');
+  const dropdownRef = useRef(null);
 
+  const branchGames = useMemo(() => {
+    if (!games?.length || !branchId) return [];
+    return games.filter(game => 
+      game && 
+      game.branch_id === branchId && 
+      game.is_active !== false
+    );
+  }, [games, branchId]);
+
+  const filteredGames = useMemo(() => {
+    if (!branchGames.length) return [];
+    
+    return branchGames.filter(game => {
+      const matchesSearch = !searchTerm || 
+        game.name?.toLowerCase().includes(searchTerm.toLowerCase());
+      
+      const matchesCategory = selectedCategory === 'all' || 
+        game.category?.toLowerCase() === selectedCategory.toLowerCase() ||
+        game.type?.toLowerCase() === selectedCategory.toLowerCase();
+      
+      return matchesSearch && matchesCategory;
+    });
+  }, [branchGames, searchTerm, selectedCategory]);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        onClose();
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isOpen, onClose]);
+
+  useEffect(() => {
+    const handleEsc = (event) => {
+      if (event.key === 'Escape') {
+        onClose();
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener('keydown', handleEsc);
+    }
+
+    return () => {
+      document.removeEventListener('keydown', handleEsc);
+    };
+  }, [isOpen, onClose]);
+
+  if (!isOpen) return null;
+
+  const isEmployee = userRole === 'employee';
+  const canAddGames = currentShift || !isEmployee;
+
+  const handleGameClick = (game) => {
+    if (!canAddGames) {
+      alert('يجب فتح شيفت أولاً لإضافة ألعاب');
+      return;
+    }
+    onSelectGame(game);
+  };
+
+  return (
+    <div className="games-dropdown-overlay">
+      <div className="games-dropdown-container" ref={dropdownRef}>
+        <div className="dropdown-header">
+          <div className="header-title">
+            <Gamepad2 size={20} />
+            <h3>اختر لعبة</h3>
+          </div>
+          <div className="header-actions">
+            <button 
+              className={`view-mode-btn ${viewMode === 'grid' ? 'active' : ''}`}
+              onClick={() => setViewMode('grid')}
+              title="عرض شبكي"
+            >
+              <Grid size={16} />
+            </button>
+            <button 
+              className={`view-mode-btn ${viewMode === 'list' ? 'active' : ''}`}
+              onClick={() => setViewMode('list')}
+              title="عرض قائمة"
+            >
+              <List size={16} />
+            </button>
+            <button className="close-btn" onClick={onClose}>
+              <X size={20} />
+            </button>
+          </div>
+        </div>
+
+        <div className="dropdown-search">
+          <Search size={16} className="search-icon" />
+          <input
+            type="text"
+            placeholder="ابحث عن لعبة..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            autoFocus
+          />
+          {searchTerm && (
+            <button className="clear-search" onClick={() => setSearchTerm('')}>
+              <X size={14} />
+            </button>
+          )}
+        </div>
+
+        <div className="dropdown-categories">
+          {GAME_CATEGORIES.map(cat => {
+            const Icon = cat.icon;
+            return (
+              <button
+                key={cat.id}
+                className={`category-btn ${selectedCategory === cat.id ? 'active' : ''}`}
+                onClick={() => setSelectedCategory(cat.id)}
+              >
+                <Icon size={14} />
+                <span>{cat.label}</span>
+              </button>
+            );
+          })}
+        </div>
+
+        {!canAddGames ? (
+          <div className="dropdown-disabled">
+            <Lock size={32} />
+            <p>يجب فتح شيفت أولاً لإضافة ألعاب</p>
+          </div>
+        ) : filteredGames.length === 0 ? (
+          <div className="dropdown-empty">
+            <Package size={32} />
+            <p>لا توجد ألعاب متاحة</p>
+            {searchTerm && (
+              <button onClick={() => setSearchTerm('')} className="btn btn-link">
+                مسح البحث
+              </button>
+            )}
+          </div>
+        ) : (
+          <div className={`dropdown-games ${viewMode}`}>
+            {filteredGames.map(game => (
+              <div
+                key={game.id}
+                className={`game-item ${viewMode}`}
+                onClick={() => handleGameClick(game)}
+              >
+                <GameImage 
+                  src={game.image_url}
+                  alt={game.name}
+                  size={viewMode === 'grid' ? 'medium' : 'small'}
+                />
+                <div className="game-item-info">
+                  <span className="game-name">{game.name}</span>
+                  <span className="game-price">{formatCurrency(game.price_per_15min)}</span>
+                  {game.category && (
+                    <span className="game-category">{game.category}</span>
+                  )}
+                </div>
+                <button className="add-game-btn">
+                  <Plus size={16} />
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+
+        <div className="dropdown-footer">
+          <span>إجمالي الألعاب: {filteredGames.length}</span>
+          <button onClick={onClose} className="btn btn-secondary btn-sm">
+            إغلاق
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 // ==================== مكون بطاقة اللعبة المبسطة ====================
 const SimpleGameCard = ({ game, onAddToCart, currentShift, userRole }) => {
@@ -489,6 +686,7 @@ const SimpleGamesList = ({
   loading,
   currentShift,
   userRole,
+  onOpenDropdown
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [isExpanded, setIsExpanded] = useState(false);
@@ -541,9 +739,20 @@ const SimpleGamesList = ({
         <div className="header-actions">
           <div className="simple-search">
             <Search size={14} className="search-icon" />
-          
+            <input
+              type="text"
+              placeholder="ابحث..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
           </div>
-        
+          <button 
+            className="browse-all-btn"
+            onClick={onOpenDropdown}
+            title="عرض الكل"
+          >
+            <Maximize2 size={16} />
+          </button>
         </div>
       </div>
 
@@ -566,6 +775,18 @@ const SimpleGamesList = ({
         )}
       </div>
 
+      {filteredGames.length > 6 && (
+        <button 
+          className="expand-toggle"
+          onClick={() => setIsExpanded(!isExpanded)}
+        >
+          {isExpanded ? (
+            <>عرض أقل <ChevronUp size={14} /></>
+          ) : (
+            <>عرض الكل ({filteredGames.length}) <ChevronDown size={14} /></>
+          )}
+        </button>
+      )}
     </div>
   );
 };
@@ -1916,6 +2137,7 @@ const Rentals = () => {
     phone: ''
   });
   
+  const [showGamesDropdown, setShowGamesDropdown] = useState(false);
   const [showRentalDetailsModal, setShowRentalDetailsModal] = useState(false);
   const [showCompleteOpenModal, setShowCompleteOpenModal] = useState(false);
   const [showCancelModal, setShowCancelModal] = useState(false);
@@ -2201,7 +2423,34 @@ const handleDeleteRental = useCallback(async (rental) => {
     }
   }, [currentShift]);
 
+  const handleAddToCart = useCallback((game) => {
+    console.log('إضافة لعبة:', game);
+    
+    if (!currentShift && userRole === 'employee') {
+      setError('❌ يجب فتح شيفت أولاً');
+      return;
+    }
 
+    if (!game || !game.id) {
+      setError('❌ بيانات اللعبة غير صالحة');
+      return;
+    }
+
+    const newItem = {
+      id: `item_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      game_id: game.id,
+      game_name: game.name || 'لعبة',
+      price_per_15min: game.price_per_15min || 0,
+      rental_type: 'fixed',
+      duration_minutes: 15,
+      quantity: 1,
+      child_name: ''
+    };
+
+    setCartItems(prev => [...prev, newItem]);
+    setShowGamesDropdown(false);
+    setSuccess(`✅ تم إضافة ${game.name || 'اللعبة'} إلى السلة`);
+  }, [currentShift, userRole]);
 
   const handleUpdateCartItem = useCallback((itemId, updates) => {
     setCartItems(prev =>
@@ -2549,9 +2798,11 @@ const handleCreateRental = useCallback(async (data) => {
           <SimpleGamesList
             games={games}
             branchId={user?.branch_id}
+            onAddToCart={handleAddToCart}
             loading={loading}
             currentShift={currentShift}
             userRole={userRole}
+            onOpenDropdown={() => setShowGamesDropdown(true)}
           />
 
           <EnhancedCart
@@ -2565,6 +2816,7 @@ const handleCreateRental = useCallback(async (data) => {
             }
             onSubmit={handleCreateRental}
             isSubmitting={loading.processing}
+            onAddGame={() => setShowGamesDropdown(true)}
             currentShift={currentShift}
             userRole={userRole}
           />
@@ -2646,7 +2898,16 @@ const handleCreateRental = useCallback(async (data) => {
         )}
       </div>
 
-      
+      {/* النوافذ المنبثقة */}
+      <GamesDropdown
+        games={games}
+        onSelectGame={handleAddToCart}
+        onClose={() => setShowGamesDropdown(false)}
+        isOpen={showGamesDropdown}
+        currentShift={currentShift}
+        userRole={userRole}
+        branchId={user?.branch_id}
+      />
 
       <RentalDetailsModal
         show={showRentalDetailsModal}
