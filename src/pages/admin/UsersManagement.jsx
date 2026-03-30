@@ -966,46 +966,45 @@ useEffect(() => {
         </div>
       )}
 
-      {/* ===== نافذة تأكيد الحذف ===== */}
-      {confirmDelete && (
-        <div className="modal-overlay" onClick={() => setConfirmDelete(null)}>
-          <div className="modal modal-small" onClick={e => e.stopPropagation()}>
-            <div className="modal-header">
-              <h2>⚠️ تأكيد الحذف</h2>
-              <button className="close-btn" onClick={() => setConfirmDelete(null)}>×</button>
-            </div>
-            <div className="modal-body">
-              <p>هل تريد حذف المستخدم <strong>{confirmDelete.name}</strong>؟</p>
-              <p className="warning-text">هذا الإجراء قد لا يمكن التراجع عنه.</p>
-              
-             {/* داخل modal التأكيد */}
-<div className="delete-options">
-  <button 
-    className="btn-warning"
-    onClick={() => handleDeleteUser(confirmDelete.id, false)}
-    disabled={loading}
-  >
-    <span>⏸️</span>
-    تعطيل فقط (موصى به)
-  </button>
-  <button 
-    className="btn-danger"
-    onClick={() => handleDeleteUser(confirmDelete.id, true)}
-    disabled={loading}
-  >
-    <span>🗑️</span>
-    حذف نهائي (يتطلب عدم وجود تأجيرات)
-  </button>
-  {userHasRentals && (
-    <p className="warning-text-small">
-      ⚠️ هذا المستخدم لديه تأجيرات سابقة، يفضل استخدام "تعطيل فقط"
-    </p>
-  )}
-</div>
-            </div>
-          </div>
+    {/* نافذة تأكيد الحذف */}
+{confirmDelete && (
+  <div className="modal-overlay" onClick={() => setConfirmDelete(null)}>
+    <div className="modal modal-small" onClick={e => e.stopPropagation()}>
+      <div className="modal-header">
+        <h2>⚠️ تأكيد الحذف</h2>
+        <button className="close-btn" onClick={() => setConfirmDelete(null)}>×</button>
+      </div>
+      <div className="modal-body">
+        <p>هل تريد حذف المستخدم <strong>{confirmDelete.name}</strong>؟</p>
+        <p className="warning-text">هذا الإجراء قد لا يمكن التراجع عنه.</p>
+        
+        <div className="delete-options">
+          <button 
+            className="btn-warning"
+            onClick={() => handleDeleteUser(confirmDelete.id, false)}
+            disabled={loading}
+          >
+            <span>⏸️</span>
+            تعطيل فقط (موصى به)
+          </button>
+          <button 
+            className="btn-danger"
+            onClick={() => handleDeleteUser(confirmDelete.id, true)}
+            disabled={loading}
+          >
+            <span>🗑️</span>
+            حذف نهائي (يتطلب عدم وجود تأجيرات)
+          </button>
         </div>
-      )}
+        
+        {/* ✅ إضافة رسالة تحذيرية ثابتة (بدون شرط) مع تخطي علامات التنصيص */}
+        <p className="warning-text-small">
+          ⚠️ هذا المستخدم لديه تأجيرات سابقة، يفضل استخدام &quot;تعطيل فقط&quot;
+        </p>
+      </div>
+    </div>
+  </div>
+)}
 
       {/* ===== نافذة إضافة مستخدم جديد ===== */}
       {showAddModal && (
