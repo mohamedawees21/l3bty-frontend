@@ -1467,3 +1467,577 @@
     grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
   }
 }
+/* ---------- المتغيرات (الألوان الجديدة) ---------- */
+:root {
+--primary: #14b8a6; /* فيروزي هادئ */
+--primary-dark: #0d9488; /* فيروزي غامق */
+--primary-light: #ccfbf1; /* فيروزي فاتح جداً */
+--success: #10b981;
+--success-dark: #059669;
+--warning: #f59e0b;
+--warning-dark: #d97706;
+--danger: #ef4444;
+--danger-dark: #dc2626;
+--info: #6366f1;
+--gray-50: #f9fafb;
+--gray-100: #f3f4f6;
+--gray-200: #e5e7eb;
+--gray-300: #d1d5db;
+--gray-400: #9ca3af;
+--gray-500: #6b7280;
+--gray-600: #4b5563;
+--gray-700: #374151;
+--gray-800: #1f2937;
+--gray-900: #111827;
+--shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+--shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+--shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+--shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+--radius-sm: 0.375rem;
+--radius: 0.5rem;
+--radius-md: 0.75rem;
+--radius-lg: 1rem;
+--transition: all 0.2s ease;
+}
+
+/* ---------- التنسيقات الأساسية ---------- */
+.rentals-page {
+min-height: 100vh;
+background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+padding: 1.5rem;
+font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Cairo', sans-serif;
+direction: rtl;
+}
+
+/* ---------- شريط حالة الشيفت (بقيت كما هي مع تغيير لون الحواف) ---------- */
+.shift-status-bar {
+background: white;
+border-radius: var(--radius-lg);
+padding: 1rem 1.5rem;
+margin-bottom: 1.5rem;
+display: flex;
+justify-content: space-between;
+align-items: center;
+flex-wrap: wrap;
+gap: 1rem;
+box-shadow: var(--shadow);
+border: 1px solid var(--gray-100);
+transition: var(--transition);
+}
+
+.shift-status-bar.closed {
+background: var(--gray-50);
+border-right: 4px solid var(--danger);
+}
+
+.shift-status-bar.open {
+background: white;
+border-right: 4px solid var(--success);
+}
+
+/* باقي حالة الشيفت لم تتغير كثيراً - نمر سريعاً للجداول */
+
+/* ========== تحسين الجداول (نشطة ومكتملة) ========== */
+.tables-section {
+margin-top: 1rem;
+background: white;
+border-radius: var(--radius-lg);
+box-shadow: var(--shadow);
+overflow: hidden;
+}
+
+.section-header {
+display: flex;
+justify-content: space-between;
+align-items: center;
+padding: 1rem 1.25rem;
+background: var(--gray-50);
+border-bottom: 1px solid var(--gray-200);
+}
+
+.section-header h2 {
+font-size: 1rem;
+font-weight: 600;
+margin: 0;
+display: flex;
+align-items: center;
+gap: 0.5rem;
+color: var(--gray-800);
+}
+
+.close-section-btn {
+background: none;
+border: none;
+cursor: pointer;
+color: var(--gray-400);
+transition: var(--transition);
+padding: 0.25rem;
+border-radius: var(--radius-sm);
+}
+
+.close-section-btn:hover {
+background: var(--gray-200);
+color: var(--gray-700);
+}
+
+/* حاوية الجدول مع تمرير ناعم */
+.active-rentals-table,
+.completed-rentals-table {
+padding: 1rem;
+}
+
+.table-header {
+margin-bottom: 1rem;
+}
+
+.search-container {
+display: flex;
+gap: 0.5rem;
+align-items: center;
+flex-wrap: wrap;
+}
+
+.table-search {
+flex: 1;
+min-width: 200px;
+padding: 0.5rem 0.75rem;
+border: 1px solid var(--gray-300);
+border-radius: var(--radius);
+font-size: 0.875rem;
+transition: var(--transition);
+}
+
+.table-search:focus {
+border-color: var(--primary);
+outline: none;
+box-shadow: 0 0 0 2px var(--primary-light);
+}
+
+.refresh-btn, .close-table-btn {
+background: var(--gray-50);
+border: 1px solid var(--gray-300);
+border-radius: var(--radius);
+padding: 0.5rem;
+display: flex;
+align-items: center;
+justify-content: center;
+cursor: pointer;
+transition: var(--transition);
+}
+
+.refresh-btn:hover, .close-table-btn:hover {
+background: var(--gray-200);
+color: var(--primary);
+}
+
+/* قائمة التأجيرات - تحسين كبير */
+.table-body {
+display: flex;
+flex-direction: column;
+gap: 1rem; /* مسافة أكبر بين المجموعات */
+max-height: 550px;
+overflow-y: auto;
+padding: 0.25rem;
+}
+
+/* بطاقة المجموعة (كل عقد إيجار) */
+.rental-group {
+background: white;
+border-radius: var(--radius);
+border: 1px solid var(--gray-200);
+padding: 1rem;
+transition: all 0.2s ease-in-out;
+box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+}
+
+.rental-group:hover {
+box-shadow: var(--shadow-md);
+border-color: var(--gray-300);
+transform: translateY(-1px);
+}
+
+.rental-group.expired {
+border-right: 4px solid var(--warning);
+background: #fffbeb;
+}
+
+.rental-group.completed {
+background: var(--gray-50);
+}
+
+.rental-group.completed.refunded {
+background: #fef2f2;
+border-right-color: var(--danger);
+}
+
+/* رأس المجموعة */
+.rental-header {
+display: flex;
+justify-content: space-between;
+align-items: flex-start;
+flex-wrap: wrap;
+gap: 0.75rem;
+margin-bottom: 0.75rem;
+padding-bottom: 0.5rem;
+border-bottom: 1px dashed var(--gray-200);
+}
+
+.rental-info {
+display: flex;
+align-items: center;
+gap: 1rem;
+flex-wrap: wrap;
+}
+
+.rental-badge {
+background: var(--gray-100);
+padding: 0.25rem 0.6rem;
+border-radius: 2rem; /* شكل دائري */
+font-size: 0.7rem;
+font-weight: 600;
+display: flex;
+align-items: center;
+gap: 0.3rem;
+color: var(--gray-700);
+}
+
+.rental-customer {
+display: flex;
+align-items: center;
+gap: 0.4rem;
+font-size: 0.875rem;
+color: var(--gray-700);
+background: var(--gray-50);
+padding: 0.2rem 0.6rem;
+border-radius: 2rem;
+}
+
+.rental-time {
+display: flex;
+align-items: center;
+gap: 0.4rem;
+font-size: 0.8rem;
+font-weight: 500;
+background: var(--gray-50);
+padding: 0.2rem 0.6rem;
+border-radius: 2rem;
+}
+
+.rental-time .expired {
+color: var(--danger);
+font-weight: 600;
+}
+
+.open-badge {
+background: #fef3c7;
+color: var(--warning);
+padding: 0.2rem 0.6rem;
+border-radius: 2rem;
+font-size: 0.7rem;
+font-weight: 600;
+}
+
+/* أزرار الإجراءات داخل الجدول */
+.rental-actions {
+display: flex;
+gap: 0.6rem;
+flex-wrap: wrap;
+}
+
+.action-btn {
+background: white;
+border: 1px solid var(--gray-300);
+border-radius: 2rem;
+padding: 0.3rem 0.8rem;
+font-size: 0.7rem;
+font-weight: 500;
+display: inline-flex;
+align-items: center;
+gap: 0.4rem;
+cursor: pointer;
+transition: all 0.2s;
+}
+
+.action-btn.info:hover {
+background: var(--primary-light);
+border-color: var(--primary);
+color: var(--primary-dark);
+}
+
+.action-btn.success:hover {
+background: #d1fae5;
+border-color: var(--success);
+color: var(--success-dark);
+}
+
+.action-btn.early-end:hover {
+background: #fef3c7;
+border-color: var(--warning);
+color: var(--warning-dark);
+}
+
+.action-btn.primary:hover {
+background: var(--primary-light);
+border-color: var(--primary);
+color: var(--primary-dark);
+}
+
+.action-btn.danger:hover {
+background: #fee2e2;
+border-color: var(--danger);
+color: var(--danger-dark);
+}
+
+/* قائمة العناصر (الألعاب) داخل الإيجار */
+.rental-items {
+margin: 0.75rem 0;
+background: var(--gray-50);
+border-radius: var(--radius);
+padding: 0.5rem;
+}
+
+.rental-item {
+display: flex;
+justify-content: space-between;
+align-items: center;
+background: white;
+padding: 0.6rem 0.8rem;
+border-radius: var(--radius-sm);
+margin-bottom: 0.5rem;
+border: 1px solid var(--gray-100);
+transition: var(--transition);
+}
+
+.rental-item:last-child {
+margin-bottom: 0;
+}
+
+.rental-item:hover {
+background: var(--primary-light);
+border-color: var(--primary);
+}
+
+.item-game {
+display: flex;
+align-items: center;
+gap: 0.75rem;
+flex-wrap: wrap;
+}
+
+.game-name {
+font-weight: 600;
+color: var(--gray-800);
+}
+
+.child-name {
+font-size: 0.7rem;
+color: var(--gray-500);
+background: var(--gray-100);
+padding: 0.1rem 0.4rem;
+border-radius: 1rem;
+}
+
+.item-details {
+display: flex;
+gap: 0.75rem;
+align-items: baseline;
+}
+
+.badge {
+background: var(--gray-200);
+padding: 0.2rem 0.5rem;
+border-radius: 2rem;
+font-size: 0.7rem;
+font-weight: 500;
+}
+
+.badge-special {
+background: #d1fae5;
+color: var(--success-dark);
+}
+
+/* الملخص والإجمالي */
+.rental-summary {
+display: flex;
+gap: 1.5rem;
+margin-top: 0.75rem;
+padding-top: 0.5rem;
+font-size: 0.75rem;
+color: var(--gray-600);
+border-top: 1px solid var(--gray-200);
+}
+
+.rental-amount {
+font-weight: 800;
+color: var(--primary-dark);
+font-size: 0.85rem;
+}
+
+.refund-badge {
+background: #fee2e2;
+color: var(--danger);
+padding: 0.2rem 0.6rem;
+border-radius: 2rem;
+font-size: 0.7rem;
+display: inline-flex;
+align-items: center;
+gap: 0.3rem;
+}
+
+.cancellation-reason {
+margin-top: 0.5rem;
+font-size: 0.7rem;
+color: var(--gray-500);
+display: flex;
+align-items: center;
+gap: 0.3rem;
+background: var(--gray-100);
+padding: 0.3rem 0.6rem;
+border-radius: var(--radius-sm);
+width: fit-content;
+}
+
+/* الترقيم (pagination) */
+.table-pagination {
+display: flex;
+justify-content: center;
+align-items: center;
+gap: 1rem;
+margin-top: 1.5rem;
+padding-top: 1rem;
+border-top: 1px solid var(--gray-200);
+}
+
+.pagination-btn {
+background: white;
+border: 1px solid var(--gray-300);
+border-radius: 2rem;
+padding: 0.3rem 1rem;
+cursor: pointer;
+font-weight: 500;
+transition: var(--transition);
+}
+
+.pagination-btn:hover:not(:disabled) {
+background: var(--primary-light);
+border-color: var(--primary);
+color: var(--primary-dark);
+}
+
+.pagination-btn:disabled {
+opacity: 0.5;
+cursor: not-allowed;
+}
+
+/* تحسينات إضافية للجداول على الشاشات الصغيرة */
+@media (max-width: 640px) {
+.rental-header {
+flex-direction: column;
+align-items: stretch;
+}
+.rental-actions {
+justify-content: flex-start;
+}
+.rental-info {
+gap: 0.5rem;
+}
+.rental-item {
+flex-direction: column;
+align-items: flex-start;
+gap: 0.5rem;
+}
+.item-details {
+align-self: flex-end;
+}
+}
+
+/* ========== باقي الأنماط مع تحديث الألوان ========== */
+/* (ألوان الأزرار، المودالات، الإشعارات، إلخ) */
+
+.header-btn.active {
+background: var(--primary-light);
+border-color: var(--primary);
+color: var(--primary);
+}
+
+.games-count {
+background: var(--primary-light);
+color: var(--primary-dark);
+}
+
+.simple-game-card:hover {
+background: var(--primary-light);
+border-color: var(--primary);
+}
+
+.simple-game-price {
+color: var(--primary-dark);
+}
+
+.simple-add-btn:hover {
+background: var(--primary);
+border-color: var(--primary);
+}
+
+.cart-count {
+background: var(--primary);
+}
+
+.cart-item-total {
+color: var(--primary-dark);
+}
+
+.customer-input:focus {
+border-color: var(--primary);
+box-shadow: 0 0 0 2px var(--primary-light);
+}
+
+.summary-total {
+color: var(--primary-dark);
+}
+
+.btn-primary {
+background: var(--primary);
+}
+.btn-primary:hover:not(:disabled) {
+background: var(--primary-dark);
+}
+
+.alert-info {
+background: var(--primary-light);
+color: var(--primary-dark);
+}
+
+.view-mode-btn.active {
+background: var(--primary);
+border-color: var(--primary);
+}
+
+.category-btn.active {
+background: var(--primary-light);
+border-color: var(--primary);
+color: var(--primary-dark);
+}
+
+.game-item:hover {
+background: var(--primary-light);
+}
+
+/* باقي الأجزاء (مثل المودالات، السبينر، التوست) لم تتغير ولكن تم تحديث الألوان الرئيسية */
+.toast.success {
+border-right-color: var(--success);
+}
+.toast.error {
+border-right-color: var(--danger);
+}
+
+@keyframes pulse {
+0% { box-shadow: 0 0 0 0 rgba(20, 184, 166, 0.5); }
+70% { box-shadow: 0 0 0 6px rgba(20, 184, 166, 0); }
+100% { box-shadow: 0 0 0 0 rgba(20, 184, 166, 0); }
+}
+
+.btn-glow {
+box-shadow: 0 0 0 0 rgba(20, 184, 166, 0.5);
+animation: pulse 1.5s infinite;
+}
